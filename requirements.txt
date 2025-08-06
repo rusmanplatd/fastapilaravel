@@ -8,6 +8,7 @@ python-dotenv==1.0.0
 email-validator==2.1.2
 pydantic[email]==2.11.7
 cryptography==3.4.8
+python-ulid==2.7.0
 mypy==1.8.0
 types-python-jose==3.3.4.8
 types-passlib==1.7.7.13

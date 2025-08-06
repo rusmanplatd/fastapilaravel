@@ -45,7 +45,7 @@ class PermissionUpdate(BaseModel):
 
 
 class PermissionResponse(BaseModel):
-    id: int
+    id: str
     name: str
     slug: str
     description: Optional[str]
@@ -100,7 +100,7 @@ class RoleUpdate(BaseModel):
 
 
 class RoleResponse(BaseModel):
-    id: int
+    id: str
     name: str
     slug: str
     description: Optional[str]
@@ -119,18 +119,18 @@ class RoleWithPermissions(RoleResponse):
 
 
 class UserRoleAssignment(BaseModel):
-    user_id: int
-    role_ids: List[int]
+    user_id: str
+    role_ids: List[str]
 
 
 class UserPermissionAssignment(BaseModel):
-    user_id: int
-    permission_ids: List[int]
+    user_id: str
+    permission_ids: List[str]
 
 
 class RolePermissionAssignment(BaseModel):
-    role_id: int
-    permission_ids: List[int]
+    role_id: str
+    permission_ids: List[str]
 
 
 class PermissionCheck(BaseModel):
@@ -180,7 +180,7 @@ class MultipleRoleCheck(BaseModel):
 
 
 class UserPermissionsResponse(BaseModel):
-    user_id: int
+    user_id: str
     roles: List[RoleResponse]
     direct_permissions: List[PermissionResponse]
     all_permissions: List[PermissionResponse]

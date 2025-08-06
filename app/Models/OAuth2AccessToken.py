@@ -6,8 +6,8 @@ similar to Laravel Passport's access token model.
 
 from __future__ import annotations
 
-from sqlalchemy import Column, String, Text, DateTime, ForeignKey, Boolean
-from sqlalchemy.orm import relationship
+from sqlalchemy import String, Text, DateTime, ForeignKey, Boolean
+from sqlalchemy.orm import relationship, Mapped, mapped_column
 from sqlalchemy.sql import func
 from typing import Optional, List, TYPE_CHECKING, Dict, Any
 from datetime import datetime, timedelta
@@ -27,24 +27,24 @@ class OAuth2AccessToken(BaseModel):
     __tablename__ = "oauth_access_tokens"
     
     # Token identification - using ULID for token_id
-    token_id = Column(String(26), unique=True, index=True, nullable=False)
-    token = Column(Text, nullable=False)
+    token_id: Mapped[str] = mapped_column(String(26), unique=True, index=True, nullable=False)
+    token: Mapped[str] = mapped_column(Text, nullable=False)
     
     # Token metadata
-    scopes = Column(Text, nullable=False, default="")
-    token_type = Column(String(50), default="Bearer", nullable=False)
+    scopes: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    token_type: Mapped[str] = mapped_column(String(50), default="Bearer", nullable=False)
     
     # Associations
-    user_id: Optional[ULID] = Column(String(26), ForeignKey("users.id"), nullable=True)
-    client_id = Column(String(26), ForeignKey("oauth_clients.client_id"), nullable=False)
+    user_id: Mapped[Optional[ULID]] = mapped_column(String(26), ForeignKey("users.id"), nullable=True)
+    client_id: Mapped[str] = mapped_column(String(26), ForeignKey("oauth_clients.client_id"), nullable=False)
     
     # Token status
-    is_revoked = Column(Boolean, default=False, nullable=False)
-    expires_at = Column(DateTime, nullable=False)
+    is_revoked: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     
     # Personal Access Token fields
-    name = Column(String(191), nullable=True)  # For personal access tokens
-    abilities = Column(Text, nullable=False, default="")  # JSON array of abilities
+    name: Mapped[Optional[str]] = mapped_column(String(191), nullable=True)  # For personal access tokens
+    abilities: Mapped[str] = mapped_column(Text, nullable=False, default="")  # JSON array of abilities
     
     # Relationships
     client = relationship("OAuth2Client", back_populates="access_tokens")
@@ -98,7 +98,8 @@ class OAuth2AccessToken(BaseModel):
             return []
         import json
         try:
-            return json.loads(self.abilities)
+            abilities = json.loads(self.abilities)
+            return abilities if isinstance(abilities, list) else []
         except (json.JSONDecodeError, TypeError):
             return []
     

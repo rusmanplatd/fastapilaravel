@@ -6,8 +6,8 @@ similar to Laravel Passport's authorization code model.
 
 from __future__ import annotations
 
-from sqlalchemy import Column, String, Text, DateTime, ForeignKey, Boolean
-from sqlalchemy.orm import relationship
+from sqlalchemy import String, Text, DateTime, ForeignKey, Boolean
+from sqlalchemy.orm import relationship, Mapped, mapped_column
 from sqlalchemy.sql import func
 from typing import Optional, List, TYPE_CHECKING, Dict, Any
 from datetime import datetime, timedelta
@@ -26,24 +26,24 @@ class OAuth2AuthorizationCode(BaseModel):
     __tablename__ = "oauth_authorization_codes"
     
     # Code identification - using ULID for code_id
-    code_id = Column(String(26), unique=True, index=True, nullable=False)
-    code = Column(Text, nullable=False)
+    code_id: Mapped[str] = mapped_column(String(26), unique=True, index=True, nullable=False)
+    code: Mapped[str] = mapped_column(Text, nullable=False)
     
     # Authorization details
-    redirect_uri = Column(Text, nullable=False)
-    scopes = Column(Text, nullable=False, default="")
+    redirect_uri: Mapped[str] = mapped_column(Text, nullable=False)
+    scopes: Mapped[str] = mapped_column(Text, nullable=False, default="")
     
     # PKCE support
-    code_challenge = Column(String(128), nullable=True)
-    code_challenge_method = Column(String(10), nullable=True)
+    code_challenge: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+    code_challenge_method: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
     
     # Associations
-    user_id: ULID = Column(String(26), ForeignKey("users.id"), nullable=False)
-    client_id = Column(String(26), ForeignKey("oauth_clients.client_id"), nullable=False)
+    user_id: Mapped[ULID] = mapped_column(String(26), ForeignKey("users.id"), nullable=False)
+    client_id: Mapped[str] = mapped_column(String(26), ForeignKey("oauth_clients.client_id"), nullable=False)
     
     # Code status
-    is_revoked = Column(Boolean, default=False, nullable=False)
-    expires_at = Column(DateTime, nullable=False)
+    is_revoked: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     
     # Relationships
     client = relationship("OAuth2Client", back_populates="authorization_codes")

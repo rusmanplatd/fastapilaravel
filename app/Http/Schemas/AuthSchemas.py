@@ -45,7 +45,7 @@ class UserLogin(BaseModel):
 
 
 class UserResponse(BaseModel):
-    id: int
+    id: str
     name: str
     email: str
     is_active: bool

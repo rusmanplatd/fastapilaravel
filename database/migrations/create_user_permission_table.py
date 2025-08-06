@@ -1,15 +1,15 @@
-from sqlalchemy import Column, Integer, ForeignKey, Table, DateTime, func
+from sqlalchemy import Column, String, ForeignKey, Table, DateTime, func
 from app.Models import Base
 
 # Association table for direct user permissions (not through roles)
 user_permission_table = Table(
     'user_permissions',
     Base.metadata,
-    Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('user_id', Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False),
-    Column('permission_id', Integer, ForeignKey('permissions.id', ondelete='CASCADE'), nullable=False),
+    Column('id', String(26), primary_key=True),
+    Column('user_id', String(26), ForeignKey('users.id', ondelete='CASCADE'), nullable=False),
+    Column('permission_id', String(26), ForeignKey('permissions.id', ondelete='CASCADE'), nullable=False),
     Column('assigned_at', DateTime, server_default=func.now(), nullable=False),
-    Column('assigned_by', Integer, ForeignKey('users.id'), nullable=True),
+    Column('assigned_by', String(26), ForeignKey('users.id'), nullable=True),
     # Add unique constraint to prevent duplicate user-permission pairs
     schema=None
 )

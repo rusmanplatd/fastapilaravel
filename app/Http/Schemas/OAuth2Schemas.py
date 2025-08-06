@@ -202,7 +202,7 @@ class OAuth2ClientUpdateRequest(BaseModel):
 class OAuth2ClientResponse(BaseModel):
     """OAuth2 client response schema."""
     
-    id: int
+    id: str
     client_id: str
     client_secret: Optional[str] = None
     name: str
@@ -218,7 +218,7 @@ class OAuth2ClientResponse(BaseModel):
 class OAuth2ClientStatsResponse(BaseModel):
     """OAuth2 client statistics response schema."""
     
-    client_id: int
+    client_id: str
     client_name: str
     oauth_client_id: str
     is_revoked: bool
@@ -264,7 +264,7 @@ class OAuth2ScopeUpdateRequest(BaseModel):
 class OAuth2ScopeResponse(BaseModel):
     """OAuth2 scope response schema."""
     
-    id: int
+    id: str
     scope_id: str
     name: str
     description: str
@@ -287,10 +287,10 @@ class OAuth2ScopeUsageStats(BaseModel):
 class OAuth2AccessTokenResponse(BaseModel):
     """OAuth2 access token response schema."""
     
-    id: int
+    id: str
     token_id: str
     name: Optional[str]
-    user_id: Optional[int]
+    user_id: Optional[str]
     scopes: List[str]
     revoked: bool
     expired: bool
@@ -301,7 +301,7 @@ class OAuth2AccessTokenResponse(BaseModel):
 class OAuth2RefreshTokenResponse(BaseModel):
     """OAuth2 refresh token response schema."""
     
-    id: int
+    id: str
     token_id: str
     access_token_id: str
     revoked: bool
@@ -320,10 +320,10 @@ class OAuth2ClientTokensResponse(BaseModel):
 class OAuth2UserTokenResponse(BaseModel):
     """OAuth2 user token response schema."""
     
-    id: int
+    id: str
     name: Optional[str]
     scopes: List[str]
-    client: Dict[str, Union[int, str]]
+    client: Dict[str, Union[str, Any]]
     created_at: datetime
     expires_at: Optional[datetime]
     is_expired: bool
@@ -353,7 +353,7 @@ class PersonalAccessTokenCreateRequest(BaseModel):
 class PersonalAccessTokenResponse(BaseModel):
     """Personal access token response schema."""
     
-    id: int
+    id: str
     name: str
     token: str
     scopes: List[str]

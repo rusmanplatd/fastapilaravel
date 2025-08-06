@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from typing import List, Optional, Dict, Any, TYPE_CHECKING
 from datetime import datetime
-from sqlalchemy import Column, String, Boolean, DateTime, func, Text
-from sqlalchemy.orm import relationship, Mapped
-from app.Models import BaseModel
+from sqlalchemy import String, Boolean, DateTime, func, Text
+from sqlalchemy.orm import relationship, Mapped, mapped_column
+from app.Models.BaseModel import BaseModel
 from database.migrations.create_user_role_table import user_role_table
 from database.migrations.create_user_permission_table import user_permission_table
 
@@ -19,13 +19,13 @@ if TYPE_CHECKING:
 class User(BaseModel):
     __tablename__ = "users"
     
-    name: Mapped[str] = Column(String(255), nullable=False)
-    email: Mapped[str] = Column(String(255), unique=True, index=True, nullable=False)
-    password: Mapped[str] = Column(String(255), nullable=False)
-    is_active: Mapped[bool] = Column(Boolean, default=True)
-    is_verified: Mapped[bool] = Column(Boolean, default=False)
-    email_verified_at: Mapped[Optional[datetime]] = Column(DateTime, nullable=True)
-    remember_token: Mapped[Optional[str]] = Column(String(100), nullable=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    email: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
+    password: Mapped[str] = mapped_column(String(255), nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
+    email_verified_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    remember_token: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     
     # Relationships
     roles: Mapped[List[Role]] = relationship("Role", secondary=user_role_table, back_populates="users")

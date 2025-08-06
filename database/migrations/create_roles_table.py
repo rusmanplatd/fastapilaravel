@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from typing import List, Optional, Dict, Any, TYPE_CHECKING
-from sqlalchemy import Column, Integer, String, Text, Boolean
-from sqlalchemy.orm import relationship, Mapped
-from app.Models import BaseModel
+from sqlalchemy import String, Text, Boolean
+from sqlalchemy.orm import relationship, Mapped, mapped_column
+from app.Models.BaseModel import BaseModel
 from database.migrations.create_role_permission_table import role_permission_table
 from database.migrations.create_user_role_table import user_role_table
 
@@ -15,12 +15,12 @@ if TYPE_CHECKING:
 class Role(BaseModel):
     __tablename__ = "roles"
     
-    name: Mapped[str] = Column(String(255), unique=True, index=True, nullable=False)
-    slug: Mapped[str] = Column(String(255), unique=True, index=True, nullable=False)
-    description: Mapped[Optional[str]] = Column(Text, nullable=True)
-    guard_name: Mapped[str] = Column(String(255), default="api", nullable=False)
-    is_active: Mapped[bool] = Column(Boolean, default=True, nullable=False)
-    is_default: Mapped[bool] = Column(Boolean, default=False, nullable=False)
+    name: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
+    slug: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    guard_name: Mapped[str] = mapped_column(String(255), default="api", nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    is_default: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     
     # Relationships
     permissions: Mapped[List[Permission]] = relationship("Permission", secondary=role_permission_table, back_populates="roles")

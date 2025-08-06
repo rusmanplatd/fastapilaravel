@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any, Union
+from app.Utils.ULIDUtils import ULID, is_valid_ulid
 from jose import JWTError, jwt
 from config.settings import settings
 
@@ -40,10 +41,11 @@ class JWTUtils:
             if user_id_raw is None:
                 return None
             
-            try:
-                user_id: int = int(user_id_raw)
-            except (ValueError, TypeError):
+            # ULID validation
+            if not is_valid_ulid(user_id_raw):
                 return None
+            
+            user_id: ULID = str(user_id_raw)
                 
             return {"user_id": user_id, "payload": payload}
         except JWTError:
@@ -58,19 +60,19 @@ class JWTUtils:
             return None
     
     @staticmethod
-    def create_reset_password_token(user_id: int) -> str:
+    def create_reset_password_token(user_id: ULID) -> str:
         data: Dict[str, Any] = {"sub": str(user_id), "type": "reset_password"}
         expire = datetime.utcnow() + timedelta(hours=1)
         data.update({"exp": expire})
         return jwt.encode(data, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     
     @staticmethod
-    def verify_reset_password_token(token: str) -> Optional[int]:
+    def verify_reset_password_token(token: str) -> Optional[ULID]:
         try:
             payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
             if payload.get("type") != "reset_password":
                 return None
             user_id = payload.get("sub")
-            return int(user_id) if user_id else None
+            return str(user_id) if user_id and is_valid_ulid(user_id) else None
         except (JWTError, ValueError):
             return None

@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import List, Optional, TYPE_CHECKING
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, func
+from sqlalchemy import Column, String, Text, Boolean, DateTime, func
 from sqlalchemy.orm import Mapped, relationship
 from app.Models.BaseModel import BaseModel
 

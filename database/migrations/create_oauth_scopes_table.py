@@ -7,8 +7,8 @@ similar to Laravel Passport's oauth_scopes table.
 from __future__ import annotations
 
 from datetime import datetime
-from sqlalchemy import Column, String, Text, DateTime, func
-from sqlalchemy.orm import Mapped
+from sqlalchemy import String, Text
+from sqlalchemy.orm import Mapped, mapped_column
 from app.Models.BaseModel import BaseModel
 
 
@@ -18,17 +18,11 @@ class OAuthScope(BaseModel):
     __tablename__ = "oauth_scopes"
     
     # Scope identification - using ULID for scope_id
-    scope_id: Mapped[str] = Column(String(26), unique=True, index=True, nullable=False)
+    scope_id: Mapped[str] = mapped_column(String(26), unique=True, index=True, nullable=False)
     
     # Scope details
-    name: Mapped[str] = Column(String(191), nullable=False)
-    description: Mapped[str] = Column(Text, nullable=False)
-    
-    # Timestamps
-    created_at: Mapped[datetime] = Column(DateTime, default=func.now(), nullable=False)
-    updated_at: Mapped[datetime] = Column(
-        DateTime, default=func.now(), onupdate=func.now(), nullable=False
-    )
+    name: Mapped[str] = mapped_column(String(191), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
     
     def __str__(self) -> str:
         """String representation of the scope."""

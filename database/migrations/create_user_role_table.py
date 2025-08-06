@@ -1,15 +1,15 @@
-from sqlalchemy import Column, Integer, ForeignKey, Table, DateTime, func
+from sqlalchemy import Column, String, ForeignKey, Table, DateTime, func
 from app.Models import Base
 
 # Association table for many-to-many relationship between users and roles
 user_role_table = Table(
     'user_roles',
     Base.metadata,
-    Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('user_id', Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False),
-    Column('role_id', Integer, ForeignKey('roles.id', ondelete='CASCADE'), nullable=False),
+    Column('id', String(26), primary_key=True),
+    Column('user_id', String(26), ForeignKey('users.id', ondelete='CASCADE'), nullable=False),
+    Column('role_id', String(26), ForeignKey('roles.id', ondelete='CASCADE'), nullable=False),
     Column('assigned_at', DateTime, server_default=func.now(), nullable=False),
-    Column('assigned_by', Integer, ForeignKey('users.id'), nullable=True),
+    Column('assigned_by', String(26), ForeignKey('users.id'), nullable=True),
     # Add unique constraint to prevent duplicate user-role pairs
     schema=None
 )

@@ -2,8 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, Optional
 from datetime import datetime
-from sqlalchemy import Column, String, DateTime, func, event
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import String, DateTime, func, event
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from app.Utils.ULIDUtils import generate_ulid, ULID

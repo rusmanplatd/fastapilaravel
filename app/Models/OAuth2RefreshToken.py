@@ -6,10 +6,10 @@ similar to Laravel Passport's refresh token model.
 
 from __future__ import annotations
 
-from sqlalchemy import Column, String, Text, DateTime, ForeignKey, Boolean
-from sqlalchemy.orm import relationship
+from sqlalchemy import String, Text, DateTime, ForeignKey, Boolean
+from sqlalchemy.orm import relationship, Mapped, mapped_column
 from sqlalchemy.sql import func
-from typing import Optional, TYPE_CHECKING, Dict, Any
+from typing import Optional, TYPE_CHECKING, Dict, Any, cast
 from datetime import datetime, timedelta
 
 from app.Models.BaseModel import BaseModel
@@ -25,11 +25,11 @@ class OAuth2RefreshToken(BaseModel):
     __tablename__ = "oauth_refresh_tokens"
     
     # Token identification - using ULID for token_id
-    token_id = Column(String(26), unique=True, index=True, nullable=False)
-    token = Column(Text, nullable=False)
+    token_id: Mapped[str] = mapped_column(String(26), unique=True, index=True, nullable=False)
+    token: Mapped[str] = mapped_column(Text, nullable=False)
     
     # Associated access token
-    access_token_id = Column(
+    access_token_id: Mapped[str] = mapped_column(
         String(26), 
         ForeignKey("oauth_access_tokens.token_id"), 
         nullable=False,
@@ -37,8 +37,8 @@ class OAuth2RefreshToken(BaseModel):
     )
     
     # Token status
-    is_revoked = Column(Boolean, default=False, nullable=False)
-    expires_at = Column(DateTime, nullable=False)
+    is_revoked: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     
     # Relationships
     access_token = relationship(
@@ -71,21 +71,21 @@ class OAuth2RefreshToken(BaseModel):
     def client_id(self) -> Optional[str]:
         """Get client ID through access token."""
         if self.access_token:
-            return self.access_token.client_id
+            return cast(str, self.access_token.client_id)
         return None
     
     @property
-    def user_id(self) -> Optional[int]:
+    def user_id(self) -> Optional[ULID]:
         """Get user ID through access token."""
         if self.access_token:
-            return self.access_token.user_id
+            return cast(Optional[ULID], self.access_token.user_id)
         return None
     
     @property
     def scopes(self) -> str:
         """Get scopes through access token."""
         if self.access_token:
-            return self.access_token.scopes
+            return cast(str, self.access_token.scopes)
         return ""
     
     def revoke(self) -> None:
