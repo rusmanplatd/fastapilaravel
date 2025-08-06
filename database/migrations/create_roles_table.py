@@ -1,37 +1,43 @@
+from __future__ import annotations
+
+from typing import List, Optional, Dict, Any, TYPE_CHECKING
 from sqlalchemy import Column, Integer, String, Text, Boolean
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, Mapped
 from app.Models import BaseModel
 from database.migrations.create_role_permission_table import role_permission_table
 from database.migrations.create_user_role_table import user_role_table
-from typing import List
+
+if TYPE_CHECKING:
+    from database.migrations.create_permissions_table import Permission
+    from database.migrations.create_users_table import User
 
 
 class Role(BaseModel):
     __tablename__ = "roles"
     
-    name = Column(String(255), unique=True, index=True, nullable=False)
-    slug = Column(String(255), unique=True, index=True, nullable=False)
-    description = Column(Text, nullable=True)
-    guard_name = Column(String(255), default="api", nullable=False)
-    is_active = Column(Boolean, default=True, nullable=False)
-    is_default = Column(Boolean, default=False, nullable=False)
+    name: Mapped[str] = Column(String(255), unique=True, index=True, nullable=False)
+    slug: Mapped[str] = Column(String(255), unique=True, index=True, nullable=False)
+    description: Mapped[Optional[str]] = Column(Text, nullable=True)
+    guard_name: Mapped[str] = Column(String(255), default="api", nullable=False)
+    is_active: Mapped[bool] = Column(Boolean, default=True, nullable=False)
+    is_default: Mapped[bool] = Column(Boolean, default=False, nullable=False)
     
     # Relationships
-    permissions = relationship("Permission", secondary=role_permission_table, back_populates="roles")
-    users = relationship("User", secondary=user_role_table, back_populates="roles")
+    permissions: Mapped[List[Permission]] = relationship("Permission", secondary=role_permission_table, back_populates="roles")
+    users: Mapped[List[User]] = relationship("User", secondary=user_role_table, back_populates="roles")
     
     # Permission Methods
-    def give_permission_to(self, permission) -> None:
+    def give_permission_to(self, permission: Permission) -> None:
         """Give permission to role"""
         if permission not in self.permissions:
             self.permissions.append(permission)
     
-    def revoke_permission_to(self, permission) -> None:
+    def revoke_permission_to(self, permission: Permission) -> None:
         """Revoke permission from role"""
         if permission in self.permissions:
             self.permissions.remove(permission)
     
-    def sync_permissions(self, permissions: List) -> None:
+    def sync_permissions(self, permissions: List[Permission]) -> None:
         """Sync role permissions"""
         self.permissions.clear()
         for permission in permissions:
@@ -45,7 +51,7 @@ class Role(BaseModel):
         """Get list of permission names for this role"""
         return [perm.name for perm in self.permissions]
     
-    def to_dict_safe(self):
+    def to_dict_safe(self) -> Dict[str, Any]:
         return {
             "id": self.id,
             "name": self.name,

@@ -1,11 +1,13 @@
+from __future__ import annotations
+
 from fastapi import Request, HTTPException, status, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from typing import Optional
+from typing import Optional, Union
 
 from app.Utils import JWTUtils
 
 
-security = HTTPBearer()
+security: HTTPBearer = HTTPBearer()
 
 
 async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)) -> str:
@@ -33,7 +35,9 @@ async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(secur
 class AuthMiddleware:
     
     @staticmethod
-    def get_optional_user_from_token(credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)):
+    def get_optional_user_from_token(
+        credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)
+    ) -> Optional[int]:
         if not credentials:
             return None
         
@@ -45,11 +49,13 @@ class AuthMiddleware:
         return token_data["user_id"]
     
     @staticmethod
-    def require_auth(token: str = Depends(verify_token)):
+    def require_auth(token: str = Depends(verify_token)) -> str:
         return token
     
     @staticmethod
-    def optional_auth(credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)):
+    def optional_auth(
+        credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)
+    ) -> Optional[str]:
         if not credentials:
             return None
         

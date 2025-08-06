@@ -1,11 +1,13 @@
-from passlib.context import CryptContext
+from __future__ import annotations
+
 import secrets
 import string
+from passlib.context import CryptContext
 
 
 class PasswordUtils:
     
-    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+    pwd_context: CryptContext = CryptContext(schemes=["bcrypt"], deprecated="auto")
     
     @classmethod
     def hash_password(cls, password: str) -> str:

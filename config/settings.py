@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 import os
-from typing import Optional
+from typing import Optional, List
 
 
 class Settings:
@@ -23,7 +25,7 @@ class Settings:
     EMAIL_VERIFICATION_TOKEN_EXPIRE_HOURS: int = int(os.getenv("EMAIL_VERIFICATION_TOKEN_EXPIRE_HOURS", "24"))
     
     # CORS
-    CORS_ORIGINS: list = os.getenv("CORS_ORIGINS", "*").split(",")
+    CORS_ORIGINS: List[str] = os.getenv("CORS_ORIGINS", "*").split(",")
     
     # API
     API_PREFIX: str = os.getenv("API_PREFIX", "/api/v1")

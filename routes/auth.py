@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+from typing import Dict, Any
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
@@ -16,34 +19,34 @@ from app.Http.Schemas import (
 from app.Models import User
 from config import get_database
 
-auth_router = APIRouter(prefix="/auth", tags=["Authentication"])
-auth_controller = AuthController()
+auth_router: APIRouter = APIRouter(prefix="/auth", tags=["Authentication"])
+auth_controller: AuthController = AuthController()
 
 
-@auth_router.post("/register", response_model=dict)
-async def register(user_data: UserRegister, db: Session = Depends(get_database)):
+@auth_router.post("/register", response_model=Dict[str, Any])
+async def register(user_data: UserRegister, db: Session = Depends(get_database)) -> Dict[str, Any]:
     return auth_controller.register(user_data, db)
 
 
-@auth_router.post("/login", response_model=dict)
-async def login(login_data: UserLogin, db: Session = Depends(get_database)):
+@auth_router.post("/login", response_model=Dict[str, Any])
+async def login(login_data: UserLogin, db: Session = Depends(get_database)) -> Dict[str, Any]:
     return auth_controller.login(login_data, db)
 
 
-@auth_router.post("/refresh", response_model=dict)
-async def refresh_token(refresh_data: RefreshTokenRequest, db: Session = Depends(get_database)):
+@auth_router.post("/refresh", response_model=Dict[str, Any])
+async def refresh_token(refresh_data: RefreshTokenRequest, db: Session = Depends(get_database)) -> Dict[str, Any]:
     return auth_controller.refresh_token(refresh_data, db)
 
 
-@auth_router.post("/logout", response_model=dict)
+@auth_router.post("/logout", response_model=Dict[str, Any])
 async def logout(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_database)
-):
+) -> Dict[str, Any]:
     return auth_controller.logout(current_user, db)
 
 
-@auth_router.get("/profile", response_model=dict)
+@auth_router.get("/profile", response_model=Dict[str, Any])
 async def get_profile(current_user: User = Depends(get_current_user)):
     return auth_controller.get_profile(current_user)
 

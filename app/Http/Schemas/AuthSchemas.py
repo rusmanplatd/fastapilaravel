@@ -1,5 +1,7 @@
-from pydantic import BaseModel, EmailStr, validator
-from typing import Optional
+from __future__ import annotations
+
+from pydantic import BaseModel, EmailStr, field_validator
+from typing import Optional, Dict, Any, ClassVar
 from datetime import datetime
 
 
@@ -9,14 +11,16 @@ class UserRegister(BaseModel):
     password: str
     confirm_password: str
     
-    @validator('name')
-    def validate_name(cls, v):
+    @field_validator('name')
+    @classmethod
+    def validate_name(cls, v: str) -> str:
         if len(v.strip()) < 2:
             raise ValueError('Name must be at least 2 characters long')
         return v.strip()
     
-    @validator('password')
-    def validate_password(cls, v):
+    @field_validator('password')
+    @classmethod
+    def validate_password(cls, v: str) -> str:
         if len(v) < 8:
             raise ValueError('Password must be at least 8 characters long')
         if not any(c.isupper() for c in v):
@@ -27,8 +31,9 @@ class UserRegister(BaseModel):
             raise ValueError('Password must contain at least one digit')
         return v
     
-    @validator('confirm_password')
-    def validate_passwords_match(cls, v, values):
+    @field_validator('confirm_password')
+    @classmethod
+    def validate_passwords_match(cls, v: str, values: Dict[str, Any]) -> str:
         if 'password' in values and v != values['password']:
             raise ValueError('Passwords do not match')
         return v
