@@ -11,6 +11,8 @@ from database.migrations.create_user_permission_table import user_permission_tab
 if TYPE_CHECKING:
     from database.migrations.create_roles_table import Role
     from database.migrations.create_permissions_table import Permission
+    from database.migrations.create_oauth_access_tokens_table import OAuthAccessToken
+    from database.migrations.create_oauth_auth_codes_table import OAuthAuthCode
 
 
 class User(BaseModel):
@@ -27,6 +29,14 @@ class User(BaseModel):
     # Relationships
     roles: Mapped[List[Role]] = relationship("Role", secondary=user_role_table, back_populates="users")
     direct_permissions: Mapped[List[Permission]] = relationship("Permission", secondary=user_permission_table, back_populates="users")
+    
+    # OAuth2 relationships
+    oauth_access_tokens: Mapped[List[OAuthAccessToken]] = relationship(
+        "OAuthAccessToken", back_populates="user", cascade="all, delete-orphan"
+    )
+    oauth_auth_codes: Mapped[List[OAuthAuthCode]] = relationship(
+        "OAuthAuthCode", back_populates="user", cascade="all, delete-orphan"
+    )
     
     def verify_password(self, password: str) -> bool:
         from app.Services.AuthService import AuthService

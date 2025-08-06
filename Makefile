@@ -69,6 +69,19 @@ lint: ## Run all linting checks
 db-seed: ## Seed database with default data
 	$(PYTHON) database/seeders/user_seeder.py
 	$(PYTHON) database/seeders/permission_seeder.py
+	$(PYTHON) database/seeders/oauth2_seeder.py
+
+.PHONY: db-seed-oauth2
+db-seed-oauth2: ## Seed OAuth2 clients and scopes
+	$(PYTHON) database/seeders/oauth2_seeder.py seed
+
+.PHONY: db-clean-oauth2
+db-clean-oauth2: ## Clean OAuth2 data
+	$(PYTHON) database/seeders/oauth2_seeder.py clean
+
+.PHONY: db-reseed-oauth2
+db-reseed-oauth2: ## Reseed OAuth2 data (clean + seed)
+	$(PYTHON) database/seeders/oauth2_seeder.py reseed
 
 .PHONY: db-reset
 db-reset: ## Reset database (remove sqlite file)
