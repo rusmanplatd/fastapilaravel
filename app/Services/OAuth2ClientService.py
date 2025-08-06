@@ -10,10 +10,12 @@ import secrets
 from typing import Optional, List, Dict, Any
 from sqlalchemy.orm import Session
 
-from database.migrations.create_oauth_clients_table import OAuthClient
-from database.migrations.create_oauth_access_tokens_table import OAuthAccessToken
-from database.migrations.create_oauth_refresh_tokens_table import OAuthRefreshToken
-from database.migrations.create_oauth_auth_codes_table import OAuthAuthCode
+from app.Utils.ULIDUtils import ULID, ULIDUtils
+
+from app.Models.OAuth2Client import OAuth2Client
+from app.Models.OAuth2AccessToken import OAuth2AccessToken
+from app.Models.OAuth2RefreshToken import OAuth2RefreshToken
+from app.Models.OAuth2AuthorizationCode import OAuth2AuthorizationCode
 from app.Services.OAuth2AuthServerService import OAuth2AuthServerService
 
 
@@ -31,7 +33,7 @@ class OAuth2ClientService:
         personal_access_client: bool = False,
         password_client: bool = False,
         confidential: bool = True
-    ) -> OAuthClient:
+    ) -> OAuth2Client:
         """
         Create a new OAuth2 client.
         
@@ -44,7 +46,7 @@ class OAuth2ClientService:
             confidential: Whether this is a confidential client (has secret)
         
         Returns:
-            Created OAuthClient instance
+            Created OAuth2Client instance
         """
         # Generate client ID
         client_id = self._generate_client_id()
@@ -57,7 +59,7 @@ class OAuth2ClientService:
             )
         
         # Create client
-        client = OAuthClient(
+        client = OAuth2Client(
             client_id=client_id,
             client_secret=client_secret,
             name=name,
@@ -76,7 +78,7 @@ class OAuth2ClientService:
         self,
         db: Session,
         name: str = "Personal Access Client"
-    ) -> OAuthClient:
+    ) -> OAuth2Client:
         """
         Create a personal access token client.
         
@@ -85,7 +87,7 @@ class OAuth2ClientService:
             name: Client name
         
         Returns:
-            Created personal access OAuthClient instance
+            Created personal access OAuth2Client instance
         """
         return self.create_client(
             db=db,
@@ -101,7 +103,7 @@ class OAuth2ClientService:
         db: Session,
         name: str = "Password Grant Client",
         redirect_uri: str = "http://localhost"
-    ) -> OAuthClient:
+    ) -> OAuth2Client:
         """
         Create a password grant client.
         
@@ -111,7 +113,7 @@ class OAuth2ClientService:
             redirect_uri: Redirect URI
         
         Returns:
-            Created password grant OAuthClient instance
+            Created password grant OAuth2Client instance
         """
         return self.create_client(
             db=db,
@@ -128,7 +130,7 @@ class OAuth2ClientService:
         name: str,
         redirect_uri: str,
         confidential: bool = True
-    ) -> OAuthClient:
+    ) -> OAuth2Client:
         """
         Create an authorization code client.
         
@@ -139,7 +141,7 @@ class OAuth2ClientService:
             confidential: Whether client is confidential
         
         Returns:
-            Created authorization code OAuthClient instance
+            Created authorization code OAuth2Client instance
         """
         return self.create_client(
             db=db,
@@ -154,7 +156,7 @@ class OAuth2ClientService:
         self,
         db: Session,
         name: str
-    ) -> OAuthClient:
+    ) -> OAuth2Client:
         """
         Create a client credentials client.
         
@@ -163,7 +165,7 @@ class OAuth2ClientService:
             name: Client name
         
         Returns:
-            Created client credentials OAuthClient instance
+            Created client credentials OAuth2Client instance
         """
         return self.create_client(
             db=db,
@@ -174,7 +176,7 @@ class OAuth2ClientService:
             confidential=True
         )
     
-    def get_client_by_id(self, db: Session, client_id: int) -> Optional[OAuthClient]:
+    def get_client_by_id(self, db: Session, client_id: ULID) -> Optional[OAuth2Client]:
         """
         Get client by database ID.
         
@@ -183,11 +185,11 @@ class OAuth2ClientService:
             client_id: Client database ID
         
         Returns:
-            OAuthClient instance or None if not found
+            OAuth2Client instance or None if not found
         """
-        return db.query(OAuthClient).filter(OAuthClient.id == client_id).first()
+        return db.query(OAuth2Client).filter(OAuth2Client.id == client_id).first()
     
-    def get_client_by_client_id(self, db: Session, client_id: str) -> Optional[OAuthClient]:
+    def get_client_by_client_id(self, db: Session, client_id: str) -> Optional[OAuth2Client]:
         """
         Get client by OAuth2 client ID.
         
@@ -196,16 +198,16 @@ class OAuth2ClientService:
             client_id: OAuth2 client ID
         
         Returns:
-            OAuthClient instance or None if not found
+            OAuth2Client instance or None if not found
         """
-        return db.query(OAuthClient).filter(OAuthClient.client_id == client_id).first()
+        return db.query(OAuth2Client).filter(OAuth2Client.client_id == client_id).first()
     
     def get_all_clients(
         self,
         db: Session,
         skip: int = 0,
         limit: int = 100
-    ) -> List[OAuthClient]:
+    ) -> List[OAuth2Client]:
         """
         Get all OAuth2 clients.
         
@@ -215,16 +217,16 @@ class OAuth2ClientService:
             limit: Maximum number of clients to return
         
         Returns:
-            List of OAuthClient instances
+            List of OAuth2Client instances
         """
-        return db.query(OAuthClient).offset(skip).limit(limit).all()
+        return db.query(OAuth2Client).offset(skip).limit(limit).all()
     
     def get_active_clients(
         self,
         db: Session,
         skip: int = 0,
         limit: int = 100
-    ) -> List[OAuthClient]:
+    ) -> List[OAuth2Client]:
         """
         Get all active (non-revoked) OAuth2 clients.
         
@@ -234,19 +236,19 @@ class OAuth2ClientService:
             limit: Maximum number of clients to return
         
         Returns:
-            List of active OAuthClient instances
+            List of active OAuth2Client instances
         """
-        return db.query(OAuthClient).filter(
-            OAuthClient.revoked == False
+        return db.query(OAuth2Client).filter(
+            OAuth2Client.revoked == False
         ).offset(skip).limit(limit).all()
     
     def update_client(
         self,
         db: Session,
-        client_id: int,
+        client_id: ULID,
         name: Optional[str] = None,
         redirect_uri: Optional[str] = None
-    ) -> Optional[OAuthClient]:
+    ) -> Optional[OAuth2Client]:
         """
         Update an existing OAuth2 client.
         
@@ -257,7 +259,7 @@ class OAuth2ClientService:
             redirect_uri: New redirect URI (optional)
         
         Returns:
-            Updated OAuthClient instance or None if not found
+            Updated OAuth2Client instance or None if not found
         """
         client = self.get_client_by_id(db, client_id)
         if not client:
@@ -277,8 +279,8 @@ class OAuth2ClientService:
     def regenerate_client_secret(
         self,
         db: Session,
-        client_id: int
-    ) -> Optional[tuple[OAuthClient, str]]:
+        client_id: ULID
+    ) -> Optional[tuple[OAuth2Client, str]]:
         """
         Regenerate client secret for a confidential client.
         
@@ -304,7 +306,7 @@ class OAuth2ClientService:
         
         return client, plain_secret
     
-    def revoke_client(self, db: Session, client_id: int) -> bool:
+    def revoke_client(self, db: Session, client_id: ULID) -> bool:
         """
         Revoke an OAuth2 client.
         
@@ -327,7 +329,7 @@ class OAuth2ClientService:
         
         return True
     
-    def restore_client(self, db: Session, client_id: int) -> bool:
+    def restore_client(self, db: Session, client_id: ULID) -> bool:
         """
         Restore a revoked OAuth2 client.
         
@@ -347,7 +349,7 @@ class OAuth2ClientService:
         
         return True
     
-    def delete_client(self, db: Session, client_id: int) -> bool:
+    def delete_client(self, db: Session, client_id: ULID) -> bool:
         """
         Delete an OAuth2 client permanently.
         
@@ -368,7 +370,7 @@ class OAuth2ClientService:
         
         return True
     
-    def get_client_stats(self, db: Session, client_id: int) -> Optional[Dict[str, Any]]:
+    def get_client_stats(self, db: Session, client_id: ULID) -> Optional[Dict[str, Any]]:
         """
         Get statistics for a client.
         
@@ -384,26 +386,26 @@ class OAuth2ClientService:
             return None
         
         # Count active tokens
-        active_access_tokens = db.query(OAuthAccessToken).filter(
-            OAuthAccessToken.client_id == client.id,
-            OAuthAccessToken.revoked == False
+        active_access_tokens = db.query(OAuth2AccessToken).filter(
+            OAuth2AccessToken.client_id == client.id,
+            OAuth2AccessToken.revoked == False
         ).count()
         
         # Count total tokens ever issued
-        total_access_tokens = db.query(OAuthAccessToken).filter(
-            OAuthAccessToken.client_id == client.id
+        total_access_tokens = db.query(OAuth2AccessToken).filter(
+            OAuth2AccessToken.client_id == client.id
         ).count()
         
         # Count active refresh tokens
-        active_refresh_tokens = db.query(OAuthRefreshToken).filter(
-            OAuthRefreshToken.client_id == client.id,
-            OAuthRefreshToken.revoked == False
+        active_refresh_tokens = db.query(OAuth2RefreshToken).filter(
+            OAuth2RefreshToken.client_id == client.id,
+            OAuth2RefreshToken.revoked == False
         ).count()
         
         # Count auth codes (typically short-lived)
-        active_auth_codes = db.query(OAuthAuthCode).filter(
-            OAuthAuthCode.client_id == client.id,
-            OAuthAuthCode.revoked == False
+        active_auth_codes = db.query(OAuth2AuthorizationCode).filter(
+            OAuth2AuthorizationCode.client_id == client.id,
+            OAuth2AuthorizationCode.revoked == False
         ).count()
         
         return {
@@ -427,7 +429,7 @@ class OAuth2ClientService:
         db: Session,
         query: str,
         limit: int = 20
-    ) -> List[OAuthClient]:
+    ) -> List[OAuth2Client]:
         """
         Search clients by name or client ID.
         
@@ -437,43 +439,43 @@ class OAuth2ClientService:
             limit: Maximum number of results
         
         Returns:
-            List of matching OAuthClient instances
+            List of matching OAuth2Client instances
         """
         search_pattern = f"%{query}%"
         
-        return db.query(OAuthClient).filter(
-            (OAuthClient.name.ilike(search_pattern)) |
-            (OAuthClient.client_id.ilike(search_pattern))
+        return db.query(OAuth2Client).filter(
+            (OAuth2Client.name.ilike(search_pattern)) |
+            (OAuth2Client.client_id.ilike(search_pattern))
         ).limit(limit).all()
     
     def _generate_client_id(self) -> str:
-        """Generate a unique client ID."""
-        return secrets.token_urlsafe(20)
+        """Generate a unique client ID using ULID."""
+        return ULIDUtils.generate_client_id()
     
-    def _revoke_all_client_tokens(self, db: Session, client_id: int) -> None:
+    def _revoke_all_client_tokens(self, db: Session, client_id: ULID) -> None:
         """Revoke all tokens for a client."""
         # Revoke access tokens
-        access_tokens = db.query(OAuthAccessToken).filter(
-            OAuthAccessToken.client_id == client_id,
-            OAuthAccessToken.revoked == False
+        access_tokens = db.query(OAuth2AccessToken).filter(
+            OAuth2AccessToken.client_id == client_id,
+            OAuth2AccessToken.revoked == False
         ).all()
         
         for token in access_tokens:
             token.revoke()
         
         # Revoke refresh tokens
-        refresh_tokens = db.query(OAuthRefreshToken).filter(
-            OAuthRefreshToken.client_id == client_id,
-            OAuthRefreshToken.revoked == False
+        refresh_tokens = db.query(OAuth2RefreshToken).filter(
+            OAuth2RefreshToken.client_id == client_id,
+            OAuth2RefreshToken.revoked == False
         ).all()
         
         for token in refresh_tokens:
             token.revoke()
         
         # Revoke auth codes
-        auth_codes = db.query(OAuthAuthCode).filter(
-            OAuthAuthCode.client_id == client_id,
-            OAuthAuthCode.revoked == False
+        auth_codes = db.query(OAuth2AuthorizationCode).filter(
+            OAuth2AuthorizationCode.client_id == client_id,
+            OAuth2AuthorizationCode.revoked == False
         ).all()
         
         for code in auth_codes:
@@ -484,7 +486,7 @@ class OAuth2ClientService:
     def get_client_tokens(
         self,
         db: Session,
-        client_id: int,
+        client_id: ULID,
         active_only: bool = True,
         limit: int = 50
     ) -> Dict[str, List[Dict[str, Any]]]:
@@ -505,12 +507,12 @@ class OAuth2ClientService:
             return {"access_tokens": [], "refresh_tokens": []}
         
         # Build base queries
-        access_query = db.query(OAuthAccessToken).filter(OAuthAccessToken.client_id == client.id)
-        refresh_query = db.query(OAuthRefreshToken).filter(OAuthRefreshToken.client_id == client.id)
+        access_query = db.query(OAuth2AccessToken).filter(OAuth2AccessToken.client_id == client.id)
+        refresh_query = db.query(OAuth2RefreshToken).filter(OAuth2RefreshToken.client_id == client.id)
         
         if active_only:
-            access_query = access_query.filter(OAuthAccessToken.revoked == False)
-            refresh_query = refresh_query.filter(OAuthRefreshToken.revoked == False)
+            access_query = access_query.filter(OAuth2AccessToken.revoked == False)
+            refresh_query = refresh_query.filter(OAuth2RefreshToken.revoked == False)
         
         # Get tokens
         access_tokens = access_query.limit(limit).all()

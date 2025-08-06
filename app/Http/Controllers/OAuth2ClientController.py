@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 from app.Http.Controllers.BaseController import BaseController
 from app.Services.OAuth2ClientService import OAuth2ClientService
 from app.Http.Middleware.OAuth2Middleware import require_scope
+from app.Utils.ULIDUtils import ULID
 from config.database import get_db_session
 
 
@@ -78,7 +79,7 @@ class OAuth2ClientController(BaseController):
     
     async def show(
         self,
-        client_id: int,
+        client_id: ULID,
         db: Session = Depends(get_db_session),
         _token_data = Depends(require_scope("oauth-clients"))
     ) -> Dict[str, Any]:
@@ -86,7 +87,7 @@ class OAuth2ClientController(BaseController):
         Get specific OAuth2 client details.
         
         Args:
-            client_id: Client database ID
+            client_id: Client ULID
             db: Database session
             _token_data: OAuth2 token data (for authorization)
         
@@ -305,7 +306,7 @@ class OAuth2ClientController(BaseController):
     
     async def update(
         self,
-        client_id: int,
+        client_id: ULID,
         name: Optional[str] = None,
         redirect_uri: Optional[str] = None,
         db: Session = Depends(get_db_session),
@@ -315,7 +316,7 @@ class OAuth2ClientController(BaseController):
         Update OAuth2 client.
         
         Args:
-            client_id: Client database ID
+            client_id: Client ULID
             name: New client name
             redirect_uri: New redirect URI
             db: Database session
@@ -364,7 +365,7 @@ class OAuth2ClientController(BaseController):
     
     async def regenerate_secret(
         self,
-        client_id: int,
+        client_id: ULID,
         db: Session = Depends(get_db_session),
         _token_data = Depends(require_scope("oauth-clients"))
     ) -> Dict[str, Any]:
@@ -372,7 +373,7 @@ class OAuth2ClientController(BaseController):
         Regenerate client secret.
         
         Args:
-            client_id: Client database ID
+            client_id: Client ULID
             db: Database session
             _token_data: OAuth2 token data (for authorization)
         
@@ -412,7 +413,7 @@ class OAuth2ClientController(BaseController):
     
     async def revoke(
         self,
-        client_id: int,
+        client_id: ULID,
         db: Session = Depends(get_db_session),
         _token_data = Depends(require_scope("oauth-clients"))
     ) -> Dict[str, Any]:
@@ -420,7 +421,7 @@ class OAuth2ClientController(BaseController):
         Revoke OAuth2 client.
         
         Args:
-            client_id: Client database ID
+            client_id: Client ULID
             db: Database session
             _token_data: OAuth2 token data (for authorization)
         
@@ -453,7 +454,7 @@ class OAuth2ClientController(BaseController):
     
     async def restore(
         self,
-        client_id: int,
+        client_id: ULID,
         db: Session = Depends(get_db_session),
         _token_data = Depends(require_scope("oauth-clients"))
     ) -> Dict[str, Any]:
@@ -461,7 +462,7 @@ class OAuth2ClientController(BaseController):
         Restore revoked OAuth2 client.
         
         Args:
-            client_id: Client database ID
+            client_id: Client ULID
             db: Database session
             _token_data: OAuth2 token data (for authorization)
         
@@ -494,7 +495,7 @@ class OAuth2ClientController(BaseController):
     
     async def delete(
         self,
-        client_id: int,
+        client_id: ULID,
         db: Session = Depends(get_db_session),
         _token_data = Depends(require_scope("oauth-clients"))
     ) -> Dict[str, Any]:
@@ -502,7 +503,7 @@ class OAuth2ClientController(BaseController):
         Delete OAuth2 client permanently.
         
         Args:
-            client_id: Client database ID
+            client_id: Client ULID
             db: Database session
             _token_data: OAuth2 token data (for authorization)
         
@@ -535,7 +536,7 @@ class OAuth2ClientController(BaseController):
     
     async def get_client_tokens(
         self,
-        client_id: int,
+        client_id: ULID,
         active_only: bool = Query(True),
         limit: int = Query(50, ge=1, le=200),
         db: Session = Depends(get_db_session),
@@ -545,7 +546,7 @@ class OAuth2ClientController(BaseController):
         Get tokens for a specific client.
         
         Args:
-            client_id: Client database ID
+            client_id: Client ULID
             active_only: Whether to return only active tokens
             limit: Maximum number of tokens per type
             db: Database session

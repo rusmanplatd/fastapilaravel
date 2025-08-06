@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import Optional, TYPE_CHECKING
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, func
+from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey, func
 from sqlalchemy.orm import Mapped, relationship
 from app.Models.BaseModel import BaseModel
 
@@ -22,13 +22,13 @@ class OAuthRefreshToken(BaseModel):
     
     __tablename__ = "oauth_refresh_tokens"
     
-    # Token identification
-    token_id: Mapped[str] = Column(String(100), unique=True, index=True, nullable=False)
+    # Token identification - using ULID for token_id
+    token_id: Mapped[str] = Column(String(26), unique=True, index=True, nullable=False)
     
     # Relationships
-    access_token_id: Mapped[str] = Column(String(100), nullable=False, index=True)
-    client_id: Mapped[int] = Column(
-        Integer, ForeignKey("oauth_clients.id", ondelete="CASCADE"), nullable=False, index=True
+    access_token_id: Mapped[str] = Column(String(26), ForeignKey("oauth_access_tokens.token_id", ondelete="CASCADE"), nullable=False, index=True)
+    client_id: Mapped[str] = Column(
+        String(26), ForeignKey("oauth_clients.client_id", ondelete="CASCADE"), nullable=False, index=True
     )
     
     # Token status

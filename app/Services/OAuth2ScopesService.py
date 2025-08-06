@@ -10,8 +10,10 @@ from typing import Optional, List, Dict, Any
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
 
-from database.migrations.create_oauth_scopes_table import OAuthScope
-from database.migrations.create_oauth_access_tokens_table import OAuthAccessToken
+from app.Utils.ULIDUtils import ULID
+
+from app.Models.OAuth2Scope import OAuth2Scope
+from app.Models.OAuth2AccessToken import OAuth2AccessToken
 
 
 class OAuth2ScopesService:
@@ -26,7 +28,7 @@ class OAuth2ScopesService:
         scope_id: str,
         name: str,
         description: str
-    ) -> OAuthScope:
+    ) -> OAuth2Scope:
         """
         Create a new OAuth2 scope.
         
@@ -37,7 +39,7 @@ class OAuth2ScopesService:
             description: Scope description
         
         Returns:
-            Created OAuthScope instance
+            Created OAuth2Scope instance
         
         Raises:
             ValueError: If scope_id already exists
@@ -48,7 +50,7 @@ class OAuth2ScopesService:
             raise ValueError(f"Scope with ID '{scope_id}' already exists")
         
         # Create new scope
-        scope = OAuthScope(
+        scope = OAuth2Scope(
             scope_id=scope_id,
             name=name,
             description=description
@@ -60,7 +62,7 @@ class OAuth2ScopesService:
         
         return scope
     
-    def get_scope_by_id(self, db: Session, scope_id: str) -> Optional[OAuthScope]:
+    def get_scope_by_id(self, db: Session, scope_id: str) -> Optional[OAuth2Scope]:
         """
         Get scope by scope ID.
         
@@ -69,11 +71,11 @@ class OAuth2ScopesService:
             scope_id: Scope identifier
         
         Returns:
-            OAuthScope instance or None if not found
+            OAuth2Scope instance or None if not found
         """
-        return db.query(OAuthScope).filter(OAuthScope.scope_id == scope_id).first()
+        return db.query(OAuth2Scope).filter(OAuth2Scope.scope_id == scope_id).first()
     
-    def get_scope_by_name(self, db: Session, name: str) -> Optional[OAuthScope]:
+    def get_scope_by_name(self, db: Session, name: str) -> Optional[OAuth2Scope]:
         """
         Get scope by name.
         
@@ -82,11 +84,11 @@ class OAuth2ScopesService:
             name: Scope name
         
         Returns:
-            OAuthScope instance or None if not found
+            OAuth2Scope instance or None if not found
         """
-        return db.query(OAuthScope).filter(OAuthScope.name == name).first()
+        return db.query(OAuth2Scope).filter(OAuth2Scope.name == name).first()
     
-    def get_all_scopes(self, db: Session) -> List[OAuthScope]:
+    def get_all_scopes(self, db: Session) -> List[OAuth2Scope]:
         """
         Get all available scopes.
         
@@ -94,11 +96,11 @@ class OAuth2ScopesService:
             db: Database session
         
         Returns:
-            List of all OAuthScope instances
+            List of all OAuth2Scope instances
         """
-        return db.query(OAuthScope).order_by(OAuthScope.name).all()
+        return db.query(OAuth2Scope).order_by(OAuth2Scope.name).all()
     
-    def get_scopes_by_ids(self, db: Session, scope_ids: List[str]) -> List[OAuthScope]:
+    def get_scopes_by_ids(self, db: Session, scope_ids: List[str]) -> List[OAuth2Scope]:
         """
         Get multiple scopes by their IDs.
         
@@ -107,9 +109,9 @@ class OAuth2ScopesService:
             scope_ids: List of scope identifiers
         
         Returns:
-            List of OAuthScope instances
+            List of OAuth2Scope instances
         """
-        return db.query(OAuthScope).filter(OAuthScope.scope_id.in_(scope_ids)).all()
+        return db.query(OAuth2Scope).filter(OAuth2Scope.scope_id.in_(scope_ids)).all()
     
     def update_scope(
         self,
@@ -117,7 +119,7 @@ class OAuth2ScopesService:
         scope_id: str,
         name: Optional[str] = None,
         description: Optional[str] = None
-    ) -> Optional[OAuthScope]:
+    ) -> Optional[OAuth2Scope]:
         """
         Update an existing scope.
         
@@ -128,7 +130,7 @@ class OAuth2ScopesService:
             description: New description (optional)
         
         Returns:
-            Updated OAuthScope instance or None if not found
+            Updated OAuth2Scope instance or None if not found
         """
         scope = self.get_scope_by_id(db, scope_id)
         if not scope:
@@ -180,7 +182,7 @@ class OAuth2ScopesService:
             return []
         
         # Get available scope IDs
-        available_scopes = db.query(OAuthScope.scope_id).all()
+        available_scopes = db.query(OAuth2Scope.scope_id).all()
         available_scope_ids = {scope[0] for scope in available_scopes}
         
         # Return only valid scopes
@@ -199,7 +201,7 @@ class OAuth2ScopesService:
         """
         # For now, return all available scopes
         # In a real implementation, you might have a 'is_default' flag
-        scopes = db.query(OAuthScope.scope_id).all()
+        scopes = db.query(OAuth2Scope.scope_id).all()
         return [scope[0] for scope in scopes]
     
     def scope_exists(self, db: Session, scope_id: str) -> bool:
@@ -244,7 +246,7 @@ class OAuth2ScopesService:
         db: Session,
         query: str,
         limit: int = 20
-    ) -> List[OAuthScope]:
+    ) -> List[OAuth2Scope]:
         """
         Search scopes by name or description.
         
@@ -254,15 +256,15 @@ class OAuth2ScopesService:
             limit: Maximum number of results
         
         Returns:
-            List of matching OAuthScope instances
+            List of matching OAuth2Scope instances
         """
         search_pattern = f"%{query}%"
         
-        return db.query(OAuthScope).filter(
+        return db.query(OAuth2Scope).filter(
             or_(
-                OAuthScope.name.ilike(search_pattern),
-                OAuthScope.description.ilike(search_pattern),
-                OAuthScope.scope_id.ilike(search_pattern)
+                OAuth2Scope.name.ilike(search_pattern),
+                OAuth2Scope.description.ilike(search_pattern),
+                OAuth2Scope.scope_id.ilike(search_pattern)
             )
         ).limit(limit).all()
     
@@ -286,8 +288,8 @@ class OAuth2ScopesService:
         for scope in all_scopes:
             # Count active tokens with this scope
             # Note: This is not efficient for large datasets
-            active_tokens = db.query(OAuthAccessToken).filter(
-                OAuthAccessToken.revoked == False
+            active_tokens = db.query(OAuth2AccessToken).filter(
+                OAuth2AccessToken.revoked == False
             ).all()
             
             count = 0
@@ -309,7 +311,7 @@ class OAuth2ScopesService:
         
         return stats
     
-    def create_default_scopes(self, db: Session) -> List[OAuthScope]:
+    def create_default_scopes(self, db: Session) -> List[OAuth2Scope]:
         """
         Create default OAuth2 scopes.
         

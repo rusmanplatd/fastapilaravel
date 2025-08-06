@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import Optional, List, TYPE_CHECKING
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, ForeignKey, func
+from sqlalchemy import Column, String, Text, Boolean, DateTime, ForeignKey, func
 from sqlalchemy.orm import Mapped, relationship
 from app.Models.BaseModel import BaseModel
 
@@ -22,15 +22,15 @@ class OAuthAuthCode(BaseModel):
     
     __tablename__ = "oauth_auth_codes"
     
-    # Code identification
-    code_id: Mapped[str] = Column(String(100), unique=True, index=True, nullable=False)
+    # Code identification - using ULID for code_id
+    code_id: Mapped[str] = Column(String(26), unique=True, index=True, nullable=False)
     
     # Relationships
-    user_id: Mapped[int] = Column(
-        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    user_id: Mapped[str] = Column(
+        String(26), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    client_id: Mapped[int] = Column(
-        Integer, ForeignKey("oauth_clients.id", ondelete="CASCADE"), nullable=False, index=True
+    client_id: Mapped[str] = Column(
+        String(26), ForeignKey("oauth_clients.client_id", ondelete="CASCADE"), nullable=False, index=True
     )
     
     # Code details

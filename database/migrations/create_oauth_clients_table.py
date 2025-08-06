@@ -23,8 +23,8 @@ class OAuthClient(BaseModel):
     
     __tablename__ = "oauth_clients"
     
-    # Client identification
-    client_id: Mapped[str] = Column(String(100), unique=True, index=True, nullable=False)
+    # Client identification - using ULID for client_id
+    client_id: Mapped[str] = Column(String(26), unique=True, index=True, nullable=False)
     client_secret: Mapped[Optional[str]] = Column(String(100), nullable=True)
     
     # Client details

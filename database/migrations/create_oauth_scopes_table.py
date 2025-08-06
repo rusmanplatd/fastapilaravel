@@ -17,8 +17,8 @@ class OAuthScope(BaseModel):
     
     __tablename__ = "oauth_scopes"
     
-    # Scope identification
-    scope_id: Mapped[str] = Column(String(100), unique=True, index=True, nullable=False)
+    # Scope identification - using ULID for scope_id
+    scope_id: Mapped[str] = Column(String(26), unique=True, index=True, nullable=False)
     
     # Scope details
     name: Mapped[str] = Column(String(191), nullable=False)

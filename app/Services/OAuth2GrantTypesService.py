@@ -11,10 +11,12 @@ from typing import Optional, List, Dict, Any, Tuple
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 
-from database.migrations.create_oauth_clients_table import OAuthClient
-from database.migrations.create_oauth_access_tokens_table import OAuthAccessToken
-from database.migrations.create_oauth_refresh_tokens_table import OAuthRefreshToken
-from database.migrations.create_oauth_auth_codes_table import OAuthAuthCode
+from app.Utils.ULIDUtils import ULID
+
+from app.Models.OAuth2Client import OAuth2Client
+from app.Models.OAuth2AccessToken import OAuth2AccessToken
+from app.Models.OAuth2RefreshToken import OAuth2RefreshToken
+from app.Models.OAuth2AuthorizationCode import OAuth2AuthorizationCode
 from database.migrations.create_users_table import User
 from app.Services.OAuth2AuthServerService import OAuth2AuthServerService, OAuth2TokenResponse
 from app.Services.AuthService import AuthService
@@ -123,7 +125,7 @@ class OAuth2GrantTypesService:
         
         # Generate JWT access token
         jwt_payload = {
-            "sub": str(auth_code.user_id),
+            "sub": auth_code.user_id,
             "client_id": client.client_id,
             "token_id": access_token.token_id,
             "scopes": auth_code.get_scopes(),
@@ -274,7 +276,7 @@ class OAuth2GrantTypesService:
         
         # Generate JWT access token
         jwt_payload = {
-            "sub": str(user.id),
+            "sub": user.id,
             "client_id": client.client_id,
             "token_id": access_token.token_id,
             "scopes": validated_scopes,
@@ -385,7 +387,7 @@ class OAuth2GrantTypesService:
         
         # Generate JWT access token
         jwt_payload = {
-            "sub": str(original_access_token.user_id) if original_access_token.user_id else None,
+            "sub": original_access_token.user_id if original_access_token.user_id else None,
             "client_id": client.client_id,
             "token_id": new_access_token.token_id,
             "scopes": requested_scopes,
@@ -445,3 +447,127 @@ class OAuth2GrantTypesService:
         base_url = "http://localhost:8000/oauth/authorize"
         
         return f"{base_url}?{urllib.parse.urlencode(params)}"
+    
+    def handle_authorization_request(
+        self,
+        db: Session,
+        client_id: str,
+        redirect_uri: str,
+        response_type: str = "code",
+        scope: Optional[str] = None,
+        state: Optional[str] = None,
+        code_challenge: Optional[str] = None,
+        code_challenge_method: Optional[str] = None,
+        user_id: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Handle OAuth2 authorization request and generate authorization code.
+        
+        This method validates the authorization request and generates an authorization
+        code that can be exchanged for an access token.
+        
+        Args:
+            db: Database session
+            client_id: OAuth2 client ID
+            redirect_uri: Redirect URI after authorization
+            response_type: OAuth2 response type (must be "code")
+            scope: Requested scope
+            state: CSRF protection state parameter
+            code_challenge: PKCE code challenge
+            code_challenge_method: PKCE code challenge method
+            user_id: ID of the authorizing user (required)
+        
+        Returns:
+            Authorization response with code and redirect information
+            
+        Raises:
+            HTTPException: If authorization request is invalid
+        """
+        # Validate response type
+        if response_type != "code":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="unsupported_response_type: Only 'code' response type is supported"
+            )
+        
+        # User must be authenticated
+        if not user_id:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="authentication_required: User must be authenticated to authorize"
+            )
+        
+        # Get and validate client
+        client = db.query(OAuth2Client).filter(
+            OAuth2Client.client_id == client_id
+        ).first()
+        
+        if not client:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="invalid_client: Client not found"
+            )
+        
+        if client.is_revoked:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="invalid_client: Client is revoked"
+            )
+        
+        # Validate redirect URI
+        if not client.is_redirect_uri_valid(redirect_uri):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="invalid_redirect_uri: Redirect URI not registered for client"
+            )
+        
+        # Validate and parse scopes
+        requested_scopes = []
+        if scope:
+            requested_scopes = scope.split(" ")
+            for scope_name in requested_scopes:
+                if not client.is_scope_allowed(scope_name):
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=f"invalid_scope: Scope '{scope_name}' not allowed for client"
+                    )
+        
+        # Validate PKCE if provided
+        if code_challenge and not code_challenge_method:
+            code_challenge_method = "S256"  # Default to S256
+        
+        if code_challenge_method and code_challenge_method not in ["plain", "S256"]:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="invalid_request: Invalid code_challenge_method"
+            )
+        
+        # Generate authorization code
+        authorization_code = self.auth_server.create_authorization_code(
+            db=db,
+            user_id=user_id,
+            client_id=client_id,
+            redirect_uri=redirect_uri,
+            scopes=requested_scopes,
+            code_challenge=code_challenge,
+            code_challenge_method=code_challenge_method
+        )
+        
+        # Build redirect response
+        redirect_params = {
+            "code": authorization_code.code_id,
+        }
+        
+        if state:
+            redirect_params["state"] = state
+        
+        # Build final redirect URL
+        separator = "&" if "?" in redirect_uri else "?"
+        final_redirect_uri = f"{redirect_uri}{separator}{urllib.parse.urlencode(redirect_params)}"
+        
+        return {
+            "code": authorization_code.code_id,
+            "state": state,
+            "redirect_uri": final_redirect_uri,
+            "expires_in": self.auth_server.auth_code_expire_minutes * 60
+        }

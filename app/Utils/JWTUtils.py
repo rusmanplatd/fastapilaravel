@@ -36,8 +36,13 @@ class JWTUtils:
             if payload.get("type") != token_type:
                 return None
                 
-            user_id: int = payload.get("sub")
-            if user_id is None:
+            user_id_raw = payload.get("sub")
+            if user_id_raw is None:
+                return None
+            
+            try:
+                user_id: int = int(user_id_raw)
+            except (ValueError, TypeError):
                 return None
                 
             return {"user_id": user_id, "payload": payload}
@@ -54,7 +59,7 @@ class JWTUtils:
     
     @staticmethod
     def create_reset_password_token(user_id: int) -> str:
-        data = {"sub": str(user_id), "type": "reset_password"}
+        data: Dict[str, Any] = {"sub": str(user_id), "type": "reset_password"}
         expire = datetime.utcnow() + timedelta(hours=1)
         data.update({"exp": expire})
         return jwt.encode(data, settings.SECRET_KEY, algorithm=settings.ALGORITHM)

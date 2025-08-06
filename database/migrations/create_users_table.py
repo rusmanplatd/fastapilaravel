@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import List, Optional, Dict, Any, TYPE_CHECKING
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, func, Text
+from sqlalchemy import Column, String, Boolean, DateTime, func, Text
 from sqlalchemy.orm import relationship, Mapped
 from app.Models import BaseModel
 from database.migrations.create_user_role_table import user_role_table
@@ -11,8 +11,9 @@ from database.migrations.create_user_permission_table import user_permission_tab
 if TYPE_CHECKING:
     from database.migrations.create_roles_table import Role
     from database.migrations.create_permissions_table import Permission
-    from database.migrations.create_oauth_access_tokens_table import OAuthAccessToken
-    from database.migrations.create_oauth_auth_codes_table import OAuthAuthCode
+    from app.Models.OAuth2AccessToken import OAuth2AccessToken
+    from app.Models.OAuth2AuthorizationCode import OAuth2AuthorizationCode
+    from app.Models.OAuth2Client import OAuth2Client
 
 
 class User(BaseModel):
@@ -31,11 +32,14 @@ class User(BaseModel):
     direct_permissions: Mapped[List[Permission]] = relationship("Permission", secondary=user_permission_table, back_populates="users")
     
     # OAuth2 relationships
-    oauth_access_tokens: Mapped[List[OAuthAccessToken]] = relationship(
-        "OAuthAccessToken", back_populates="user", cascade="all, delete-orphan"
+    oauth_access_tokens: Mapped[List[OAuth2AccessToken]] = relationship(
+        "OAuth2AccessToken", back_populates="user", cascade="all, delete-orphan"
     )
-    oauth_auth_codes: Mapped[List[OAuthAuthCode]] = relationship(
-        "OAuthAuthCode", back_populates="user", cascade="all, delete-orphan"
+    oauth_authorization_codes: Mapped[List[OAuth2AuthorizationCode]] = relationship(
+        "OAuth2AuthorizationCode", back_populates="user", cascade="all, delete-orphan"
+    )
+    oauth_clients: Mapped[List[OAuth2Client]] = relationship(
+        "OAuth2Client", back_populates="user", cascade="all, delete-orphan"
     )
     
     def verify_password(self, password: str) -> bool:

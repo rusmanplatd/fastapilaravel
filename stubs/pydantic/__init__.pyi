@@ -4,7 +4,7 @@ from typing_extensions import dataclass_transform
 
 T = TypeVar('T', bound='BaseModel')
 
-@dataclass_transform(kw_only_default=True, field_descriptors=(Field,))
+@dataclass_transform(kw_only_default=True, field_descriptors=True)
 class BaseModel:
     def __init__(self, **data: Any) -> None: ...
     
@@ -25,6 +25,11 @@ class BaseModel:
         from_attributes: bool
 
 class EmailStr(str): ...
+
+class ConfigDict(dict[str, Any]): ...
+
+class ValidationInfo:
+    data: Dict[str, Any]
 
 def Field(
     default: Any = ...,
@@ -49,5 +54,11 @@ def validator(
     *,
     pre: bool = ...,
     always: bool = ...,
+    **kwargs: Any
+) -> Callable[[Callable[..., Any]], Callable[..., Any]]: ...
+
+def model_validator(
+    *,
+    mode: str = ...,
     **kwargs: Any
 ) -> Callable[[Callable[..., Any]], Callable[..., Any]]: ...

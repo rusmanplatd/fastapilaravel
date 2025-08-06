@@ -10,9 +10,11 @@ from typing import Optional, Dict, Any, List
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 
-from database.migrations.create_oauth_clients_table import OAuthClient
-from database.migrations.create_oauth_access_tokens_table import OAuthAccessToken
-from database.migrations.create_oauth_refresh_tokens_table import OAuthRefreshToken
+from app.Utils.ULIDUtils import ULID
+
+from app.Models.OAuth2Client import OAuth2Client
+from app.Models.OAuth2AccessToken import OAuth2AccessToken
+from app.Models.OAuth2RefreshToken import OAuth2RefreshToken
 from app.Services.OAuth2AuthServerService import OAuth2AuthServerService
 
 
@@ -158,7 +160,7 @@ class OAuth2IntrospectionService:
                 token_type="Bearer",
                 exp=int(access_token.expires_at.timestamp()) if access_token.expires_at else None,
                 iat=int(access_token.created_at.timestamp()),
-                sub=str(access_token.user_id) if access_token.user_id else None,
+                sub=access_token.user_id if access_token.user_id else None,
                 aud="api",
                 iss="fastapi-laravel-oauth",
                 jti=access_token.token_id,
@@ -187,7 +189,7 @@ class OAuth2IntrospectionService:
                 token_type="refresh_token",
                 exp=int(refresh_token.expires_at.timestamp()) if refresh_token.expires_at else None,
                 iat=int(refresh_token.created_at.timestamp()),
-                sub=str(access_token.user_id) if access_token and access_token.user_id else None,
+                sub=access_token.user_id if access_token and access_token.user_id else None,
                 aud="api",
                 iss="fastapi-laravel-oauth",
                 jti=refresh_token.token_id
@@ -200,8 +202,8 @@ class OAuth2IntrospectionService:
         self,
         db: Session,
         token: str,
-        token_type_hint: Optional[str] = None,
         client_id: str,
+        token_type_hint: Optional[str] = None,
         client_secret: Optional[str] = None
     ) -> OAuth2RevocationResponse:
         """
@@ -247,7 +249,7 @@ class OAuth2IntrospectionService:
             message="Token revoked successfully" if revoked else "Token processed"
         )
     
-    def _revoke_access_token(self, db: Session, token: str, client: OAuthClient) -> bool:
+    def _revoke_access_token(self, db: Session, token: str, client: OAuth2Client) -> bool:
         """Revoke access token."""
         try:
             # Validate JWT and get token record
@@ -270,9 +272,9 @@ class OAuth2IntrospectionService:
             access_token.revoke()
             
             # Also revoke associated refresh tokens
-            refresh_tokens = db.query(OAuthRefreshToken).filter(
-                OAuthRefreshToken.access_token_id == access_token.token_id,
-                OAuthRefreshToken.revoked == False
+            refresh_tokens = db.query(OAuth2RefreshToken).filter(
+                OAuth2RefreshToken.access_token_id == access_token.token_id,
+                OAuth2RefreshToken.revoked == False
             ).all()
             
             for refresh_token in refresh_tokens:
@@ -284,7 +286,7 @@ class OAuth2IntrospectionService:
         except Exception:
             return False
     
-    def _revoke_refresh_token(self, db: Session, token: str, client: OAuthClient) -> bool:
+    def _revoke_refresh_token(self, db: Session, token: str, client: OAuth2Client) -> bool:
         """Revoke refresh token."""
         try:
             refresh_token = self.auth_server.find_refresh_token_by_id(db, token)
@@ -315,8 +317,8 @@ class OAuth2IntrospectionService:
     def revoke_all_tokens_for_user(
         self,
         db: Session,
-        user_id: int,
-        client_id: Optional[int] = None
+        user_id: ULID,
+        client_id: Optional[ULID] = None
     ) -> int:
         """
         Revoke all tokens for a user (optionally filtered by client).
@@ -329,13 +331,13 @@ class OAuth2IntrospectionService:
         Returns:
             Number of tokens revoked
         """
-        query = db.query(OAuthAccessToken).filter(
-            OAuthAccessToken.user_id == user_id,
-            OAuthAccessToken.revoked == False
+        query = db.query(OAuth2AccessToken).filter(
+            OAuth2AccessToken.user_id == user_id,
+            OAuth2AccessToken.revoked == False
         )
         
         if client_id:
-            query = query.filter(OAuthAccessToken.client_id == client_id)
+            query = query.filter(OAuth2AccessToken.client_id == client_id)
         
         access_tokens = query.all()
         revoked_count = 0
@@ -345,9 +347,9 @@ class OAuth2IntrospectionService:
             revoked_count += 1
             
             # Also revoke associated refresh tokens
-            refresh_tokens = db.query(OAuthRefreshToken).filter(
-                OAuthRefreshToken.access_token_id == access_token.token_id,
-                OAuthRefreshToken.revoked == False
+            refresh_tokens = db.query(OAuth2RefreshToken).filter(
+                OAuth2RefreshToken.access_token_id == access_token.token_id,
+                OAuth2RefreshToken.revoked == False
             ).all()
             
             for refresh_token in refresh_tokens:
@@ -357,7 +359,7 @@ class OAuth2IntrospectionService:
         db.commit()
         return revoked_count
     
-    def revoke_all_tokens_for_client(self, db: Session, client_id: int) -> int:
+    def revoke_all_tokens_for_client(self, db: Session, client_id: ULID) -> int:
         """
         Revoke all tokens for a client.
         
@@ -369,15 +371,15 @@ class OAuth2IntrospectionService:
             Number of tokens revoked
         """
         # Revoke access tokens
-        access_tokens = db.query(OAuthAccessToken).filter(
-            OAuthAccessToken.client_id == client_id,
-            OAuthAccessToken.revoked == False
+        access_tokens = db.query(OAuth2AccessToken).filter(
+            OAuth2AccessToken.client_id == client_id,
+            OAuth2AccessToken.revoked == False
         ).all()
         
         # Revoke refresh tokens
-        refresh_tokens = db.query(OAuthRefreshToken).filter(
-            OAuthRefreshToken.client_id == client_id,
-            OAuthRefreshToken.revoked == False
+        refresh_tokens = db.query(OAuth2RefreshToken).filter(
+            OAuth2RefreshToken.client_id == client_id,
+            OAuth2RefreshToken.revoked == False
         ).all()
         
         revoked_count = 0
@@ -392,7 +394,7 @@ class OAuth2IntrospectionService:
     def get_active_tokens_for_user(
         self,
         db: Session,
-        user_id: int,
+        user_id: ULID,
         limit: int = 20
     ) -> List[Dict[str, Any]]:
         """
@@ -406,10 +408,10 @@ class OAuth2IntrospectionService:
         Returns:
             List of active token information
         """
-        access_tokens = db.query(OAuthAccessToken).filter(
-            OAuthAccessToken.user_id == user_id,
-            OAuthAccessToken.revoked == False
-        ).order_by(OAuthAccessToken.created_at.desc()).limit(limit).all()
+        access_tokens = db.query(OAuth2AccessToken).filter(
+            OAuth2AccessToken.user_id == user_id,
+            OAuth2AccessToken.revoked == False
+        ).order_by(OAuth2AccessToken.created_at.desc()).limit(limit).all()
         
         token_list = []
         for token in access_tokens:

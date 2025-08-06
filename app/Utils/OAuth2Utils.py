@@ -201,7 +201,8 @@ class OAuth2TokenUtils:
                 return None
             
             payload = base64.urlsafe_b64decode(parts[1] + '===')
-            return json.loads(payload)
+            decoded_payload: Dict[str, Any] = json.loads(payload)
+            return decoded_payload
         except (json.JSONDecodeError, ValueError):
             return None
 
@@ -312,7 +313,12 @@ class OAuth2ScopeUtils:
         
         # Remove duplicates while preserving order
         seen = set()
-        return [x for x in expanded if not (x in seen or seen.add(x))]
+        result = []
+        for x in expanded:
+            if x not in seen:
+                seen.add(x)
+                result.append(x)
+        return result
 
 
 class OAuth2URLUtils:

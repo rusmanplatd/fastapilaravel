@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+from typing import Dict, Any
 from fastapi import FastAPI
 from routes import api_router, web_router
 from routes.oauth2 import router as oauth2_router
@@ -35,7 +38,7 @@ app = FastAPI(
     """
 )
 
-add_cors_middleware(app)
+add_cors_middleware(app)  # type: ignore[no-untyped-call]
 
 # Include routers
 app.include_router(web_router)
@@ -50,7 +53,7 @@ app.include_router(oauth2_router)  # OAuth2 endpoints
     summary="OAuth2 Server Metadata",
     description="RFC 8414: OAuth2 Authorization Server Metadata"
 )
-async def oauth2_server_metadata():
+async def oauth2_server_metadata() -> Dict[str, Any]:
     """OAuth2 server metadata endpoint."""
     base_url = "http://localhost:8000"  # Should come from settings in production
     return oauth2_settings.to_server_metadata(base_url)
@@ -63,7 +66,7 @@ async def oauth2_server_metadata():
     summary="OpenID Connect Discovery",
     description="OpenID Connect Discovery metadata"
 )
-async def openid_configuration():
+async def openid_configuration() -> Dict[str, Any]:
     """OpenID Connect discovery endpoint."""
     if not oauth2_settings.oauth2_enable_openid_connect:
         return {"error": "OpenID Connect not enabled"}
@@ -84,7 +87,7 @@ async def openid_configuration():
 
 
 @app.on_event("startup")
-async def startup_event():
+async def startup_event() -> None:
     create_tables()
     print(f"🚀 {settings.APP_NAME} v{settings.APP_VERSION} with OAuth2 started!")
     print(f"📊 OAuth2 Settings:")
@@ -99,7 +102,7 @@ async def startup_event():
 
 
 @app.on_event("shutdown")
-async def shutdown_event():
+async def shutdown_event() -> None:
     print("Application shutting down...")
 
 

@@ -18,6 +18,25 @@ from app.Models import User
 from config import get_database
 
 
+def verify_token_dependency():
+    from app.Http.Middleware.AuthMiddleware import verify_token
+    return verify_token
+
+
+def get_current_user(token: str = Depends(verify_token_dependency), db: Session = Depends(get_database)) -> User:
+    from app.Services import AuthService
+    auth_service = AuthService(db)
+    user = auth_service.get_current_user(token)
+    
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials"
+        )
+    
+    return user
+
+
 class AuthController(BaseController):
     
     def register(self, user_data: UserRegister, db: Session = Depends(get_database)):
@@ -151,21 +170,3 @@ class AuthController(BaseController):
             self.error_response(message, status.HTTP_400_BAD_REQUEST)
         
         return self.success_response(message=message)
-
-
-def get_current_user(token: str = Depends(verify_token_dependency), db: Session = Depends(get_database)) -> User:
-    auth_service = AuthService(db)
-    user = auth_service.get_current_user(token)
-    
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials"
-        )
-    
-    return user
-
-
-def verify_token_dependency():
-    from app.Http.Middleware.AuthMiddleware import verify_token
-    return verify_token

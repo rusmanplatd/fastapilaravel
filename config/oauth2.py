@@ -8,11 +8,11 @@ from __future__ import annotations
 
 import os
 from typing import List, Optional, Dict, Any
-from pydantic import BaseSettings, Field, validator
+from pydantic import BaseModel, Field, field_validator
 from datetime import timedelta
 
 
-class OAuth2Settings(BaseSettings):
+class OAuth2Settings(BaseModel):
     """OAuth2 configuration settings with validation."""
     
     # JWT Configuration
@@ -192,19 +192,18 @@ class OAuth2Settings(BaseSettings):
         description="Log token operations (development only)"
     )
     
-    class Config:
-        env_file = ".env"
-        env_prefix = ""
-        case_sensitive = False
+    model_config = {"env_file": ".env", "env_prefix": "", "case_sensitive": False}
     
-    @validator('oauth2_secret_key')
+    @field_validator('oauth2_secret_key')
+    @classmethod
     def validate_secret_key(cls, v: str) -> str:
         """Validate OAuth2 secret key."""
         if len(v) < 32:
             raise ValueError('OAuth2 secret key must be at least 32 characters long')
         return v
     
-    @validator('oauth2_algorithm')
+    @field_validator('oauth2_algorithm')
+    @classmethod
     def validate_algorithm(cls, v: str) -> str:
         """Validate JWT algorithm."""
         supported_algorithms = ['HS256', 'HS384', 'HS512', 'RS256', 'RS384', 'RS512']
@@ -212,7 +211,8 @@ class OAuth2Settings(BaseSettings):
             raise ValueError(f'Unsupported JWT algorithm: {v}')
         return v
     
-    @validator('oauth2_supported_scopes')
+    @field_validator('oauth2_supported_scopes')
+    @classmethod
     def validate_supported_scopes(cls, v: List[str]) -> List[str]:
         """Validate supported scopes list."""
         if not v:
@@ -227,7 +227,8 @@ class OAuth2Settings(BaseSettings):
         
         return v
     
-    @validator('oauth2_enabled_grants')
+    @field_validator('oauth2_enabled_grants')
+    @classmethod
     def validate_enabled_grants(cls, v: List[str]) -> List[str]:
         """Validate enabled grant types."""
         supported_grants = [
@@ -243,7 +244,8 @@ class OAuth2Settings(BaseSettings):
         
         return v
     
-    @validator('oauth2_pkce_methods')
+    @field_validator('oauth2_pkce_methods')
+    @classmethod
     def validate_pkce_methods(cls, v: List[str]) -> List[str]:
         """Validate PKCE methods."""
         supported_methods = ['S256', 'plain']

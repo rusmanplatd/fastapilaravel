@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 from app.Http.Controllers.BaseController import BaseController
 from app.Services.OAuth2ScopesService import OAuth2ScopesService
 from app.Http.Middleware.OAuth2Middleware import require_scope
+from app.Utils.ULIDUtils import ULID
 from config.database import get_db_session
 
 

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from pydantic import BaseModel, EmailStr, field_validator
+from pydantic import BaseModel, EmailStr, field_validator, ValidationInfo
 from typing import Optional, Dict, Any, ClassVar
 from datetime import datetime
 
@@ -33,8 +33,8 @@ class UserRegister(BaseModel):
     
     @field_validator('confirm_password')
     @classmethod
-    def validate_passwords_match(cls, v: str, values: Dict[str, Any]) -> str:
-        if 'password' in values and v != values['password']:
+    def validate_passwords_match(cls, v: str, info: ValidationInfo) -> str:
+        if hasattr(info.data, 'password') and v != info.data.get('password'):
             raise ValueError('Passwords do not match')
         return v
 
@@ -75,8 +75,9 @@ class ChangePasswordRequest(BaseModel):
     new_password: str
     confirm_new_password: str
     
-    @validator('new_password')
-    def validate_new_password(cls, v):
+    @field_validator('new_password')
+    @classmethod
+    def validate_new_password(cls, v: str) -> str:
         if len(v) < 8:
             raise ValueError('Password must be at least 8 characters long')
         if not any(c.isupper() for c in v):
@@ -87,9 +88,10 @@ class ChangePasswordRequest(BaseModel):
             raise ValueError('Password must contain at least one digit')
         return v
     
-    @validator('confirm_new_password')
-    def validate_passwords_match(cls, v, values):
-        if 'new_password' in values and v != values['new_password']:
+    @field_validator('confirm_new_password')
+    @classmethod
+    def validate_passwords_match(cls, v: str, info: ValidationInfo) -> str:
+        if hasattr(info.data, 'new_password') and v != info.data.get('new_password'):
             raise ValueError('Passwords do not match')
         return v
 
@@ -98,8 +100,9 @@ class UpdateProfileRequest(BaseModel):
     name: Optional[str] = None
     email: Optional[EmailStr] = None
     
-    @validator('name')
-    def validate_name(cls, v):
+    @field_validator('name')
+    @classmethod
+    def validate_name(cls, v: Optional[str]) -> Optional[str]:
         if v is not None and len(v.strip()) < 2:
             raise ValueError('Name must be at least 2 characters long')
         return v.strip() if v else v
@@ -115,14 +118,16 @@ class ResetPasswordRequest(BaseModel):
     password: str
     confirm_password: str
     
-    @validator('password')
-    def validate_password(cls, v):
+    @field_validator('password')
+    @classmethod
+    def validate_password(cls, v: str) -> str:
         if len(v) < 8:
             raise ValueError('Password must be at least 8 characters long')
         return v
     
-    @validator('confirm_password')
-    def validate_passwords_match(cls, v, values):
-        if 'password' in values and v != values['password']:
+    @field_validator('confirm_password')
+    @classmethod
+    def validate_passwords_match(cls, v: str, info: ValidationInfo) -> str:
+        if hasattr(info.data, 'password') and v != info.data.get('password'):
             raise ValueError('Passwords do not match')
         return v

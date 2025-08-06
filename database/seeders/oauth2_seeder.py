@@ -17,8 +17,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 
 from sqlalchemy.orm import Session
 from config.database import get_db_session
-from database.migrations.create_oauth_clients_table import OAuthClient
-from database.migrations.create_oauth_scopes_table import OAuthScope
+from app.Models.OAuth2Client import OAuth2Client
+from app.Models.OAuth2Scope import OAuth2Scope
 from app.Services.OAuth2ClientService import OAuth2ClientService
 from app.Services.OAuth2ScopesService import OAuth2ScopesService
 
@@ -30,7 +30,7 @@ class OAuth2Seeder:
         self.client_service = OAuth2ClientService()
         self.scope_service = OAuth2ScopesService()
     
-    def seed_scopes(self, db: Session) -> List[OAuthScope]:
+    def seed_scopes(self, db: Session) -> List[OAuth2Scope]:
         """
         Seed default OAuth2 scopes.
         
@@ -146,7 +146,7 @@ class OAuth2Seeder:
         print(f"📝 Created {len(created_scopes)} OAuth2 scopes\n")
         return created_scopes
     
-    def seed_clients(self, db: Session) -> List[OAuthClient]:
+    def seed_clients(self, db: Session) -> List[OAuth2Client]:
         """
         Seed default OAuth2 clients.
         
@@ -248,7 +248,7 @@ class OAuth2Seeder:
         print(f"🔐 Created {len(created_clients)} OAuth2 clients\n")
         return created_clients
     
-    def display_client_credentials(self, clients: List[OAuthClient]) -> None:
+    def display_client_credentials(self, clients: List[OAuth2Client]) -> None:
         """
         Display client credentials for reference.
         
@@ -318,12 +318,12 @@ class OAuth2Seeder:
         
         try:
             # Delete clients (cascade will handle tokens)
-            client_count = db.query(OAuthClient).count()
-            db.query(OAuthClient).delete()
+            client_count = db.query(OAuth2Client).count()
+            db.query(OAuth2Client).delete()
             
             # Delete scopes
-            scope_count = db.query(OAuthScope).count()
-            db.query(OAuthScope).delete()
+            scope_count = db.query(OAuth2Scope).count()
+            db.query(OAuth2Scope).delete()
             
             db.commit()
             

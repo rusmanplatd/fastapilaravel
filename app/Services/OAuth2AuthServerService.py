@@ -16,13 +16,15 @@ from sqlalchemy.orm import Session
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 
-from database.migrations.create_oauth_clients_table import OAuthClient
-from database.migrations.create_oauth_access_tokens_table import OAuthAccessToken
-from database.migrations.create_oauth_refresh_tokens_table import OAuthRefreshToken
-from database.migrations.create_oauth_auth_codes_table import OAuthAuthCode
-from database.migrations.create_oauth_scopes_table import OAuthScope
+from app.Utils.ULIDUtils import ULID, ULIDUtils
+
+from app.Models.OAuth2Client import OAuth2Client
+from app.Models.OAuth2AccessToken import OAuth2AccessToken
+from app.Models.OAuth2RefreshToken import OAuth2RefreshToken
+from app.Models.OAuth2AuthorizationCode import OAuth2AuthorizationCode
+from app.Models.OAuth2Scope import OAuth2Scope
 from database.migrations.create_users_table import User
-from config.database import get_db_session
+from config.database import get_database
 
 
 class OAuth2TokenResponse:
@@ -77,8 +79,8 @@ class OAuth2AuthServerService:
         self.algorithm = "HS256"
     
     def generate_token_id(self) -> str:
-        """Generate a secure random token ID."""
-        return secrets.token_urlsafe(32)
+        """Generate a secure random token ID using ULID."""
+        return ULIDUtils.generate_token_id()
     
     def generate_client_secret(self) -> str:
         """Generate a secure client secret."""
@@ -125,17 +127,17 @@ class OAuth2AuthServerService:
     def create_access_token(
         self,
         db: Session,
-        client: OAuthClient,
+        client: OAuth2Client,
         user: Optional[User] = None,
         scopes: Optional[List[str]] = None,
         name: Optional[str] = None
-    ) -> OAuthAccessToken:
+    ) -> OAuth2AccessToken:
         """Create new access token."""
         token_id = self.generate_token_id()
         
         # Create JWT payload
         jwt_payload = {
-            "sub": str(user.id) if user else None,
+            "sub": user.id if user else None,
             "client_id": client.client_id,
             "token_id": token_id,
             "scopes": scopes or [],
@@ -146,7 +148,7 @@ class OAuth2AuthServerService:
         jwt_token = self.create_jwt_token(jwt_payload)
         
         # Create access token record
-        access_token = OAuthAccessToken(
+        access_token = OAuth2AccessToken(
             token_id=token_id,
             user_id=user.id if user else None,
             client_id=client.id,
@@ -164,13 +166,13 @@ class OAuth2AuthServerService:
     def create_refresh_token(
         self,
         db: Session,
-        access_token: OAuthAccessToken,
-        client: OAuthClient
-    ) -> OAuthRefreshToken:
+        access_token: OAuth2AccessToken,
+        client: OAuth2Client
+    ) -> OAuth2RefreshToken:
         """Create refresh token for access token."""
         token_id = self.generate_token_id()
         
-        refresh_token = OAuthRefreshToken(
+        refresh_token = OAuth2RefreshToken(
             token_id=token_id,
             access_token_id=access_token.token_id,
             client_id=client.id,
@@ -186,17 +188,17 @@ class OAuth2AuthServerService:
     def create_authorization_code(
         self,
         db: Session,
-        client: OAuthClient,
+        client: OAuth2Client,
         user: User,
         redirect_uri: str,
         scopes: Optional[List[str]] = None,
         code_challenge: Optional[str] = None,
         code_challenge_method: Optional[str] = None
-    ) -> OAuthAuthCode:
+    ) -> OAuth2AuthorizationCode:
         """Create authorization code for OAuth2 flow."""
         code_id = self.generate_token_id()
         
-        auth_code = OAuthAuthCode(
+        auth_code = OAuth2AuthorizationCode(
             code_id=code_id,
             user_id=user.id,
             client_id=client.id,
@@ -218,11 +220,11 @@ class OAuth2AuthServerService:
         db: Session,
         client_id: str,
         client_secret: Optional[str] = None
-    ) -> Optional[OAuthClient]:
+    ) -> Optional[OAuth2Client]:
         """Validate client credentials."""
-        client = db.query(OAuthClient).filter(
-            OAuthClient.client_id == client_id,
-            OAuthClient.revoked == False
+        client = db.query(OAuth2Client).filter(
+            OAuth2Client.client_id == client_id,
+            OAuth2Client.revoked == False
         ).first()
         
         if not client:
@@ -241,25 +243,25 @@ class OAuth2AuthServerService:
         
         return client
     
-    def find_access_token_by_id(self, db: Session, token_id: str) -> Optional[OAuthAccessToken]:
+    def find_access_token_by_id(self, db: Session, token_id: str) -> Optional[OAuth2AccessToken]:
         """Find access token by token ID."""
-        return db.query(OAuthAccessToken).filter(
-            OAuthAccessToken.token_id == token_id
+        return db.query(OAuth2AccessToken).filter(
+            OAuth2AccessToken.token_id == token_id
         ).first()
     
-    def find_refresh_token_by_id(self, db: Session, token_id: str) -> Optional[OAuthRefreshToken]:
+    def find_refresh_token_by_id(self, db: Session, token_id: str) -> Optional[OAuth2RefreshToken]:
         """Find refresh token by token ID."""
-        return db.query(OAuthRefreshToken).filter(
-            OAuthRefreshToken.token_id == token_id
+        return db.query(OAuth2RefreshToken).filter(
+            OAuth2RefreshToken.token_id == token_id
         ).first()
     
-    def find_auth_code_by_id(self, db: Session, code_id: str) -> Optional[OAuthAuthCode]:
+    def find_auth_code_by_id(self, db: Session, code_id: str) -> Optional[OAuth2AuthorizationCode]:
         """Find authorization code by code ID."""
-        return db.query(OAuthAuthCode).filter(
-            OAuthAuthCode.code_id == code_id
+        return db.query(OAuth2AuthorizationCode).filter(
+            OAuth2AuthorizationCode.code_id == code_id
         ).first()
     
-    def validate_access_token(self, db: Session, token: str) -> Optional[OAuthAccessToken]:
+    def validate_access_token(self, db: Session, token: str) -> Optional[OAuth2AccessToken]:
         """Validate JWT access token and return token record."""
         payload = self.decode_jwt_token(token)
         if not payload:
@@ -309,17 +311,17 @@ class OAuth2AuthServerService:
             "exp": int(access_token.expires_at.timestamp()) if access_token.expires_at else None,
             "iat": int(access_token.created_at.timestamp()),
             "token_type": "Bearer",
-            "sub": str(access_token.user_id) if access_token.user_id else None
+            "sub": access_token.user_id if access_token.user_id else None
         }
     
     def get_default_scopes(self, db: Session) -> List[str]:
         """Get default OAuth2 scopes."""
-        scopes = db.query(OAuthScope).all()
+        scopes = db.query(OAuth2Scope).all()
         return [scope.scope_id for scope in scopes]
     
     def validate_scopes(self, db: Session, requested_scopes: List[str]) -> List[str]:
         """Validate requested scopes against available scopes."""
-        available_scopes = db.query(OAuthScope.scope_id).all()
+        available_scopes = db.query(OAuth2Scope.scope_id).all()
         available_scope_ids = [scope[0] for scope in available_scopes]
         
         return [scope for scope in requested_scopes if scope in available_scope_ids]

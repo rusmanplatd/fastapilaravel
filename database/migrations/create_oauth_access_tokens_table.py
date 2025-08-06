@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import Optional, List, TYPE_CHECKING
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, ForeignKey, func
+from sqlalchemy import Column, String, Text, Boolean, DateTime, ForeignKey, func
 from sqlalchemy.orm import Mapped, relationship
 from app.Models.BaseModel import BaseModel
 
@@ -22,15 +22,15 @@ class OAuthAccessToken(BaseModel):
     
     __tablename__ = "oauth_access_tokens"
     
-    # Token identification
-    token_id: Mapped[str] = Column(String(100), unique=True, index=True, nullable=False)
+    # Token identification - using ULID for token_id
+    token_id: Mapped[str] = Column(String(26), unique=True, index=True, nullable=False)
     
     # Relationships
-    user_id: Mapped[Optional[int]] = Column(
-        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True
+    user_id: Mapped[Optional[str]] = Column(
+        String(26), ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True
     )
-    client_id: Mapped[int] = Column(
-        Integer, ForeignKey("oauth_clients.id", ondelete="CASCADE"), nullable=False, index=True
+    client_id: Mapped[str] = Column(
+        String(26), ForeignKey("oauth_clients.client_id", ondelete="CASCADE"), nullable=False, index=True
     )
     
     # Token details

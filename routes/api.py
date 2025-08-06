@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import Dict, Any
+from typing_extensions import Annotated
 from fastapi import APIRouter, Depends
 from app.Http.Middleware.AuthMiddleware import verify_token
 from app.Http.Controllers import get_current_user
@@ -18,17 +22,17 @@ api_router.include_router(examples_router)
 
 
 @api_router.get("/")
-async def root():
+async def root() -> Dict[str, str]:
     return {"message": "FastAPI with Laravel Structure"}
 
 
 @api_router.get("/health")
-async def health_check():
+async def health_check() -> Dict[str, str]:
     return {"status": "healthy", "message": "Application is running"}
 
 
 @api_router.get("/protected")
-async def protected_route(current_user: User = Depends(get_current_user)):
+async def protected_route(current_user: Annotated[User, Depends(get_current_user)]) -> Dict[str, Any]:
     return {
         "message": "This is a protected route", 
         "user": {

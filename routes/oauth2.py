@@ -6,13 +6,14 @@ token endpoints, client management, and scope management.
 
 from __future__ import annotations
 
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from fastapi import APIRouter, Depends, Form, Query, Body, status
 from sqlalchemy.orm import Session
 
 from app.Http.Controllers.OAuth2TokenController import OAuth2TokenController
 from app.Http.Controllers.OAuth2ClientController import OAuth2ClientController
 from app.Http.Controllers.OAuth2ScopeController import OAuth2ScopeController
+from app.Utils.ULIDUtils import ULID
 from app.Http.Schemas.OAuth2Schemas import (
     OAuth2TokenResponse,
     OAuth2IntrospectionResponse,
@@ -157,6 +158,45 @@ async def revoke(
 
 
 @router.get(
+    "/authorize",
+    summary="OAuth2 Authorization Endpoint",
+    description="""
+    OAuth2 authorization endpoint for authorization code flow (RFC 6749).
+    
+    This endpoint validates the client and generates an authorization code
+    that can be exchanged for access tokens. The user must be authenticated
+    before accessing this endpoint.
+    
+    Supports PKCE (Proof Key for Code Exchange) for enhanced security.
+    """,
+    operation_id="oauth2_authorize"
+)
+async def authorize(
+    client_id: str = Query(..., description="OAuth2 client identifier"),
+    redirect_uri: str = Query(..., description="Redirect URI after authorization"),
+    response_type: str = Query("code", description="OAuth2 response type"),
+    scope: Optional[str] = Query(None, description="Requested scopes"),
+    state: Optional[str] = Query(None, description="State parameter for CSRF protection"),
+    code_challenge: Optional[str] = Query(None, description="PKCE code challenge"),
+    code_challenge_method: Optional[str] = Query(None, description="PKCE code challenge method"),
+    user_id: Optional[str] = Query(None, description="ID of the authorizing user (required)"),
+    db: Session = Depends(get_db_session)
+) -> Dict[str, Any]:
+    """OAuth2 authorization endpoint."""
+    return await token_controller.authorize(
+        db=db,
+        client_id=client_id,
+        redirect_uri=redirect_uri,
+        response_type=response_type,
+        scope=scope,
+        state=state,
+        code_challenge=code_challenge,
+        code_challenge_method=code_challenge_method,
+        user_id=user_id
+    )
+
+
+@router.get(
     "/authorize-url",
     summary="Generate Authorization URL",
     description="""
@@ -217,7 +257,7 @@ async def list_clients(
     operation_id="get_oauth2_client"
 )
 async def get_client(
-    client_id: int,
+    client_id: ULID,
     db: Session = Depends(get_db_session)
 ) -> Dict[str, Any]:
     """Get OAuth2 client details."""
@@ -306,7 +346,7 @@ async def create_client_credentials_client(
     operation_id="update_oauth2_client"
 )
 async def update_client(
-    client_id: int,
+    client_id: ULID,
     client_data: OAuth2ClientUpdateRequest,
     db: Session = Depends(get_db_session)
 ) -> Dict[str, Any]:
@@ -326,7 +366,7 @@ async def update_client(
     operation_id="regenerate_client_secret"
 )
 async def regenerate_client_secret(
-    client_id: int,
+    client_id: ULID,
     db: Session = Depends(get_db_session)
 ) -> Dict[str, Any]:
     """Regenerate OAuth2 client secret."""
@@ -340,7 +380,7 @@ async def regenerate_client_secret(
     operation_id="revoke_oauth2_client"
 )
 async def revoke_client(
-    client_id: int,
+    client_id: ULID,
     db: Session = Depends(get_db_session)
 ) -> Dict[str, Any]:
     """Revoke OAuth2 client."""
@@ -354,7 +394,7 @@ async def revoke_client(
     operation_id="restore_oauth2_client"
 )
 async def restore_client(
-    client_id: int,
+    client_id: ULID,
     db: Session = Depends(get_db_session)
 ) -> Dict[str, Any]:
     """Restore OAuth2 client."""
@@ -368,7 +408,7 @@ async def restore_client(
     operation_id="delete_oauth2_client"
 )
 async def delete_client(
-    client_id: int,
+    client_id: ULID,
     db: Session = Depends(get_db_session)
 ) -> Dict[str, Any]:
     """Delete OAuth2 client."""
@@ -382,7 +422,7 @@ async def delete_client(
     operation_id="get_client_tokens"
 )
 async def get_client_tokens(
-    client_id: int,
+    client_id: ULID,
     active_only: bool = Query(True, description="Return only active tokens"),
     limit: int = Query(50, ge=1, le=200, description="Maximum tokens per type"),
     db: Session = Depends(get_db_session)
@@ -536,3 +576,105 @@ async def create_default_scopes(
 ) -> Dict[str, Any]:
     """Create default OAuth2 scopes."""
     return await scope_controller.create_defaults(db=db)
+
+
+# Personal Access Token Endpoints
+
+@router.get(
+    "/personal-access-tokens",
+    summary="List User's Personal Access Tokens", 
+    description="Get list of personal access tokens for the authenticated user.",
+    operation_id="list_personal_access_tokens"
+)
+async def list_personal_access_tokens(
+    user_id: str = Query(..., description="User ID (in production, get from authentication)"),
+    active_only: bool = Query(True, description="Return only active tokens"),
+    db: Session = Depends(get_db_session)
+) -> Dict[str, Any]:
+    """List user's personal access tokens."""
+    return await token_controller.list_personal_access_tokens(
+        user_id=user_id,
+        active_only=active_only,
+        db=db
+    )
+
+
+@router.post(
+    "/personal-access-tokens",
+    status_code=status.HTTP_201_CREATED,
+    summary="Create Personal Access Token",
+    description="Create a new personal access token for the authenticated user.",
+    operation_id="create_personal_access_token"
+)
+async def create_personal_access_token(
+    name: str = Body(..., description="Token name"),
+    scopes: List[str] = Body(["read"], description="Token scopes"),
+    expires_days: Optional[int] = Body(365, description="Token expiration in days"),
+    user_id: str = Body(..., description="User ID (in production, get from authentication)"),
+    db: Session = Depends(get_db_session)
+) -> Dict[str, Any]:
+    """Create personal access token."""
+    return await token_controller.create_personal_access_token(
+        user_id=user_id,
+        name=name,
+        scopes=scopes,
+        expires_days=expires_days,
+        db=db
+    )
+
+
+@router.get(
+    "/personal-access-tokens/{token_id}",
+    summary="Get Personal Access Token Details",
+    description="Get details of a specific personal access token.",
+    operation_id="get_personal_access_token"
+)
+async def get_personal_access_token(
+    token_id: str,
+    user_id: str = Query(..., description="User ID (in production, get from authentication)"),
+    db: Session = Depends(get_db_session)
+) -> Dict[str, Any]:
+    """Get personal access token details."""
+    return await token_controller.get_personal_access_token(
+        token_id=token_id,
+        user_id=user_id,
+        db=db
+    )
+
+
+@router.post(
+    "/personal-access-tokens/{token_id}/revoke",
+    summary="Revoke Personal Access Token",
+    description="Revoke a specific personal access token.",
+    operation_id="revoke_personal_access_token"
+)
+async def revoke_personal_access_token(
+    token_id: str,
+    user_id: str = Body(..., description="User ID (in production, get from authentication)"),
+    db: Session = Depends(get_db_session)
+) -> Dict[str, Any]:
+    """Revoke personal access token."""
+    return await token_controller.revoke_personal_access_token(
+        token_id=token_id,
+        user_id=user_id,
+        db=db
+    )
+
+
+@router.delete(
+    "/personal-access-tokens/{token_id}",
+    summary="Delete Personal Access Token",
+    description="Permanently delete a personal access token.",
+    operation_id="delete_personal_access_token"
+)
+async def delete_personal_access_token(
+    token_id: str,
+    user_id: str = Body(..., description="User ID (in production, get from authentication)"),
+    db: Session = Depends(get_db_session)
+) -> Dict[str, Any]:
+    """Delete personal access token."""
+    return await token_controller.delete_personal_access_token(
+        token_id=token_id,
+        user_id=user_id,
+        db=db
+    )

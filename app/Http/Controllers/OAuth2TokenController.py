@@ -6,7 +6,7 @@ token issuance, introspection, and revocation.
 
 from __future__ import annotations
 
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from fastapi import HTTPException, status, Form, Query, Depends
 from sqlalchemy.orm import Session
 
@@ -267,4 +267,276 @@ class OAuth2TokenController(BaseController):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Failed to generate authorization URL: {str(e)}"
+            )
+    
+    async def authorize(
+        self,
+        db: Session,
+        client_id: str,
+        redirect_uri: str,
+        response_type: str = "code",
+        scope: Optional[str] = None,
+        state: Optional[str] = None,
+        code_challenge: Optional[str] = None,
+        code_challenge_method: Optional[str] = None,
+        user_id: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        OAuth2 authorization endpoint (RFC 6749).
+        
+        This endpoint is typically used in the authorization code flow where
+        the user is redirected here to authorize the client application.
+        
+        Args:
+            db: Database session
+            client_id: Client identifier
+            redirect_uri: Redirect URI after authorization
+            response_type: OAuth2 response type (typically "code")
+            scope: Requested scope
+            state: State parameter for CSRF protection
+            code_challenge: PKCE code challenge
+            code_challenge_method: PKCE code challenge method
+            user_id: ID of the authorizing user
+        
+        Returns:
+            Authorization response with code or redirect information
+        """
+        try:
+            # Validate client and generate authorization code
+            auth_response = self.grant_service.handle_authorization_request(
+                db=db,
+                client_id=client_id,
+                redirect_uri=redirect_uri,
+                response_type=response_type,
+                scope=scope,
+                state=state,
+                code_challenge=code_challenge,
+                code_challenge_method=code_challenge_method,
+                user_id=user_id
+            )
+            
+            return self.success_response(
+                data=auth_response,
+                message="Authorization request processed"
+            )
+            
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Authorization failed: {str(e)}"
+            )
+    
+    async def list_personal_access_tokens(
+        self,
+        user_id: str,
+        active_only: bool,
+        db: Session
+    ) -> Dict[str, Any]:
+        """
+        List user's personal access tokens.
+        
+        Args:
+            user_id: User ID
+            active_only: Return only active tokens
+            db: Database session
+        
+        Returns:
+            List of personal access tokens
+        """
+        try:
+            tokens = self.auth_server.get_user_personal_access_tokens(
+                db=db,
+                user_id=user_id,
+                active_only=active_only
+            )
+            
+            token_data = []
+            for token in tokens:
+                if hasattr(token, 'to_dict'):
+                    token_data.append(token.to_dict())
+            
+            return self.success_response(
+                data={"tokens": token_data},
+                message=f"Found {len(token_data)} personal access tokens"
+            )
+            
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to list personal access tokens: {str(e)}"
+            )
+    
+    async def create_personal_access_token(
+        self,
+        user_id: str,
+        name: str,
+        scopes: List[str],
+        expires_days: Optional[int],
+        db: Session
+    ) -> Dict[str, Any]:
+        """
+        Create personal access token for user.
+        
+        Args:
+            user_id: User ID
+            name: Token name
+            scopes: Token scopes
+            expires_days: Token expiration in days
+            db: Database session
+        
+        Returns:
+            Created personal access token
+        """
+        try:
+            token_response = self.auth_server.create_personal_access_token(
+                db=db,
+                user_id=user_id,
+                name=name,
+                scopes=scopes,
+                expires_days=expires_days or 365
+            )
+            
+            return self.success_response(
+                data=token_response,
+                message="Personal access token created successfully",
+                status_code=201
+            )
+            
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Failed to create personal access token: {str(e)}"
+            )
+    
+    async def get_personal_access_token(
+        self,
+        token_id: str,
+        user_id: str,
+        db: Session
+    ) -> Dict[str, Any]:
+        """
+        Get personal access token details.
+        
+        Args:
+            token_id: Token ID
+            user_id: User ID
+            db: Database session
+        
+        Returns:
+            Personal access token details
+        """
+        try:
+            token = self.auth_server.get_personal_access_token(
+                db=db,
+                token_id=token_id,
+                user_id=user_id
+            )
+            
+            if not token:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Personal access token not found"
+                )
+            
+            token_data = token.to_dict() if hasattr(token, 'to_dict') else {}
+            
+            return self.success_response(
+                data={"token": token_data},
+                message="Personal access token retrieved successfully"
+            )
+            
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to get personal access token: {str(e)}"
+            )
+    
+    async def revoke_personal_access_token(
+        self,
+        token_id: str,
+        user_id: str,
+        db: Session
+    ) -> Dict[str, Any]:
+        """
+        Revoke personal access token.
+        
+        Args:
+            token_id: Token ID
+            user_id: User ID
+            db: Database session
+        
+        Returns:
+            Revocation response
+        """
+        try:
+            success = self.auth_server.revoke_personal_access_token(
+                db=db,
+                token_id=token_id,
+                user_id=user_id
+            )
+            
+            if not success:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Personal access token not found"
+                )
+            
+            return self.success_response(
+                data={"revoked": True},
+                message="Personal access token revoked successfully"
+            )
+            
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to revoke personal access token: {str(e)}"
+            )
+    
+    async def delete_personal_access_token(
+        self,
+        token_id: str,
+        user_id: str,
+        db: Session
+    ) -> Dict[str, Any]:
+        """
+        Delete personal access token.
+        
+        Args:
+            token_id: Token ID
+            user_id: User ID
+            db: Database session
+        
+        Returns:
+            Deletion response
+        """
+        try:
+            success = self.auth_server.delete_personal_access_token(
+                db=db,
+                token_id=token_id,
+                user_id=user_id
+            )
+            
+            if not success:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Personal access token not found"
+                )
+            
+            return self.success_response(
+                data={"deleted": True},
+                message="Personal access token deleted successfully"
+            )
+            
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to delete personal access token: {str(e)}"
             )

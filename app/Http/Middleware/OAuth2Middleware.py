@@ -11,7 +11,7 @@ from fastapi import HTTPException, status, Depends, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 
-from database.migrations.create_oauth_access_tokens_table import OAuthAccessToken
+from app.Models.OAuth2AccessToken import OAuth2AccessToken
 from database.migrations.create_users_table import User
 from app.Services.OAuth2AuthServerService import OAuth2AuthServerService
 from config.database import get_db_session
@@ -26,7 +26,7 @@ class OAuth2TokenData:
     
     def __init__(
         self,
-        access_token: OAuthAccessToken,
+        access_token: OAuth2AccessToken,
         user: Optional[User] = None,
         scopes: List[str] = None
     ) -> None:
@@ -211,7 +211,7 @@ class OAuth2Middleware:
     
     def require_user_token(
         self,
-        token_data: OAuth2TokenData = Depends(require_authentication)
+        token_data: OAuth2TokenData = Depends(oauth2_middleware.require_authentication)
     ) -> tuple[OAuth2TokenData, User]:
         """
         Require a user-associated token (not client credentials).
