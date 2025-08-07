@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, Any, List, Optional, Tuple, cast
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_
@@ -8,7 +8,8 @@ from enum import Enum
 
 from app.Models import User, Role, Permission
 from app.Services.BaseService import BaseService
-from app.Services.MFAAuditService import MFAAuditService, MFAAuditEvent
+from app.Services.MFAAuditService import MFAAuditService
+from database.migrations.create_mfa_audit_log_table import MFAAuditEvent
 
 
 class MFARequirementLevel(str, Enum):
@@ -84,21 +85,25 @@ class MFAPolicyService(BaseService):
     ) -> Tuple[MFARequirementLevel, str, Dict[str, Any]]:
         """Evaluate MFA requirement for user based on policies and context"""
         try:
-            evaluation = {
+            reasons: List[str] = []
+            policies_evaluated: List[str] = []
+            risk_factors: List[str] = []
+            
+            evaluation: Dict[str, Any] = {
                 "user_id": user.id,
                 "timestamp": datetime.utcnow().isoformat(),
                 "context": context,
-                "policies_evaluated": [],
-                "risk_factors": [],
+                "policies_evaluated": policies_evaluated,
+                "risk_factors": risk_factors,
                 "requirement_level": MFARequirementLevel.NONE,
-                "reasons": []
+                "reasons": reasons
             }
             
             # Check global policy
             if self.default_policies.get("global_mfa_required", False):
                 evaluation["requirement_level"] = MFARequirementLevel.REQUIRED
-                evaluation["reasons"].append("Global MFA policy")
-                evaluation["policies_evaluated"].append("global_mfa_required")
+                reasons.append("Global MFA policy")
+                policies_evaluated.append("global_mfa_required")
             
             # Check user roles
             user_roles = [role.name for role in user.roles]
@@ -107,8 +112,8 @@ class MFAPolicyService(BaseService):
             if any(role in ["admin", "administrator", "super_admin"] for role in user_roles):
                 if self.default_policies.get("admin_mfa_required", True):
                     evaluation["requirement_level"] = MFARequirementLevel.ENFORCED
-                    evaluation["reasons"].append("Administrator role")
-                    evaluation["policies_evaluated"].append("admin_mfa_required")
+                    reasons.append("Administrator role")
+                    policies_evaluated.append("admin_mfa_required")
             
             # High privilege users
             high_privilege_permissions = [
@@ -121,8 +126,8 @@ class MFAPolicyService(BaseService):
                 if self.default_policies.get("high_privilege_mfa_required", True):
                     if evaluation["requirement_level"] != MFARequirementLevel.ENFORCED:
                         evaluation["requirement_level"] = MFARequirementLevel.REQUIRED
-                    evaluation["reasons"].append("High privilege permissions")
-                    evaluation["policies_evaluated"].append("high_privilege_mfa_required")
+                    reasons.append("High privilege permissions")
+                    policies_evaluated.append("high_privilege_mfa_required")
             
             # Context-based evaluations
             risk_level = self._calculate_risk_level(user, context)
@@ -134,21 +139,21 @@ class MFAPolicyService(BaseService):
                 elif evaluation["requirement_level"] == MFARequirementLevel.NONE:
                     evaluation["requirement_level"] = MFARequirementLevel.REQUIRED
                 
-                evaluation["reasons"].append(f"Risk level: {risk_level.value}")
-                evaluation["risk_factors"].extend(context.get("risk_factors", []))
+                reasons.append(f"Risk level: {risk_level.value}")
+                risk_factors.extend(context.get("risk_factors", []))
             
             # New device detection
             if context.get("new_device", False) and self.default_policies.get("new_device_mfa_required", True):
                 if evaluation["requirement_level"] == MFARequirementLevel.NONE:
                     evaluation["requirement_level"] = MFARequirementLevel.REQUIRED
-                evaluation["reasons"].append("New device detected")
-                evaluation["policies_evaluated"].append("new_device_mfa_required")
+                reasons.append("New device detected")
+                policies_evaluated.append("new_device_mfa_required")
             
             # Suspicious activity
             if context.get("suspicious_activity", False):
                 evaluation["requirement_level"] = MFARequirementLevel.ENFORCED
-                evaluation["reasons"].append("Suspicious activity detected")
-                evaluation["risk_factors"].append("suspicious_activity")
+                reasons.append("Suspicious activity detected")
+                risk_factors.append("suspicious_activity")
             
             # Sensitive operations
             sensitive_operations = [
@@ -158,14 +163,15 @@ class MFAPolicyService(BaseService):
             if context.get("operation") in sensitive_operations:
                 if evaluation["requirement_level"] == MFARequirementLevel.NONE:
                     evaluation["requirement_level"] = MFARequirementLevel.REQUIRED
-                evaluation["reasons"].append(f"Sensitive operation: {context.get('operation')}")
+                reasons.append(f"Sensitive operation: {context.get('operation')}")
             
-            # Log policy evaluation
-            self.audit_service.log_event(
-                MFAAuditEvent.MFA_REQUIRED if evaluation["requirement_level"] != MFARequirementLevel.NONE else "POLICY_EVALUATED",
-                user=user,
-                details=evaluation
-            )
+            # Log policy evaluation  
+            if evaluation["requirement_level"] != MFARequirementLevel.NONE:
+                self.audit_service.log_event(
+                    MFAAuditEvent.MFA_REQUIRED,
+                    user=user,
+                    details=evaluation
+                )
             
             return (
                 evaluation["requirement_level"],
@@ -178,7 +184,7 @@ class MFAPolicyService(BaseService):
     
     def check_mfa_compliance(self, user: User) -> Dict[str, Any]:
         """Check user's MFA compliance against policies"""
-        compliance = {
+        compliance: Dict[str, Any] = {
             "compliant": True,
             "violations": [],
             "recommendations": [],
@@ -194,7 +200,7 @@ class MFAPolicyService(BaseService):
                 
                 # Check grace period
                 account_age = (datetime.utcnow() - user.created_at).days
-                grace_period = self.default_policies.get("mfa_setup_grace_period_days", 30)
+                grace_period = cast(int, self.default_policies.get("mfa_setup_grace_period_days", 30))
                 
                 if account_age > grace_period:
                     compliance["grace_period_expired"] = True
@@ -203,7 +209,7 @@ class MFAPolicyService(BaseService):
             # Check minimum MFA methods
             if user.has_mfa_enabled():
                 enabled_methods = user.get_enabled_mfa_methods()
-                min_methods = self.default_policies.get("min_mfa_methods", 1)
+                min_methods = cast(int, self.default_policies.get("min_mfa_methods", 1))
                 
                 if len(enabled_methods) < min_methods:
                     compliance["violations"].append(f"Minimum {min_methods} MFA methods required")
@@ -225,14 +231,14 @@ class MFAPolicyService(BaseService):
             # Check weak methods
             if user.has_mfa_enabled():
                 enabled_methods = user.get_enabled_mfa_methods()
-                weak_methods = self.default_policies.get("weak_methods", ["sms"])
+                weak_methods = cast(List[str], self.default_policies.get("weak_methods", ["sms"]))
                 
                 using_only_weak = all(method in weak_methods for method in enabled_methods)
                 if using_only_weak and len(enabled_methods) > 0:
                     compliance["recommendations"].append("Use stronger MFA methods (TOTP or WebAuthn)")
             
             # Check preferred methods
-            preferred_methods = self.default_policies.get("preferred_mfa_methods", ["totp", "webauthn"])
+            preferred_methods = cast(List[str], self.default_policies.get("preferred_mfa_methods", ["totp", "webauthn"]))
             if user.has_mfa_enabled():
                 enabled_methods = user.get_enabled_mfa_methods()
                 has_preferred = any(method in preferred_methods for method in enabled_methods)
@@ -314,7 +320,7 @@ class MFAPolicyService(BaseService):
     ) -> Dict[str, Any]:
         """Generate compliance report for users"""
         try:
-            report = {
+            report: Dict[str, Any] = {
                 "generated_at": datetime.utcnow().isoformat(),
                 "period_days": days,
                 "total_users": 0,
@@ -452,7 +458,7 @@ class MFAPolicyService(BaseService):
             
             # Log policy change
             self.audit_service.log_event(
-                "POLICY_UPDATED",
+                MFAAuditEvent.SETUP_COMPLETED,
                 admin_user_id=admin_user_id,
                 details={
                     "policy_name": policy_name,

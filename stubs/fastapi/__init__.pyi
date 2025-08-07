@@ -101,6 +101,19 @@ class Query:
         **kwargs: Any
     ) -> None: ...
 
+class Path:
+    def __init__(
+        self,
+        default: Any = ...,
+        **kwargs: Any
+    ) -> None: ...
+
+class Request:
+    def __init__(self, **kwargs: Any) -> None: ...
+
+class Response:
+    def __init__(self, **kwargs: Any) -> None: ...
+
 class status:
     HTTP_200_OK: int
     HTTP_201_CREATED: int

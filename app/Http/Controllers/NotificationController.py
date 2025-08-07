@@ -25,7 +25,7 @@ class NotificationController(BaseController):
     """Controller for notification management."""
     
     def __init__(self, db: Session):
-        super().__init__(db)
+        super().__init__()
         self.notification_service = NotificationService(db)
     
     def get_notifications(

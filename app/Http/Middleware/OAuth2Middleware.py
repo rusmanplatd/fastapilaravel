@@ -7,6 +7,7 @@ for FastAPI similar to Laravel Passport middleware.
 from __future__ import annotations
 
 from typing import Optional, List, Callable, Any, Union
+from typing_extensions import Annotated
 from fastapi import HTTPException, status, Depends, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
@@ -28,7 +29,7 @@ class OAuth2TokenData:
         self,
         access_token: OAuth2AccessToken,
         user: Optional[User] = None,
-        scopes: List[str] = None
+        scopes: Optional[List[str]] = None
     ) -> None:
         self.access_token = access_token
         self.user = user
@@ -49,7 +50,7 @@ class OAuth2TokenData:
     
     def is_personal_access_token(self) -> bool:
         """Check if this is a personal access token."""
-        return self.client.is_personal_access_client()
+        return bool(self.client.is_personal_access_client())
     
     def is_client_credentials_token(self) -> bool:
         """Check if this is a client credentials token."""
@@ -64,8 +65,8 @@ class OAuth2Middleware:
     
     def authenticate_token(
         self,
-        db: Session = Depends(get_db_session),
-        credentials: Optional[HTTPAuthorizationCredentials] = Depends(oauth2_scheme)
+        db: Annotated[Session, Depends(get_db_session)],
+        credentials: Annotated[Optional[HTTPAuthorizationCredentials], Depends(oauth2_scheme)]
     ) -> Optional[OAuth2TokenData]:
         """
         Authenticate OAuth2 bearer token.
@@ -111,8 +112,8 @@ class OAuth2Middleware:
     
     def require_authentication(
         self,
-        db: Session = Depends(get_db_session),
-        credentials: Optional[HTTPAuthorizationCredentials] = Depends(oauth2_scheme)
+        db: Annotated[Session, Depends(get_db_session)],
+        credentials: Annotated[Optional[HTTPAuthorizationCredentials], Depends(oauth2_scheme)]
     ) -> OAuth2TokenData:
         """
         Require OAuth2 authentication.
@@ -149,7 +150,7 @@ class OAuth2Middleware:
             Dependency function
         """
         def scope_dependency(
-            token_data: OAuth2TokenData = Depends(self.require_authentication)
+            token_data: Annotated[OAuth2TokenData, Depends(self.require_authentication)]
         ) -> OAuth2TokenData:
             if not token_data.has_scope(required_scope):
                 raise HTTPException(
@@ -172,7 +173,7 @@ class OAuth2Middleware:
             Dependency function
         """
         def scope_dependency(
-            token_data: OAuth2TokenData = Depends(self.require_authentication)
+            token_data: Annotated[OAuth2TokenData, Depends(self.require_authentication)]
         ) -> OAuth2TokenData:
             if not token_data.has_any_scope(required_scopes):
                 scope_list = " ".join(required_scopes)
@@ -196,7 +197,7 @@ class OAuth2Middleware:
             Dependency function
         """
         def scope_dependency(
-            token_data: OAuth2TokenData = Depends(self.require_authentication)
+            token_data: Annotated[OAuth2TokenData, Depends(self.require_authentication)]
         ) -> OAuth2TokenData:
             if not token_data.has_all_scopes(required_scopes):
                 scope_list = " ".join(required_scopes)
@@ -211,7 +212,7 @@ class OAuth2Middleware:
     
     def require_user_token(
         self,
-        token_data: OAuth2TokenData = Depends(oauth2_middleware.require_authentication)
+        token_data: Annotated[OAuth2TokenData, Depends(oauth2_middleware.require_authentication)]
     ) -> tuple[OAuth2TokenData, User]:
         """
         Require a user-associated token (not client credentials).
@@ -241,8 +242,8 @@ class OAuth2Middleware:
     
     def optional_authentication(
         self,
-        db: Session = Depends(get_db_session),
-        credentials: Optional[HTTPAuthorizationCredentials] = Depends(oauth2_scheme)
+        db: Annotated[Session, Depends(get_db_session)],
+        credentials: Annotated[Optional[HTTPAuthorizationCredentials], Depends(oauth2_scheme)]
     ) -> Optional[OAuth2TokenData]:
         """
         Optional OAuth2 authentication (doesn't raise error if no token).
@@ -338,7 +339,7 @@ def can_full_access() -> Callable[..., OAuth2TokenData]:
 
 # User context helpers
 async def get_current_user_from_token(
-    token_data: OAuth2TokenData = Depends(require_user_token)
+    token_data: Annotated[OAuth2TokenData, Depends(require_user_token)]
 ) -> User:
     """
     Get current user from OAuth2 token.
@@ -349,12 +350,16 @@ async def get_current_user_from_token(
     Returns:
         Current user
     """
-    _, user = token_data
-    return user
+    if not token_data.user:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User token required.",
+        )
+    return token_data.user
 
 
 async def get_current_user_optional(
-    token_data: Optional[OAuth2TokenData] = Depends(optional_oauth2)
+    token_data: Annotated[Optional[OAuth2TokenData], Depends(optional_oauth2)]
 ) -> Optional[User]:
     """
     Get current user from OAuth2 token (optional).

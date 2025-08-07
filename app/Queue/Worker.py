@@ -186,7 +186,7 @@ class QueueWorker:
             execution_time = (datetime.utcnow() - start_time).total_seconds()
             self.logger.info(f"Job {job_model.id} completed in {execution_time:.2f}s")
             
-            return result
+            return result  # type: ignore[no-any-return]
             
         except Exception as e:
             self.logger.error(f"Error executing job {job_model.id}: {str(e)}")
@@ -265,7 +265,7 @@ class QueueWorker:
             import psutil
             process = psutil.Process()
             memory_mb = process.memory_info().rss / 1024 / 1024
-            return memory_mb > self.options.memory_limit
+            return bool(memory_mb > self.options.memory_limit)
         except ImportError:
             # psutil not available, skip memory check
             return False

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Dict, Any
+from typing import Dict, Any, Optional
+from typing_extensions import Annotated
 from fastapi import APIRouter, Depends, Path, Query
 from sqlalchemy.orm import Session
 
@@ -34,16 +35,16 @@ activity_log_router = APIRouter(
     description="Get a paginated list of activity logs with optional filters"
 )
 async def get_activity_logs(
-    log_name: str = Query(None, description="Filter by log name"),
-    event: str = Query(None, description="Filter by event type"),
-    subject_type: str = Query(None, description="Filter by subject type"),
-    subject_id: str = Query(None, description="Filter by subject ID"),
-    causer_id: str = Query(None, description="Filter by causer ID"),
-    batch_uuid: str = Query(None, description="Filter by batch UUID"),
-    page: int = Query(1, ge=1, description="Page number"),
-    per_page: int = Query(20, ge=1, le=100, description="Items per page"),
-    db: Session = Depends(get_db_session),
-    current_user: User = Depends(AuthService.get_current_user)
+    db: Annotated[Session, Depends(get_db_session)],
+    current_user: Annotated[User, Depends(AuthService.get_current_user)],
+    log_name: Annotated[Optional[str], Query(description="Filter by log name")] = None,
+    event: Annotated[Optional[str], Query(description="Filter by event type")] = None,
+    subject_type: Annotated[Optional[str], Query(description="Filter by subject type")] = None,
+    subject_id: Annotated[Optional[str], Query(description="Filter by subject ID")] = None,
+    causer_id: Annotated[Optional[str], Query(description="Filter by causer ID")] = None,
+    batch_uuid: Annotated[Optional[str], Query(description="Filter by batch UUID")] = None,
+    page: Annotated[int, Query(ge=1, description="Page number")] = 1,
+    per_page: Annotated[int, Query(ge=1, le=100, description="Items per page")] = 20
 ) -> ActivityLogListResponse:
     """Get paginated activity logs with filters."""
     return ActivityLogController.get_activity_logs(
@@ -67,9 +68,9 @@ async def get_activity_logs(
     description="Get a specific activity log by ID"
 )
 async def get_activity_log(
-    log_id: str = Path(..., description="Activity log ID"),
-    db: Session = Depends(get_db_session),
-    current_user: User = Depends(AuthService.get_current_user)
+    log_id: str,
+    db: Annotated[Session, Depends(get_db_session)],
+    current_user: Annotated[User, Depends(AuthService.get_current_user)]
 ) -> ActivityLogResponse:
     """Get a specific activity log by ID."""
     return ActivityLogController.get_activity_log(
@@ -87,8 +88,8 @@ async def get_activity_log(
 )
 async def create_activity_log(
     request: CreateActivityLogRequest,
-    db: Session = Depends(get_db_session),
-    current_user: User = Depends(AuthService.get_current_user)
+    db: Annotated[Session, Depends(get_db_session)],
+    current_user: Annotated[User, Depends(AuthService.get_current_user)]
 ) -> ActivityLogResponse:
     """Manually create an activity log entry."""
     return ActivityLogController.create_activity_log(
@@ -105,9 +106,9 @@ async def create_activity_log(
     description="Get activity log statistics and analytics"
 )
 async def get_activity_stats(
-    days: int = Query(30, ge=1, le=365, description="Number of days to analyze"),
-    db: Session = Depends(get_db_session),
-    current_user: User = Depends(AuthService.get_current_user)
+    db: Annotated[Session, Depends(get_db_session)],
+    current_user: Annotated[User, Depends(AuthService.get_current_user)],
+    days: Annotated[int, Query(ge=1, le=365, description="Number of days to analyze")] = 30
 ) -> ActivityLogStatsResponse:
     """Get activity log statistics."""
     return ActivityLogController.get_activity_stats(
@@ -125,8 +126,8 @@ async def get_activity_stats(
 )
 async def clean_old_logs(
     request: CleanLogsRequest,
-    db: Session = Depends(get_db_session),
-    current_user: User = Depends(AuthService.get_current_user)
+    db: Annotated[Session, Depends(get_db_session)],
+    current_user: Annotated[User, Depends(AuthService.get_current_user)]
 ) -> CleanLogsResponse:
     """Clean old activity logs."""
     return ActivityLogController.clean_old_logs(
@@ -143,12 +144,12 @@ async def clean_old_logs(
     description="Get activity logs for a specific subject (model instance)"
 )
 async def get_logs_for_subject(
-    subject_type: str = Path(..., description="Type of the subject model"),
-    subject_id: str = Path(..., description="ID of the subject model"),
-    page: int = Query(1, ge=1, description="Page number"),
-    per_page: int = Query(20, ge=1, le=100, description="Items per page"),
-    db: Session = Depends(get_db_session),
-    current_user: User = Depends(AuthService.get_current_user)
+    db: Annotated[Session, Depends(get_db_session)],
+    current_user: Annotated[User, Depends(AuthService.get_current_user)],
+    subject_type: Annotated[str, Path(..., description="Type of the subject model")],
+    subject_id: Annotated[str, Path(..., description="ID of the subject model")],
+    page: Annotated[int, Query(ge=1, description="Page number")] = 1,
+    per_page: Annotated[int, Query(ge=1, le=100, description="Items per page")] = 20
 ) -> ActivityLogListResponse:
     """Get activity logs for a specific subject."""
     return ActivityLogController.get_logs_for_subject(
@@ -169,7 +170,7 @@ async def get_logs_for_subject(
 )
 async def start_batch_operation(
     request: BatchOperationRequest,
-    current_user: User = Depends(AuthService.get_current_user)
+    current_user: Annotated[User, Depends(AuthService.get_current_user)]
 ) -> BatchOperationResponse:
     """Start a batch operation for grouped logging."""
     return ActivityLogController.start_batch_operation(
@@ -185,7 +186,7 @@ async def start_batch_operation(
     description="End the current batch operation"
 )
 async def end_batch_operation(
-    current_user: User = Depends(AuthService.get_current_user)
+    current_user: Annotated[User, Depends(AuthService.get_current_user)]
 ) -> Dict[str, Any]:
     """End the current batch operation."""
     return ActivityLogController.end_batch_operation(current_user=current_user)
@@ -200,11 +201,11 @@ async def end_batch_operation(
     description="Get activity logs for a specific user"
 )
 async def get_user_activity_logs(
-    user_id: str = Path(..., description="User ID"),
-    page: int = Query(1, ge=1, description="Page number"),
-    per_page: int = Query(20, ge=1, le=100, description="Items per page"),
-    db: Session = Depends(get_db_session),
-    current_user: User = Depends(AuthService.get_current_user)
+    db: Annotated[Session, Depends(get_db_session)],
+    current_user: Annotated[User, Depends(AuthService.get_current_user)],
+    user_id: Annotated[str, Path(description="User ID")],
+    page: Annotated[int, Query(ge=1, description="Page number")] = 1,
+    per_page: Annotated[int, Query(ge=1, le=100, description="Items per page")] = 20
 ) -> ActivityLogListResponse:
     """Get activity logs for a specific user."""
     return ActivityLogController.get_activity_logs(
@@ -223,11 +224,11 @@ async def get_user_activity_logs(
     description="Get activity logs for a specific event type"
 )
 async def get_logs_by_event_type(
-    event_type: str = Path(..., description="Event type"),
-    page: int = Query(1, ge=1, description="Page number"),
-    per_page: int = Query(20, ge=1, le=100, description="Items per page"),
-    db: Session = Depends(get_db_session),
-    current_user: User = Depends(AuthService.get_current_user)
+    db: Annotated[Session, Depends(get_db_session)],
+    current_user: Annotated[User, Depends(AuthService.get_current_user)],
+    event_type: Annotated[str, Path(description="Event type")],
+    page: Annotated[int, Query(ge=1, description="Page number")] = 1,
+    per_page: Annotated[int, Query(ge=1, le=100, description="Items per page")] = 20
 ) -> ActivityLogListResponse:
     """Get activity logs for a specific event type."""
     return ActivityLogController.get_activity_logs(

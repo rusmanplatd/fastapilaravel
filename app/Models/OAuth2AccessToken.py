@@ -27,24 +27,24 @@ class OAuth2AccessToken(BaseModel):
     __tablename__ = "oauth_access_tokens"
     
     # Token identification - using ULID for token_id
-    token_id: Mapped[str] = mapped_column(String(26), unique=True, index=True, nullable=False)
-    token: Mapped[str] = mapped_column(Text, nullable=False)
+    token_id: Mapped[str] = mapped_column(unique=True, index=True, nullable=False)
+    token: Mapped[str] = mapped_column(nullable=False)
     
     # Token metadata
-    scopes: Mapped[str] = mapped_column(Text, nullable=False, default="")
-    token_type: Mapped[str] = mapped_column(String(50), default="Bearer", nullable=False)
+    scopes: Mapped[str] = mapped_column(nullable=False, default="")
+    token_type: Mapped[str] = mapped_column(default="Bearer", nullable=False)
     
     # Associations
-    user_id: Mapped[Optional[ULID]] = mapped_column(String(26), ForeignKey("users.id"), nullable=True)
-    client_id: Mapped[str] = mapped_column(String(26), ForeignKey("oauth_clients.client_id"), nullable=False)
+    user_id: Mapped[Optional[ULID]] = mapped_column(String(26), ForeignKey("users.id"), nullable=True)  # type: ignore[arg-type]
+    client_id: Mapped[str] = mapped_column(String(26), ForeignKey("oauth_clients.client_id"), nullable=False)  # type: ignore[arg-type]
     
     # Token status
-    is_revoked: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    is_revoked: Mapped[bool] = mapped_column(default=False, nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(nullable=False)
     
     # Personal Access Token fields
-    name: Mapped[Optional[str]] = mapped_column(String(191), nullable=True)  # For personal access tokens
-    abilities: Mapped[str] = mapped_column(Text, nullable=False, default="")  # JSON array of abilities
+    name: Mapped[Optional[str]] = mapped_column(nullable=True)  # For personal access tokens
+    abilities: Mapped[str] = mapped_column(nullable=False, default="")  # JSON array of abilities
     
     # Relationships
     client = relationship("OAuth2Client", back_populates="access_tokens")

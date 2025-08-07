@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from typing import Dict, Any, List, Optional
 from fastapi import HTTPException, status, Depends, Query
+from typing_extensions import Annotated
 from sqlalchemy.orm import Session
 
 from app.Http.Controllers.BaseController import BaseController
@@ -26,11 +27,11 @@ class OAuth2ClientController(BaseController):
     
     async def index(
         self,
-        db: Session = Depends(get_db_session),
-        skip: int = Query(0, ge=0),
-        limit: int = Query(100, ge=1, le=1000),
-        active_only: bool = Query(True),
-        _token_data = Depends(require_scope("oauth-clients"))
+        db: Annotated[Session, Depends(get_db_session)],
+        skip: Annotated[int, Query(ge=0)] = 0,
+        limit: Annotated[int, Query(ge=1, le=1000)] = 100,
+        active_only: Annotated[bool, Query()] = True,
+        _token_data: Annotated[Any, Depends(require_scope("oauth-clients"))] = Depends(require_scope("oauth-clients"))
     ) -> Dict[str, Any]:
         """
         Get list of OAuth2 clients.
@@ -57,11 +58,11 @@ class OAuth2ClientController(BaseController):
                     "id": client.id,
                     "client_id": client.client_id,
                     "name": client.name,
-                    "redirect": client.redirect,
-                    "personal_access_client": client.personal_access_client,
-                    "password_client": client.password_client,
-                    "revoked": client.revoked,
-                    "is_confidential": client.is_confidential(),
+                    "redirect": client.redirect_uris,
+                    "personal_access_client": client.is_personal_access_client,
+                    "password_client": client.is_password_client,
+                    "revoked": client.is_revoked,
+                    "is_confidential": client.is_confidential,
                     "created_at": client.created_at,
                     "updated_at": client.updated_at
                 })
@@ -80,8 +81,8 @@ class OAuth2ClientController(BaseController):
     async def show(
         self,
         client_id: ULID,
-        db: Session = Depends(get_db_session),
-        _token_data = Depends(require_scope("oauth-clients"))
+        db: Annotated[Session, Depends(get_db_session)],
+        _token_data: Annotated[Any, Depends(require_scope("oauth-clients"))] = Depends(require_scope("oauth-clients"))
     ) -> Dict[str, Any]:
         """
         Get specific OAuth2 client details.
@@ -125,9 +126,9 @@ class OAuth2ClientController(BaseController):
         self,
         name: str,
         redirect_uri: str,
-        confidential: bool = True,
-        db: Session = Depends(get_db_session),
-        _token_data = Depends(require_scope("oauth-clients"))
+        db: Annotated[Session, Depends(get_db_session)],
+        _token_data: Annotated[Any, Depends(require_scope("oauth-clients"))] = Depends(require_scope("oauth-clients")),
+        confidential: bool = True
     ) -> Dict[str, Any]:
         """
         Create authorization code OAuth2 client.
@@ -161,10 +162,10 @@ class OAuth2ClientController(BaseController):
                 "client_id": client.client_id,
                 "client_secret": plain_secret,
                 "name": client.name,
-                "redirect": client.redirect,
-                "personal_access_client": client.personal_access_client,
-                "password_client": client.password_client,
-                "is_confidential": client.is_confidential(),
+                "redirect": client.redirect_uris,
+                "personal_access_client": client.is_personal_access_client,
+                "password_client": client.is_password_client,
+                "is_confidential": client.is_confidential,
                 "created_at": client.created_at
             }
             
@@ -182,9 +183,9 @@ class OAuth2ClientController(BaseController):
     
     async def create_personal_access_client(
         self,
-        name: str = "Personal Access Client",
-        db: Session = Depends(get_db_session),
-        _token_data = Depends(require_scope("oauth-clients"))
+        db: Annotated[Session, Depends(get_db_session)],
+        _token_data: Annotated[Any, Depends(require_scope("oauth-clients"))] = Depends(require_scope("oauth-clients")),
+        name: str = "Personal Access Client"
     ) -> Dict[str, Any]:
         """
         Create personal access token client.
@@ -204,8 +205,8 @@ class OAuth2ClientController(BaseController):
                 "id": client.id,
                 "client_id": client.client_id,
                 "name": client.name,
-                "personal_access_client": client.personal_access_client,
-                "is_confidential": client.is_confidential(),
+                "personal_access_client": client.is_personal_access_client,
+                "is_confidential": client.is_confidential,
                 "created_at": client.created_at
             }
             
@@ -223,10 +224,10 @@ class OAuth2ClientController(BaseController):
     
     async def create_password_client(
         self,
+        db: Annotated[Session, Depends(get_db_session)],
+        _token_data: Annotated[Any, Depends(require_scope("oauth-clients"))] = Depends(require_scope("oauth-clients")),
         name: str = "Password Grant Client",
-        redirect_uri: str = "http://localhost",
-        db: Session = Depends(get_db_session),
-        _token_data = Depends(require_scope("oauth-clients"))
+        redirect_uri: str = "http://localhost"
     ) -> Dict[str, Any]:
         """
         Create password grant client.
@@ -247,8 +248,8 @@ class OAuth2ClientController(BaseController):
                 "id": client.id,
                 "client_id": client.client_id,
                 "name": client.name,
-                "password_client": client.password_client,
-                "is_confidential": client.is_confidential(),
+                "password_client": client.is_password_client,
+                "is_confidential": client.is_confidential,
                 "created_at": client.created_at
             }
             
@@ -267,8 +268,8 @@ class OAuth2ClientController(BaseController):
     async def create_client_credentials_client(
         self,
         name: str,
-        db: Session = Depends(get_db_session),
-        _token_data = Depends(require_scope("oauth-clients"))
+        db: Annotated[Session, Depends(get_db_session)],
+        _token_data: Annotated[Any, Depends(require_scope("oauth-clients"))] = Depends(require_scope("oauth-clients"))
     ) -> Dict[str, Any]:
         """
         Create client credentials client.
@@ -288,7 +289,7 @@ class OAuth2ClientController(BaseController):
                 "id": client.id,
                 "client_id": client.client_id,
                 "name": client.name,
-                "is_confidential": client.is_confidential(),
+                "is_confidential": client.is_confidential,
                 "created_at": client.created_at
             }
             
@@ -307,10 +308,10 @@ class OAuth2ClientController(BaseController):
     async def update(
         self,
         client_id: ULID,
+        db: Annotated[Session, Depends(get_db_session)],
+        _token_data: Annotated[Any, Depends(require_scope("oauth-clients"))] = Depends(require_scope("oauth-clients")),
         name: Optional[str] = None,
-        redirect_uri: Optional[str] = None,
-        db: Session = Depends(get_db_session),
-        _token_data = Depends(require_scope("oauth-clients"))
+        redirect_uri: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Update OAuth2 client.
@@ -346,7 +347,7 @@ class OAuth2ClientController(BaseController):
                 "id": client.id,
                 "client_id": client.client_id,
                 "name": client.name,
-                "redirect": client.redirect,
+                "redirect": client.redirect_uris,
                 "updated_at": client.updated_at
             }
             
@@ -366,8 +367,8 @@ class OAuth2ClientController(BaseController):
     async def regenerate_secret(
         self,
         client_id: ULID,
-        db: Session = Depends(get_db_session),
-        _token_data = Depends(require_scope("oauth-clients"))
+        db: Annotated[Session, Depends(get_db_session)],
+        _token_data: Annotated[Any, Depends(require_scope("oauth-clients"))] = Depends(require_scope("oauth-clients"))
     ) -> Dict[str, Any]:
         """
         Regenerate client secret.
@@ -414,8 +415,8 @@ class OAuth2ClientController(BaseController):
     async def revoke(
         self,
         client_id: ULID,
-        db: Session = Depends(get_db_session),
-        _token_data = Depends(require_scope("oauth-clients"))
+        db: Annotated[Session, Depends(get_db_session)],
+        _token_data: Annotated[Any, Depends(require_scope("oauth-clients"))] = Depends(require_scope("oauth-clients"))
     ) -> Dict[str, Any]:
         """
         Revoke OAuth2 client.
@@ -455,8 +456,8 @@ class OAuth2ClientController(BaseController):
     async def restore(
         self,
         client_id: ULID,
-        db: Session = Depends(get_db_session),
-        _token_data = Depends(require_scope("oauth-clients"))
+        db: Annotated[Session, Depends(get_db_session)],
+        _token_data: Annotated[Any, Depends(require_scope("oauth-clients"))] = Depends(require_scope("oauth-clients"))
     ) -> Dict[str, Any]:
         """
         Restore revoked OAuth2 client.
@@ -496,8 +497,8 @@ class OAuth2ClientController(BaseController):
     async def delete(
         self,
         client_id: ULID,
-        db: Session = Depends(get_db_session),
-        _token_data = Depends(require_scope("oauth-clients"))
+        db: Annotated[Session, Depends(get_db_session)],
+        _token_data: Annotated[Any, Depends(require_scope("oauth-clients"))] = Depends(require_scope("oauth-clients"))
     ) -> Dict[str, Any]:
         """
         Delete OAuth2 client permanently.
@@ -537,10 +538,10 @@ class OAuth2ClientController(BaseController):
     async def get_client_tokens(
         self,
         client_id: ULID,
-        active_only: bool = Query(True),
-        limit: int = Query(50, ge=1, le=200),
-        db: Session = Depends(get_db_session),
-        _token_data = Depends(require_scope("oauth-clients"))
+        db: Annotated[Session, Depends(get_db_session)],
+        _token_data: Annotated[Any, Depends(require_scope("oauth-clients"))] = Depends(require_scope("oauth-clients")),
+        active_only: Annotated[bool, Query()] = True,
+        limit: Annotated[int, Query(ge=1, le=200)] = 50
     ) -> Dict[str, Any]:
         """
         Get tokens for a specific client.
@@ -571,10 +572,10 @@ class OAuth2ClientController(BaseController):
     
     async def search(
         self,
-        q: str = Query(..., min_length=2),
-        limit: int = Query(20, ge=1, le=100),
-        db: Session = Depends(get_db_session),
-        _token_data = Depends(require_scope("oauth-clients"))
+        db: Annotated[Session, Depends(get_db_session)],
+        q: Annotated[str, Query(min_length=2)],
+        limit: Annotated[int, Query(ge=1, le=100)] = 20,
+        _token_data: Annotated[Any, Depends(require_scope("oauth-clients"))] = Depends(require_scope("oauth-clients"))
     ) -> Dict[str, Any]:
         """
         Search OAuth2 clients.
@@ -597,10 +598,10 @@ class OAuth2ClientController(BaseController):
                     "id": client.id,
                     "client_id": client.client_id,
                     "name": client.name,
-                    "revoked": client.revoked,
-                    "is_confidential": client.is_confidential(),
-                    "personal_access_client": client.personal_access_client,
-                    "password_client": client.password_client
+                    "revoked": client.is_revoked,
+                    "is_confidential": client.is_confidential,
+                    "personal_access_client": client.is_personal_access_client,
+                    "password_client": client.is_password_client
                 })
             
             return self.success_response(

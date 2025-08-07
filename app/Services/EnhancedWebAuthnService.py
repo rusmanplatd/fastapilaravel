@@ -22,6 +22,7 @@ from app.Services.BaseService import BaseService
 from app.Services.MFAAuditService import MFAAuditService
 from app.Services.MFARateLimitService import MFARateLimitService
 from database.migrations.create_mfa_attempts_table import MFAAttemptType, MFAAttemptStatus
+from database.migrations.create_mfa_audit_log_table import MFAAuditEvent
 from config.settings import settings
 
 
@@ -37,7 +38,7 @@ class EnhancedWebAuthnService(BaseService):
         self.rate_limit_service = MFARateLimitService(db)
         
         # Trusted attestation root certificates (in production, load from config)
-        self.trusted_attestation_roots = []
+        self.trusted_attestation_roots: List[bytes] = []
         
         # Known authenticator AAGUIDs and their metadata
         self.authenticator_metadata = {
@@ -130,7 +131,7 @@ class EnhancedWebAuthnService(BaseService):
                 "timeout": options.timeout,
                 "excludeCredentials": [
                     {
-                        "id": base64.urlsafe_b64encode(cred["id"]).decode('utf-8'),
+                        "id": base64.urlsafe_b64encode(cred["id"] if isinstance(cred["id"], bytes) else str(cred["id"]).encode('latin-1')).decode('utf-8'),
                         "type": cred["type"]
                     } for cred in existing_credentials
                 ],
@@ -196,7 +197,7 @@ class EnhancedWebAuthnService(BaseService):
             
             if not verification.verified:
                 self.audit_service.log_event(
-                    "SETUP_FAILED", user=user, mfa_method="webauthn",
+                    MFAAuditEvent.SETUP_FAILED, user=user, mfa_method="webauthn",
                     error_message="Registration verification failed"
                 )
                 return False, "Registration verification failed", None
@@ -262,7 +263,7 @@ class EnhancedWebAuthnService(BaseService):
             
         except InvalidRegistrationResponse as e:
             self.audit_service.log_event(
-                "SETUP_FAILED", user=user, mfa_method="webauthn",
+                MFAAuditEvent.SETUP_FAILED, user=user, mfa_method="webauthn",
                 error_message=f"Invalid registration response: {str(e)}"
             )
             return False, f"Invalid registration response: {str(e)}", None
@@ -299,7 +300,7 @@ class EnhancedWebAuthnService(BaseService):
                 "rpId": options.rp_id,
                 "allowCredentials": [
                     {
-                        "id": base64.urlsafe_b64encode(cred["id"]).decode('utf-8'),
+                        "id": base64.urlsafe_b64encode(cred["id"] if isinstance(cred["id"], bytes) else str(cred["id"]).encode('latin-1')).decode('utf-8'),
                         "type": cred["type"],
                         "transports": ["usb", "nfc", "ble", "internal"]  # All possible transports
                     } for cred in (allowed_credentials or [])
@@ -466,7 +467,7 @@ class EnhancedWebAuthnService(BaseService):
             })
         return credentials
     
-    def _extract_device_info(self, verification) -> Dict[str, Any]:
+    def _extract_device_info(self, verification: Any) -> Dict[str, Any]:
         """Extract device information from attestation"""
         device_info = {
             "type": "unknown",
@@ -488,7 +489,7 @@ class EnhancedWebAuthnService(BaseService):
         
         return device_info
     
-    def _validate_attestation(self, verification) -> bool:
+    def _validate_attestation(self, verification: Any) -> bool:
         """Validate attestation statement (simplified implementation)"""
         # In production, implement full attestation validation
         # This includes verifying attestation certificates against trusted roots
@@ -511,7 +512,7 @@ class EnhancedWebAuthnService(BaseService):
     def _get_credential_usage_stats(self, credential: WebAuthnCredential) -> Dict[str, Any]:
         """Get usage statistics for a credential"""
         # Count recent usage
-        recent_usage = self.db.query(self.db.query).filter().count()  # Placeholder
+        # recent_usage = 0  # Placeholder for real implementation
         
         return {
             "total_uses": credential.sign_count,

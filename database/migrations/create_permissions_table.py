@@ -15,15 +15,15 @@ if TYPE_CHECKING:
 class Permission(BaseModel):
     __tablename__ = "permissions"
     
-    name: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
-    slug: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
-    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    guard_name: Mapped[str] = mapped_column(String(255), default="api", nullable=False)
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    name: Mapped[str] = mapped_column(unique=True, index=True, nullable=False)
+    slug: Mapped[str] = mapped_column(unique=True, index=True, nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(nullable=True)
+    guard_name: Mapped[str] = mapped_column(default="api", nullable=False)
+    is_active: Mapped[bool] = mapped_column(default=True, nullable=False)
     
     # Relationships
-    roles: Mapped[List[Role]] = relationship("Role", secondary=role_permission_table, back_populates="permissions")
-    users: Mapped[List[User]] = relationship("User", secondary=user_permission_table, back_populates="direct_permissions")
+    roles: Mapped[List[Role]] = relationship("Role", secondary=role_permission_table, back_populates="permissions")  # type: ignore[arg-type]
+    users: Mapped[List[User]] = relationship("User", secondary=user_permission_table, back_populates="direct_permissions")  # type: ignore[arg-type]
     
     def to_dict_safe(self) -> Dict[str, Any]:
         return {

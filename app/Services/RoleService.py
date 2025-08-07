@@ -2,6 +2,7 @@ from typing import Optional, List, Tuple, Dict, Any
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import or_
+from sqlalchemy.sql.elements import ColumnElement
 
 from app.Models import Permission, Role, User
 from app.Http.Schemas import RoleCreate, RoleUpdate
@@ -17,7 +18,7 @@ class RoleService(BaseService):
                 or_(
                     Role.name == role_data.name,
                     Role.slug == role_data.slug
-                )
+                )  # type: ignore[arg-type]
             ).first()
             
             if existing:
@@ -49,7 +50,7 @@ class RoleService(BaseService):
     
     def get_role_by_name(self, name: str) -> Optional[Role]:
         return self.db.query(Role).filter(
-            or_(Role.name == name, Role.slug == name)
+            or_(Role.name == name, Role.slug == name)  # type: ignore[arg-type]
         ).first()
     
     def get_all_roles(self, skip: int = 0, limit: int = 100, active_only: bool = True) -> List[Role]:
@@ -70,7 +71,7 @@ class RoleService(BaseService):
                     or_(
                         Role.name == (role_data.name or role.name),
                         Role.slug == (role_data.slug or role.slug)
-                    )
+                    )  # type: ignore[arg-type]
                 ).first()
                 
                 if existing:
@@ -258,7 +259,7 @@ class RoleService(BaseService):
             Role.description.ilike(f"%{query}%")
         )
         
-        return self.db.query(Role).filter(search_filter).offset(skip).limit(limit).all()
+        return self.db.query(Role).filter(search_filter).offset(skip).limit(limit).all()  # type: ignore[arg-type]
     
     def get_roles_count(self, active_only: bool = True) -> int:
         query = self.db.query(Role)
@@ -276,7 +277,7 @@ class RoleService(BaseService):
                     or_(
                         Role.name == role_data.name,
                         Role.slug == role_data.slug
-                    )
+                    )  # type: ignore[arg-type]
                 ).first()
                 
                 if not existing:

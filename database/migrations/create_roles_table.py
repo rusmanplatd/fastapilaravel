@@ -15,16 +15,16 @@ if TYPE_CHECKING:
 class Role(BaseModel):
     __tablename__ = "roles"
     
-    name: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
-    slug: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
-    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    guard_name: Mapped[str] = mapped_column(String(255), default="api", nullable=False)
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    is_default: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    name: Mapped[str] = mapped_column(unique=True, index=True, nullable=False)
+    slug: Mapped[str] = mapped_column(unique=True, index=True, nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(nullable=True)
+    guard_name: Mapped[str] = mapped_column(default="api", nullable=False)
+    is_active: Mapped[bool] = mapped_column(default=True, nullable=False)
+    is_default: Mapped[bool] = mapped_column(default=False, nullable=False)
     
     # Relationships
-    permissions: Mapped[List[Permission]] = relationship("Permission", secondary=role_permission_table, back_populates="roles")
-    users: Mapped[List[User]] = relationship("User", secondary=user_role_table, back_populates="roles")
+    permissions: Mapped[List[Permission]] = relationship("Permission", secondary=role_permission_table, back_populates="roles")  # type: ignore[has-type]
+    users: Mapped[List[User]] = relationship("User", secondary=user_role_table, back_populates="roles")  # type: ignore[arg-type]
     
     # Permission Methods
     def give_permission_to(self, permission: Permission) -> None:

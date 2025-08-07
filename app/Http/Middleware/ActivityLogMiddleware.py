@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import time
-from typing import Optional, Any, Dict, Callable, Awaitable
-from fastapi import Request, Response
+from typing import Optional, Any, Dict, Callable, Awaitable, List
+from starlette.requests import Request
+from starlette.responses import Response
 from starlette.middleware.base import BaseHTTPMiddleware
 from app.Services.ActivityLogService import ActivityLogService
 from app.Services.AuthService import AuthService
@@ -19,7 +20,7 @@ class ActivityLogMiddleware(BaseHTTPMiddleware):
         app: Any,
         log_requests: bool = True,
         log_name: str = "api",
-        exclude_paths: Optional[list] = None,
+        exclude_paths: Optional[List[str]] = None,
         log_successful_only: bool = False
     ):
         """
@@ -96,7 +97,14 @@ class ActivityLogMiddleware(BaseHTTPMiddleware):
             auth_header = request.headers.get("Authorization")
             if auth_header and auth_header.startswith("Bearer "):
                 token = auth_header.split(" ")[1]
-                user = await AuthService.get_user_from_token(token)
+                from config.database import get_database
+                db_gen = get_database()
+                db = next(db_gen)
+                try:
+                    auth_service = AuthService(db)
+                    user = auth_service.get_current_user(token)
+                finally:
+                    db.close()
                 return user
             
             # Try to get user from OAuth2 token (if implementing OAuth2 middleware)

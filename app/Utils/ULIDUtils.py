@@ -62,9 +62,6 @@ class ULIDUtils:
         Returns:
             True if valid ULID, False otherwise
         """
-        if not isinstance(ulid, str):
-            return False
-            
         if len(ulid) != ULIDUtils.ULID_LENGTH:
             return False
             

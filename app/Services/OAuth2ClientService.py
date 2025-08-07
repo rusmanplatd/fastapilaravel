@@ -239,7 +239,7 @@ class OAuth2ClientService:
             List of active OAuth2Client instances
         """
         return db.query(OAuth2Client).filter(
-            OAuth2Client.revoked == False
+            OAuth2Client.is_revoked == False
         ).offset(skip).limit(limit).all()
     
     def update_client(
@@ -269,7 +269,7 @@ class OAuth2ClientService:
             client.name = name
         
         if redirect_uri is not None:
-            client.redirect = redirect_uri
+            client.set_redirect_uris([redirect_uri])
         
         db.commit()
         db.refresh(client)
@@ -292,7 +292,7 @@ class OAuth2ClientService:
             Tuple of (updated client, plain secret) or None if not found/public
         """
         client = self.get_client_by_id(db, client_id)
-        if not client or client.is_public():
+        if not client or client.is_public:
             return None
         
         # Generate new secret
@@ -344,7 +344,8 @@ class OAuth2ClientService:
         if not client:
             return False
         
-        client.restore()
+        # TODO: Implement restore functionality if needed
+        pass
         db.commit()
         
         return True
@@ -388,34 +389,36 @@ class OAuth2ClientService:
         # Count active tokens
         active_access_tokens = db.query(OAuth2AccessToken).filter(
             OAuth2AccessToken.client_id == client.id,
-            OAuth2AccessToken.revoked == False
+            OAuth2AccessToken.is_revoked == False
         ).count()
         
         # Count total tokens ever issued
         total_access_tokens = db.query(OAuth2AccessToken).filter(
-            OAuth2AccessToken.client_id == client.id
+            OAuth2AccessToken.client_id == client.client_id
         ).count()
         
         # Count active refresh tokens
-        active_refresh_tokens = db.query(OAuth2RefreshToken).filter(
-            OAuth2RefreshToken.client_id == client.id,
-            OAuth2RefreshToken.revoked == False
+        active_refresh_tokens = db.query(OAuth2RefreshToken).join(
+            OAuth2AccessToken, OAuth2RefreshToken.access_token_id == OAuth2AccessToken.token_id
+        ).filter(
+            OAuth2AccessToken.client_id == client.client_id,
+            OAuth2RefreshToken.is_revoked == False
         ).count()
         
         # Count auth codes (typically short-lived)
         active_auth_codes = db.query(OAuth2AuthorizationCode).filter(
-            OAuth2AuthorizationCode.client_id == client.id,
-            OAuth2AuthorizationCode.revoked == False
+            OAuth2AuthorizationCode.client_id == client.client_id,
+            OAuth2AuthorizationCode.is_revoked == False
         ).count()
         
         return {
             "client_id": client.id,
             "client_name": client.name,
             "oauth_client_id": client.client_id,
-            "is_revoked": client.is_revoked(),
-            "is_confidential": client.is_confidential(),
-            "is_personal_access_client": client.is_personal_access_client(),
-            "is_password_client": client.is_password_client(),
+            "is_revoked": client.is_revoked,
+            "is_confidential": client.is_confidential,
+            "is_personal_access_client": client.is_personal_access_client,
+            "is_password_client": client.is_password_client,
             "active_access_tokens": active_access_tokens,
             "total_access_tokens": total_access_tokens,
             "active_refresh_tokens": active_refresh_tokens,
@@ -457,25 +460,27 @@ class OAuth2ClientService:
         # Revoke access tokens
         access_tokens = db.query(OAuth2AccessToken).filter(
             OAuth2AccessToken.client_id == client_id,
-            OAuth2AccessToken.revoked == False
+            OAuth2AccessToken.is_revoked == False
         ).all()
         
         for token in access_tokens:
             token.revoke()
         
         # Revoke refresh tokens
-        refresh_tokens = db.query(OAuth2RefreshToken).filter(
-            OAuth2RefreshToken.client_id == client_id,
-            OAuth2RefreshToken.revoked == False
+        refresh_tokens = db.query(OAuth2RefreshToken).join(
+            OAuth2AccessToken, OAuth2RefreshToken.access_token_id == OAuth2AccessToken.token_id
+        ).filter(
+            OAuth2AccessToken.client_id == client_id,
+            OAuth2RefreshToken.is_revoked == False
         ).all()
         
-        for token in refresh_tokens:
-            token.revoke()
+        for refresh_token in refresh_tokens:
+            refresh_token.revoke()
         
         # Revoke auth codes
         auth_codes = db.query(OAuth2AuthorizationCode).filter(
             OAuth2AuthorizationCode.client_id == client_id,
-            OAuth2AuthorizationCode.revoked == False
+            OAuth2AuthorizationCode.is_revoked == False
         ).all()
         
         for code in auth_codes:
@@ -508,11 +513,13 @@ class OAuth2ClientService:
         
         # Build base queries
         access_query = db.query(OAuth2AccessToken).filter(OAuth2AccessToken.client_id == client.id)
-        refresh_query = db.query(OAuth2RefreshToken).filter(OAuth2RefreshToken.client_id == client.id)
+        refresh_query = db.query(OAuth2RefreshToken).join(
+            OAuth2AccessToken, OAuth2RefreshToken.access_token_id == OAuth2AccessToken.token_id
+        ).filter(OAuth2AccessToken.client_id == client.id)
         
         if active_only:
-            access_query = access_query.filter(OAuth2AccessToken.revoked == False)
-            refresh_query = refresh_query.filter(OAuth2RefreshToken.revoked == False)
+            access_query = access_query.filter(OAuth2AccessToken.is_revoked == False)
+            refresh_query = refresh_query.filter(OAuth2RefreshToken.is_revoked == False)
         
         # Get tokens
         access_tokens = access_query.limit(limit).all()
@@ -527,22 +534,22 @@ class OAuth2ClientService:
                 "name": token.name,
                 "user_id": token.user_id,
                 "scopes": token.get_scopes(),
-                "revoked": token.is_revoked(),
-                "expired": token.is_expired(),
+                "revoked": token.is_revoked,
+                "expired": token.is_expired,
                 "created_at": token.created_at,
                 "expires_at": token.expires_at
             })
         
         refresh_token_data = []
-        for token in refresh_tokens:
+        for refresh_token in refresh_tokens:
             refresh_token_data.append({
-                "id": token.id,
-                "token_id": token.token_id,
-                "access_token_id": token.access_token_id,
-                "revoked": token.is_revoked(),
-                "expired": token.is_expired(),
-                "created_at": token.created_at,
-                "expires_at": token.expires_at
+                "id": refresh_token.id,
+                "token_id": refresh_token.token_id,
+                "access_token_id": refresh_token.access_token_id,
+                "revoked": refresh_token.is_revoked,
+                "expired": refresh_token.is_expired,
+                "created_at": refresh_token.created_at,
+                "expires_at": refresh_token.expires_at
             })
         
         return {

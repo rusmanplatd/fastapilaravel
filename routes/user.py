@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Any
+from typing_extensions import Annotated
 
 from app.Http.Controllers import get_current_user
 from app.Http.Schemas import UserResponse, UpdateProfileRequest
@@ -12,8 +13,8 @@ user_router = APIRouter(prefix="/users", tags=["Users"])
 
 
 @user_router.get("/me", response_model=dict)
-async def get_current_user_profile(current_user: User = Depends(get_current_user)):
-    user_response = UserResponse.from_orm(current_user)
+async def get_current_user_profile(current_user: Annotated[User, Depends(get_current_user)]) -> dict[str, Any]:
+    user_response = UserResponse.model_validate(current_user)  # type: ignore[attr-defined]
     return {
         "success": True,
         "message": "User profile retrieved successfully",
@@ -25,9 +26,9 @@ async def get_current_user_profile(current_user: User = Depends(get_current_user
 @user_router.put("/me", response_model=dict)
 async def update_current_user_profile(
     profile_data: UpdateProfileRequest,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_database)
-):
+    db: Annotated[Session, Depends(get_database)],
+    current_user: Annotated[User, Depends(get_current_user)]
+) -> dict[str, Any]:
     auth_service = AuthService(db)
     
     update_data = {}
@@ -47,7 +48,7 @@ async def update_current_user_profile(
             }
         )
     
-    user_response = UserResponse.from_orm(updated_user)
+    user_response = UserResponse.model_validate(updated_user)  # type: ignore[attr-defined]
     return {
         "success": True,
         "message": message,
@@ -58,9 +59,9 @@ async def update_current_user_profile(
 
 @user_router.delete("/me", response_model=dict)
 async def deactivate_current_user(
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_database)
-):
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_database)]
+) -> dict[str, Any]:
     try:
         current_user.is_active = False
         db.commit()
@@ -86,9 +87,9 @@ async def deactivate_current_user(
 @user_router.get("/profile/{user_id}", response_model=dict)
 async def get_user_profile_by_id(
     user_id: int,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_database)
-):
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_database)]
+) -> dict[str, Any]:
     user = db.query(User).filter(User.id == user_id, User.is_active == True).first()
     
     if not user:

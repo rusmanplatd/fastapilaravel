@@ -27,17 +27,17 @@ if TYPE_CHECKING:
 class User(BaseModel, LogsActivityMixin, NotifiableMixin):
     __tablename__ = "users"
     
-    name: Mapped[str] = mapped_column(String(255), nullable=False)
-    email: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
-    password: Mapped[str] = mapped_column(String(255), nullable=False)
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
-    email_verified_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
-    remember_token: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    name: Mapped[str] = mapped_column(nullable=False)
+    email: Mapped[str] = mapped_column(unique=True, index=True, nullable=False)
+    password: Mapped[str] = mapped_column(nullable=False)
+    is_active: Mapped[bool] = mapped_column(default=True)
+    is_verified: Mapped[bool] = mapped_column(default=False)
+    email_verified_at: Mapped[Optional[datetime]] = mapped_column(nullable=True)
+    remember_token: Mapped[Optional[str]] = mapped_column(nullable=True)
     
     # Relationships
-    roles: Mapped[List[Role]] = relationship("Role", secondary=user_role_table, back_populates="users")
-    direct_permissions: Mapped[List[Permission]] = relationship("Permission", secondary=user_permission_table, back_populates="users")
+    roles: Mapped[List[Role]] = relationship("Role", secondary=user_role_table, back_populates="users")  # type: ignore[has-type]
+    direct_permissions: Mapped[List[Permission]] = relationship("Permission", secondary=user_permission_table, back_populates="users")  # type: ignore[has-type]
     
     # OAuth2 relationships
     oauth_access_tokens: Mapped[List[OAuth2AccessToken]] = relationship(

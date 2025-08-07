@@ -261,7 +261,7 @@ class OAuth2ScopesService:
         search_pattern = f"%{query}%"
         
         return db.query(OAuth2Scope).filter(
-            or_(
+            or_(  # type: ignore[arg-type]
                 OAuth2Scope.name.ilike(search_pattern),
                 OAuth2Scope.description.ilike(search_pattern),
                 OAuth2Scope.scope_id.ilike(search_pattern)
@@ -289,7 +289,7 @@ class OAuth2ScopesService:
             # Count active tokens with this scope
             # Note: This is not efficient for large datasets
             active_tokens = db.query(OAuth2AccessToken).filter(
-                OAuth2AccessToken.revoked == False
+                OAuth2AccessToken.is_revoked == False
             ).all()
             
             count = 0

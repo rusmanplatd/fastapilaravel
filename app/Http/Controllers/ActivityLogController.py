@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import math
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 from datetime import datetime, timedelta
 from fastapi import HTTPException, Depends, Query
+from typing_extensions import Annotated
 from sqlalchemy.orm import Session
-from sqlalchemy import func, desc, and_
+from sqlalchemy import func, desc, and_  # type: ignore[attr-defined]
 
 from app.Http.Schemas.ActivityLogSchemas import (
     ActivityLogResponse,
@@ -30,18 +31,18 @@ class ActivityLogController:
     
     @staticmethod
     def get_activity_logs(
-        log_name: str = Query(None, description="Filter by log name"),
-        event: str = Query(None, description="Filter by event type"),
-        subject_type: str = Query(None, description="Filter by subject type"),
-        subject_id: str = Query(None, description="Filter by subject ID"),
-        causer_id: str = Query(None, description="Filter by causer ID"),
-        batch_uuid: str = Query(None, description="Filter by batch UUID"),
-        page: int = Query(1, ge=1, description="Page number"),
-        per_page: int = Query(20, ge=1, le=100, description="Items per page"),
-        from_date: datetime = Query(None, description="Filter from date"),
-        to_date: datetime = Query(None, description="Filter to date"),
-        db: Session = Depends(get_db_session),
-        current_user: User = Depends(AuthService.get_current_user)
+        db: Annotated[Session, Depends(get_db_session)],
+        current_user: Annotated[User, Depends(AuthService.get_current_user)],
+        log_name: Annotated[Optional[str], Query(description="Filter by log name")] = None,
+        event: Annotated[Optional[str], Query(description="Filter by event type")] = None,
+        subject_type: Annotated[Optional[str], Query(description="Filter by subject type")] = None,
+        subject_id: Annotated[Optional[str], Query(description="Filter by subject ID")] = None,
+        causer_id: Annotated[Optional[str], Query(description="Filter by causer ID")] = None,
+        batch_uuid: Annotated[Optional[str], Query(description="Filter by batch UUID")] = None,
+        page: Annotated[int, Query(ge=1, description="Page number")] = 1,
+        per_page: Annotated[int, Query(ge=1, le=100, description="Items per page")] = 20,
+        from_date: Annotated[Optional[datetime], Query(description="Filter from date")] = None,
+        to_date: Annotated[Optional[datetime], Query(description="Filter to date")] = None
     ) -> ActivityLogListResponse:
         """
         Get paginated list of activity logs with optional filters.
@@ -106,7 +107,7 @@ class ActivityLogController:
         total_pages = math.ceil(total / per_page)
         
         return ActivityLogListResponse(
-            data=[ActivityLogResponse.model_validate(log) for log in logs],
+            data=[ActivityLogResponse.model_validate(log) for log in logs],  # type: ignore[attr-defined]
             total=total,
             page=page,
             per_page=per_page,
@@ -116,8 +117,8 @@ class ActivityLogController:
     @staticmethod
     def get_activity_log(
         log_id: str,
-        db: Session = Depends(get_db_session),
-        current_user: User = Depends(AuthService.get_current_user)
+        db: Annotated[Session, Depends(get_db_session)],
+        current_user: Annotated[User, Depends(AuthService.get_current_user)]
     ) -> ActivityLogResponse:
         """
         Get a specific activity log by ID.
@@ -140,13 +141,13 @@ class ActivityLogController:
         if not log:
             raise HTTPException(status_code=404, detail="Activity log not found")
         
-        return ActivityLogResponse.model_validate(log)
+        return ActivityLogResponse.model_validate(log)  # type: ignore[attr-defined, no-any-return]
     
     @staticmethod
     def create_activity_log(
         request: CreateActivityLogRequest,
-        db: Session = Depends(get_db_session),
-        current_user: User = Depends(AuthService.get_current_user)
+        db: Annotated[Session, Depends(get_db_session)],
+        current_user: Annotated[User, Depends(AuthService.get_current_user)]
     ) -> ActivityLogResponse:
         """
         Manually create an activity log entry.
@@ -178,7 +179,7 @@ class ActivityLogController:
                 db_session=db
             )
             
-            return ActivityLogResponse.model_validate(log)
+            return ActivityLogResponse.model_validate(log)  # type: ignore[attr-defined, no-any-return]  # type: ignore[attr-defined, no-any-return]
         
         finally:
             # Clear the current user
@@ -186,9 +187,9 @@ class ActivityLogController:
     
     @staticmethod
     def get_activity_stats(
-        days: int = Query(30, ge=1, le=365, description="Number of days to analyze"),
-        db: Session = Depends(get_db_session),
-        current_user: User = Depends(AuthService.get_current_user)
+        db: Annotated[Session, Depends(get_db_session)],
+        current_user: Annotated[User, Depends(AuthService.get_current_user)],
+        days: Annotated[int, Query(ge=1, le=365, description="Number of days to analyze")] = 30
     ) -> ActivityLogStatsResponse:
         """
         Get activity log statistics.
@@ -244,7 +245,7 @@ class ActivityLogController:
             date_str = date.strftime('%Y-%m-%d')
             
             count = db.query(ActivityLog).filter(
-                func.date(ActivityLog.created_at) == date
+                func.date(ActivityLog.created_at) == date  # type: ignore[attr-defined]
             ).count()
             
             logs_by_date[date_str] = count
@@ -282,8 +283,8 @@ class ActivityLogController:
     @staticmethod
     def clean_old_logs(
         request: CleanLogsRequest,
-        db: Session = Depends(get_db_session),
-        current_user: User = Depends(AuthService.get_current_user)
+        db: Annotated[Session, Depends(get_db_session)],
+        current_user: Annotated[User, Depends(AuthService.get_current_user)]
     ) -> CleanLogsResponse:
         """
         Clean old activity logs.
@@ -331,10 +332,10 @@ class ActivityLogController:
     def get_logs_for_subject(
         subject_type: str,
         subject_id: str,
-        page: int = Query(1, ge=1),
-        per_page: int = Query(20, ge=1, le=100),
-        db: Session = Depends(get_db_session),
-        current_user: User = Depends(AuthService.get_current_user)
+        db: Annotated[Session, Depends(get_db_session)],
+        current_user: Annotated[User, Depends(AuthService.get_current_user)],
+        page: Annotated[int, Query(ge=1)] = 1,
+        per_page: Annotated[int, Query(ge=1, le=100)] = 20
     ) -> ActivityLogListResponse:
         """
         Get activity logs for a specific subject (model instance).
@@ -356,10 +357,8 @@ class ActivityLogController:
         
         # Build query
         query = db.query(ActivityLog).filter(
-            and_(
-                ActivityLog.subject_type == subject_type,
-                ActivityLog.subject_id == subject_id
-            )
+            ActivityLog.subject_type == subject_type,
+            ActivityLog.subject_id == subject_id
         )
         
         # Get total count
@@ -373,7 +372,7 @@ class ActivityLogController:
         total_pages = math.ceil(total / per_page)
         
         return ActivityLogListResponse(
-            data=[ActivityLogResponse.model_validate(log) for log in logs],
+            data=[ActivityLogResponse.model_validate(log) for log in logs],  # type: ignore[attr-defined]
             total=total,
             page=page,
             per_page=per_page,
@@ -383,7 +382,7 @@ class ActivityLogController:
     @staticmethod
     def start_batch_operation(
         request: BatchOperationRequest,
-        current_user: User = Depends(AuthService.get_current_user)
+        current_user: Annotated[User, Depends(AuthService.get_current_user)]
     ) -> BatchOperationResponse:
         """
         Start a batch operation for grouped activity logging.
@@ -419,7 +418,7 @@ class ActivityLogController:
     
     @staticmethod
     def end_batch_operation(
-        current_user: User = Depends(AuthService.get_current_user)
+        current_user: Annotated[User, Depends(AuthService.get_current_user)]
     ) -> Dict[str, Any]:
         """
         End the current batch operation.

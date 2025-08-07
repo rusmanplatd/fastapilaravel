@@ -34,7 +34,7 @@ class JobEventData:
     error: Optional[Exception] = None
     duration_ms: Optional[int] = None
     memory_usage_mb: Optional[float] = None
-    extra_data: Dict[str, Any] = None
+    extra_data: Optional[Dict[str, Any]] = None
     
     def __post_init__(self) -> None:
         if self.extra_data is None:
@@ -63,7 +63,7 @@ class JobEventDispatcher:
         """Register handler for all events."""
         self.global_listeners.append(handler)
     
-    def dispatch(self, event: JobEvent, job: ShouldQueue, **kwargs) -> None:
+    def dispatch(self, event: JobEvent, job: ShouldQueue, **kwargs: Any) -> None:
         """Dispatch event to all registered handlers."""
         event_data = JobEventData(
             job=job,
@@ -199,11 +199,13 @@ class ObservableJob:
         self._event_dispatcher = global_event_dispatcher
         self._hooks = global_job_hooks
     
-    def emit_event(self, event: JobEvent, **kwargs) -> None:
+    def emit_event(self, event: JobEvent, **kwargs: Any) -> None:
         """Emit job lifecycle event."""
-        self._event_dispatcher.dispatch(event, self, **kwargs)
+        from app.Jobs.Job import ShouldQueue
+        if isinstance(self, ShouldQueue):
+            self._event_dispatcher.dispatch(event, self, **kwargs)
     
-    def execute_hooks(self, hook_type: str, *args) -> None:
+    def execute_hooks(self, hook_type: str, *args: Any) -> None:
         """Execute job hooks."""
         hook_method = getattr(self._hooks, f"call_{hook_type}", None)
         if hook_method:
@@ -264,10 +266,10 @@ global_event_dispatcher.listen(JobEvent.JOB_FAILED, notification_event_handler)
 
 
 # Decorator for adding event hooks to job methods
-def job_event(event: JobEvent):
+def job_event(event: JobEvent) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     """Decorator to emit job events."""
-    def decorator(func):
-        def wrapper(self, *args, **kwargs):
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+        def wrapper(self: Any, *args: Any, **kwargs: Any) -> Any:
             if hasattr(self, 'emit_event'):
                 self.emit_event(event)
             
@@ -296,7 +298,7 @@ class JobExecutionContext:
         
         return self
     
-    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         duration_ms = None
         if self.start_time:
             duration = datetime.now(timezone.utc) - self.start_time

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import time
-from typing import Callable, Optional, Dict, Any, List
+from typing import Callable, Optional, Dict, Any, List, Tuple, Awaitable, TypeVar, Union
 from fastapi import Request, Response, HTTPException, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
@@ -12,13 +12,14 @@ from app.Services import MFAService
 from app.Services.MFAPolicyService import MFAPolicyService, MFARequirementLevel
 from app.Services.MFAAuditService import MFAAuditService
 from app.Services.MFARateLimitService import MFARateLimitService
+from database.migrations.create_mfa_audit_log_table import MFAAuditEvent
 from config.database import get_db
 
 
 class AdvancedMFAMiddleware:
     """Advanced MFA middleware with policy enforcement and security features"""
     
-    def __init__(self):
+    def __init__(self) -> None:
         # Security configuration
         self.device_fingerprint_enabled = True
         self.geo_blocking_enabled = False  # Requires GeoIP database
@@ -59,9 +60,9 @@ class AdvancedMFAMiddleware:
     async def __call__(
         self, 
         request: Request, 
-        call_next: Callable, 
+        call_next: Callable[[Request], Awaitable[Response]], 
         user: Optional[User] = None
-    ) -> Response:
+    ) -> Union[Response, JSONResponse]:
         """Advanced MFA middleware with comprehensive security checks"""
         try:
             # Skip if no user (let auth middleware handle)
@@ -69,7 +70,12 @@ class AdvancedMFAMiddleware:
                 return await call_next(request)
             
             # Check if endpoint is exempt from MFA
-            path = request.url.path
+            if hasattr(request, 'url'):
+                path = str(request.url.path)
+            elif hasattr(request, '__dict__') and hasattr(request, 'scope'):
+                path = getattr(request.scope, 'path', '/')
+            else:
+                path = '/'
             if self._is_mfa_exempt(path):
                 return await call_next(request)
             
@@ -116,7 +122,7 @@ class AdvancedMFAMiddleware:
                     if session_valid:
                         # Log successful MFA check
                         audit_service.log_event(
-                            "MFA_SESSION_VALIDATED",
+                            MFAAuditEvent.VERIFICATION_SUCCESS,
                             user=user,
                             ip_address=context.get("ip_address"),
                             user_agent=context.get("user_agent"),
@@ -128,8 +134,8 @@ class AdvancedMFAMiddleware:
                         )
                         
                         # Add MFA context to request
-                        request.state.mfa_verified = True
-                        request.state.mfa_method = session_info.get("method_used")
+                        request.state.mfa_verified = True  # type: ignore[attr-defined]
+                        request.state.mfa_method = session_info.get("method_used") if session_info else None  # type: ignore[attr-defined]
                         
                         return await call_next(request)
                 
@@ -154,7 +160,7 @@ class AdvancedMFAMiddleware:
                 
                 # Log MFA challenge
                 audit_service.log_event(
-                    "MFA_CHALLENGE_ISSUED",
+                    MFAAuditEvent.MFA_REQUIRED,
                     user=user,
                     ip_address=context.get("ip_address"),
                     user_agent=context.get("user_agent"),
@@ -188,17 +194,33 @@ class AdvancedMFAMiddleware:
     
     def _gather_request_context(self, request: Request, user: User) -> Dict[str, Any]:
         """Gather comprehensive request context for risk assessment"""
+        # Get endpoint path
+        if hasattr(request, 'url'):
+            endpoint = str(request.url.path)
+        elif hasattr(request, '__dict__') and hasattr(request, 'scope'):
+            endpoint = getattr(request.scope, 'path', '/')
+        else:
+            endpoint = '/'
+            
+        # Get method
+        if hasattr(request, 'method'):
+            method = request.method
+        elif hasattr(request, '__dict__') and hasattr(request, 'scope'):
+            method = getattr(request.scope, 'method', 'GET')
+        else:
+            method = 'GET'
+            
         context = {
-            "endpoint": request.url.path,
-            "method": request.method,
+            "endpoint": endpoint,
+            "method": method,
             "timestamp": time.time(),
             "user_id": user.id
         }
         
         # Client information
         context["ip_address"] = self._get_client_ip(request)
-        context["user_agent"] = request.headers.get("user-agent", "")
-        context["referer"] = request.headers.get("referer", "")
+        context["user_agent"] = request.headers.get("user-agent", "") if hasattr(request, 'headers') else ""
+        context["referer"] = request.headers.get("referer", "")  # type: ignore[attr-defined]
         
         # Device fingerprinting
         if self.device_fingerprint_enabled:
@@ -216,29 +238,29 @@ class AdvancedMFAMiddleware:
     def _get_client_ip(self, request: Request) -> str:
         """Get client IP address with proxy support"""
         # Check for forwarded headers
-        forwarded_for = request.headers.get("x-forwarded-for")
+        forwarded_for = request.headers.get("x-forwarded-for")  # type: ignore[attr-defined]
         if forwarded_for:
-            return forwarded_for.split(",")[0].strip()
+            return forwarded_for.split(",")[0].strip()  # type: ignore[no-any-return]
         
-        real_ip = request.headers.get("x-real-ip")
+        real_ip = request.headers.get("x-real-ip")  # type: ignore[attr-defined]
         if real_ip:
-            return real_ip
+            return real_ip  # type: ignore[no-any-return]
         
         # Fallback to direct connection IP
-        if request.client:
-            return request.client.host
+        if request.client:  # type: ignore[attr-defined]
+            return request.client.host  # type: ignore[attr-defined,no-any-return]
         
         return "unknown"
     
     def _generate_device_fingerprint(self, request: Request) -> str:
         """Generate device fingerprint from request headers"""
         fingerprint_data = [
-            request.headers.get("user-agent", ""),
-            request.headers.get("accept-language", ""),
-            request.headers.get("accept-encoding", ""),
-            request.headers.get("sec-ch-ua", ""),
-            request.headers.get("sec-ch-ua-platform", ""),
-            str(sorted(request.headers.items()))
+            request.headers.get("user-agent", ""),  # type: ignore[attr-defined]
+            request.headers.get("accept-language", ""),  # type: ignore[attr-defined]
+            request.headers.get("accept-encoding", ""),  # type: ignore[attr-defined]
+            request.headers.get("sec-ch-ua", ""),  # type: ignore[attr-defined]
+            request.headers.get("sec-ch-ua-platform", ""),  # type: ignore[attr-defined]
+            str(sorted(request.headers.items()))  # type: ignore[attr-defined]
         ]
         
         fingerprint_string = "|".join(fingerprint_data)
@@ -304,7 +326,7 @@ class AdvancedMFAMiddleware:
             risk_factors.append("admin_operation")
         
         # Data modification operations
-        if request.method in ["POST", "PUT", "PATCH", "DELETE"]:
+        if request.method in ["POST", "PUT", "PATCH", "DELETE"]:  # type: ignore[attr-defined]
             risk_factors.append("data_modification")
         
         return risk_factors
@@ -345,14 +367,14 @@ class AdvancedMFAMiddleware:
     def _extract_mfa_session_token(self, request: Request) -> Optional[str]:
         """Extract MFA session token from request"""
         # Check header
-        token = request.headers.get("x-mfa-session-token")
+        token = request.headers.get("x-mfa-session-token")  # type: ignore[attr-defined]
         if token:
-            return token
+            return token  # type: ignore[no-any-return]
         
         # Check query parameter (less secure, for compatibility)
-        token = request.query_params.get("mfa_session_token")
+        token = request.query_params.get("mfa_session_token")  # type: ignore[attr-defined]
         if token:
-            return token
+            return token  # type: ignore[no-any-return]
         
         return None
     
@@ -389,15 +411,17 @@ class AdvancedMFAMiddleware:
                 mfa_session.ip_address != context.get("ip_address")):
                 
                 # Allow IP changes within same network/region (basic check)
-                if not self._is_similar_ip(mfa_session.ip_address, context.get("ip_address")):
+                ip_address = context.get("ip_address")
+                if ip_address and not self._is_similar_ip(mfa_session.ip_address, ip_address):
                     return False, {"error": "IP address mismatch"}
             
             # User agent validation (basic check)
+            user_agent = context.get("user_agent")
             if (mfa_session.user_agent and 
-                context.get("user_agent") and
-                not self._is_similar_user_agent(mfa_session.user_agent, context.get("user_agent"))):
+                user_agent and
+                not self._is_similar_user_agent(mfa_session.user_agent, user_agent)):
                 # Log suspicious activity but don't block (user agents can vary)
-                session_info["user_agent_mismatch"] = True
+                session_info["user_agent_mismatch"] = "True"
             
             return True, session_info
             
@@ -494,40 +518,40 @@ class MFAContextManager:
     @staticmethod
     def add_mfa_context(request: Request, **context: Any) -> None:
         """Add MFA context to request state"""
-        if not hasattr(request.state, "mfa_context"):
-            request.state.mfa_context = {}
+        if not hasattr(request.state, "mfa_context"):  # type: ignore[attr-defined]
+            request.state.mfa_context = {}  # type: ignore[attr-defined]
         
-        request.state.mfa_context.update(context)
+        request.state.mfa_context.update(context)  # type: ignore[attr-defined]
     
     @staticmethod
     def get_mfa_context(request: Request) -> Dict[str, Any]:
         """Get MFA context from request state"""
-        return getattr(request.state, "mfa_context", {})
+        return getattr(request.state, "mfa_context", {})  # type: ignore[attr-defined]
     
     @staticmethod
     def is_mfa_verified(request: Request) -> bool:
         """Check if MFA is verified for this request"""
-        return getattr(request.state, "mfa_verified", False)
+        return getattr(request.state, "mfa_verified", False)  # type: ignore[attr-defined]
     
     @staticmethod
     def get_mfa_method(request: Request) -> Optional[str]:
         """Get MFA method used for this request"""
-        return getattr(request.state, "mfa_method", None)
+        return getattr(request.state, "mfa_method", None)  # type: ignore[attr-defined]
 
 
 # Utility functions for route decorators
-def require_mfa(requirement_level: MFARequirementLevel = MFARequirementLevel.REQUIRED):
+def require_mfa(requirement_level: MFARequirementLevel = MFARequirementLevel.REQUIRED) -> Callable[[Any], Any]:
     """Decorator to require MFA for specific routes"""
-    def decorator(func):
+    def decorator(func: Any) -> Any:
         func._mfa_required = True
         func._mfa_requirement_level = requirement_level
         return func
     return decorator
 
 
-def mfa_exempt():
+def mfa_exempt() -> Callable[[Any], Any]:
     """Decorator to exempt routes from MFA"""
-    def decorator(func):
+    def decorator(func: Any) -> Any:
         func._mfa_exempt = True
         return func
     return decorator

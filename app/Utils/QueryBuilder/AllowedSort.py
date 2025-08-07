@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-from typing import Optional, Callable, Union, TypeVar
+from typing import Optional, Callable, Union, TypeVar, Any
 from abc import ABC, abstractmethod  
-from sqlalchemy.orm import Query as SQLQuery
+from sqlalchemy.orm import Query
 from enum import Enum
 
 T = TypeVar('T')
+SQLQuery = Query[Any]
 
 
 class SortDirection(Enum):

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional, Type, TypeVar, Callable, Dict, Any
+from typing import Optional, Type, TypeVar, Callable, Dict, Any, Annotated
 from starlette.requests import Request
 from fastapi import Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -28,7 +28,7 @@ def get_query_builder_request(request: Request) -> QueryBuilderRequest:
 def create_query_builder_dependency(
     model_class: Type[T],
     get_db: Callable[[], Session]
-) -> Callable[[Request], QueryBuilder[T]]:
+) -> Callable[..., QueryBuilder[T]]:
     """
     Create a FastAPI dependency that returns a configured QueryBuilder
     
@@ -42,7 +42,7 @@ def create_query_builder_dependency(
     
     def query_builder_dependency(
         request: Request,
-        db: Session = Depends(get_db)
+        db: Annotated[Session, Depends(get_db)]
     ) -> QueryBuilder[T]:
         """QueryBuilder dependency"""
         query_request = QueryBuilderRequest.from_request(request)
@@ -51,13 +51,13 @@ def create_query_builder_dependency(
     return query_builder_dependency
 
 
-def handle_query_builder_exceptions(func: Callable) -> Callable:
+def handle_query_builder_exceptions(func: Callable[..., Any]) -> Callable[..., Any]:
     """
     Decorator to handle QueryBuilder exceptions and convert them to HTTP exceptions
     """
     
     @wraps(func)
-    async def wrapper(*args, **kwargs):
+    async def wrapper(*args: Any, **kwargs: Any) -> Any:
         try:
             return await func(*args, **kwargs)
         except InvalidFilterQueryException as e:
@@ -167,11 +167,11 @@ class QueryBuilderMiddleware:
     FastAPI middleware for QueryBuilder
     """
     
-    def __init__(self, app, config: Optional[QueryBuilderConfig] = None):
+    def __init__(self, app: Any, config: Optional[QueryBuilderConfig] = None) -> None:
         self.app = app
         self.config = config or query_builder_config
     
-    async def __call__(self, scope, receive, send):
+    async def __call__(self, scope: Any, receive: Any, send: Any) -> Any:
         if scope["type"] == "http":
             # Apply configuration if needed
             self.config.apply_to_request_class()
@@ -228,19 +228,19 @@ def paginated_response_formatter(
 def create_list_endpoint_dependency(
     model_class: Type[T],
     get_db: Callable[[], Session],
-    allowed_filters: Optional[list] = None,
-    allowed_sorts: Optional[list] = None,
-    allowed_includes: Optional[list] = None,
-    allowed_fields: Optional[list] = None,
-    default_sorts: Optional[list] = None
-) -> Callable:
+    allowed_filters: Optional[list[Any]] = None,
+    allowed_sorts: Optional[list[Any]] = None,
+    allowed_includes: Optional[list[Any]] = None,
+    allowed_fields: Optional[list[Any]] = None,
+    default_sorts: Optional[list[Any]] = None
+) -> Callable[..., Any]:
     """
     Create a ready-to-use dependency for list endpoints
     """
     
     def configured_query_builder(
         request: Request,
-        db: Session = Depends(get_db)
+        db: Annotated[Session, Depends(get_db)]
     ) -> QueryBuilder[T]:
         """Pre-configured QueryBuilder for list endpoint"""
         query_request = QueryBuilderRequest.from_request(request)
@@ -269,16 +269,16 @@ def create_list_endpoint_dependency(
 def create_show_endpoint_dependency(
     model_class: Type[T],
     get_db: Callable[[], Session],
-    allowed_includes: Optional[list] = None,
-    allowed_fields: Optional[list] = None
-) -> Callable:
+    allowed_includes: Optional[list[Any]] = None,
+    allowed_fields: Optional[list[Any]] = None
+) -> Callable[..., Any]:
     """
     Create a ready-to-use dependency for show endpoints
     """
     
     def configured_query_builder(
         request: Request,
-        db: Session = Depends(get_db)
+        db: Annotated[Session, Depends(get_db)]
     ) -> QueryBuilder[T]:
         """Pre-configured QueryBuilder for show endpoint"""
         query_request = QueryBuilderRequest.from_request(request)

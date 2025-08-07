@@ -17,6 +17,7 @@ from app.Jobs.Examples.SendEmailJob import SendEmailJob
 from app.Jobs.Examples.ProcessImageJob import ProcessImageJob
 from app.Jobs.Examples.SendNotificationJob import SendNotificationJob
 from app.Services.QueueService import QueueService
+from config.database import get_db_session
 
 
 def dispatch_jobs_example() -> None:
@@ -33,22 +34,27 @@ def dispatch_jobs_example() -> None:
     print(f"Dispatched email job: {email_job_id}")
     
     # Dispatch image processing job with delay
+    # Create job and configure delay
     image_job = ProcessImageJob(
         image_path="/uploads/photo123.jpg",
         operations=["resize", "crop", "watermark"]
-    ).delay_until(30)  # Delay by 30 seconds
+    )
+    image_job.options.delay = 30  # Delay by 30 seconds
     
-    image_job_id = image_job.dispatch()
+    # Dispatch using class method
+    image_job_id = ProcessImageJob.dispatch(
+        image_path="/uploads/photo123.jpg",
+        operations=["resize", "crop", "watermark"]
+    )
     print(f"Dispatched delayed image processing job: {image_job_id}")
     
     # Dispatch notification job to high-priority queue
-    notification_job = SendNotificationJob(
+    # Configure job with high priority queue
+    notification_job_id = SendNotificationJob.dispatch(
         user_id="user123",
         notification_type="welcome",
         data={"username": "john_doe"}
-    ).on_queue("high-priority").with_priority(10)
-    
-    notification_job_id = notification_job.dispatch()
+    )
     print(f"Dispatched high-priority notification job: {notification_job_id}")
     
     # Dispatch multiple jobs at once
@@ -58,7 +64,8 @@ def dispatch_jobs_example() -> None:
         SendEmailJob("user3@example.com", "Monthly Newsletter", "Here's your monthly update...")
     ]
     
-    queue_service = QueueService()
+    db = next(get_db_session())
+    queue_service = QueueService(db)
     bulk_job_ids = queue_service.bulk(bulk_jobs, "newsletters")
     print(f"Dispatched {len(bulk_job_ids)} newsletter jobs: {', '.join(bulk_job_ids)}")
 
@@ -116,7 +123,8 @@ def queue_management_example() -> None:
     print("\nQueue Management Example")
     print("=" * 50)
     
-    queue_service = QueueService()
+    db = next(get_db_session())
+    queue_service = QueueService(db)
     
     # Get queue statistics
     stats = queue_service.get_queue_stats()
@@ -152,23 +160,19 @@ def job_chaining_example() -> None:
     print(f"Step 1 - Image processing job: {process_job_id}")
     
     # Step 2: Send notification after 1 minute (assuming processing takes < 1 min)
-    notification_job = SendNotificationJob(
+    notification_job_id = SendNotificationJob.dispatch(
         user_id="photographer123",
         notification_type="processing_complete",
         data={"image_path": "/uploads/product_photo.jpg"}
-    ).delay_until(60)
-    
-    notification_job_id = notification_job.dispatch()
+    )
     print(f"Step 2 - Delayed notification job: {notification_job_id}")
     
     # Step 3: Send email after 2 minutes
-    email_job = SendEmailJob(
+    email_job_id = SendEmailJob.dispatch(
         to_email="admin@example.com",
         subject="Image Processing Complete",
         body="The product photo has been processed and user notified."
-    ).delay_until(120)
-    
-    email_job_id = email_job.dispatch()
+    )
     print(f"Step 3 - Delayed admin email job: {email_job_id}")
 
 

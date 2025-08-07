@@ -15,28 +15,28 @@ class Job(BaseModel):
     __tablename__ = "jobs"
     
     # Queue information
-    queue: Mapped[str] = mapped_column(String(255), nullable=False, default="default", index=True)
+    queue: Mapped[str] = mapped_column(nullable=False, default="default", index=True)
     
     # Job payload and metadata
-    payload: Mapped[str] = mapped_column(Text, nullable=False)  # JSON-encoded job data
-    attempts: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
-    reserved_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
-    available_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), nullable=False, index=True)
+    payload: Mapped[str] = mapped_column(nullable=False)  # JSON-encoded job data
+    attempts: Mapped[int] = mapped_column(default=0, nullable=False)
+    reserved_at: Mapped[Optional[datetime]] = mapped_column(nullable=True)
+    available_at: Mapped[datetime] = mapped_column(server_default=func.now(), nullable=False, index=True)
     
     # Job status and processing info
-    is_reserved: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False, index=True)
-    worker_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    is_reserved: Mapped[bool] = mapped_column(default=False, nullable=False, index=True)
+    worker_id: Mapped[Optional[str]] = mapped_column(nullable=True)
     
     # Job type and class information
-    job_class: Mapped[str] = mapped_column(String(255), nullable=False)
-    job_method: Mapped[str] = mapped_column(String(255), default="handle", nullable=False)
+    job_class: Mapped[str] = mapped_column(nullable=False)
+    job_method: Mapped[str] = mapped_column(default="handle", nullable=False)
     
     # Priority and delay
-    priority: Mapped[int] = mapped_column(Integer, default=0, nullable=False, index=True)
-    delay: Mapped[int] = mapped_column(Integer, default=0, nullable=False)  # Seconds to delay
+    priority: Mapped[int] = mapped_column(default=0, nullable=False, index=True)
+    delay: Mapped[int] = mapped_column(default=0, nullable=False)  # Seconds to delay
     
     # Connection information
-    connection: Mapped[str] = mapped_column(String(255), default="default", nullable=False)
+    connection: Mapped[str] = mapped_column(default="default", nullable=False)
     
     def __repr__(self) -> str:
         return f"<Job(id='{self.id}', queue='{self.queue}', job_class='{self.job_class}', attempts={self.attempts})>"

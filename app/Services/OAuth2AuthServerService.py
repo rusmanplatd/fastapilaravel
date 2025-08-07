@@ -54,7 +54,7 @@ class OAuth2TokenResponse:
         }
         
         if self.expires_in is not None:
-            data["expires_in"] = self.expires_in
+            data["expires_in"] = self.expires_in  # type: ignore[assignment]
         
         if self.refresh_token:
             data["refresh_token"] = self.refresh_token
@@ -224,14 +224,14 @@ class OAuth2AuthServerService:
         """Validate client credentials."""
         client = db.query(OAuth2Client).filter(
             OAuth2Client.client_id == client_id,
-            OAuth2Client.revoked == False
+            OAuth2Client.is_revoked == False
         ).first()
         
         if not client:
             return None
         
         # Public clients don't need secret verification
-        if client.is_public():
+        if client.is_public:
             return client
         
         # Confidential clients must provide valid secret
@@ -272,7 +272,7 @@ class OAuth2AuthServerService:
             return None
         
         access_token = self.find_access_token_by_id(db, token_id)
-        if not access_token or not access_token.is_valid():
+        if not access_token or not access_token.is_valid:
             return None
         
         return access_token

@@ -1,6 +1,7 @@
 from fastapi import HTTPException, status, Depends
 from functools import wraps
-from typing import List, Union, Callable
+from typing import List, Union, Callable, Any
+from typing_extensions import Annotated
 from sqlalchemy.orm import Session
 
 from app.Models import User
@@ -8,7 +9,7 @@ from app.Http.Controllers import get_current_user
 from config import get_database
 
 
-def require_permission(permission: Union[str, List[str]], require_all: bool = True):
+def require_permission(permission: Union[str, List[str]], require_all: bool = True) -> Any:
     """
     Decorator to require specific permission(s) for a route.
     Similar to Spatie Laravel Permission middleware.
@@ -18,9 +19,9 @@ def require_permission(permission: Union[str, List[str]], require_all: bool = Tr
         require_all: If True and multiple permissions provided, user must have ALL permissions.
                     If False, user needs ANY of the permissions.
     """
-    def decorator(func):
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
         @wraps(func)
-        async def wrapper(*args, **kwargs):
+        async def wrapper(*args: Any, **kwargs: Any) -> Any:
             # Get current user from the endpoint dependencies
             current_user = None
             
@@ -74,7 +75,7 @@ def require_permission(permission: Union[str, List[str]], require_all: bool = Tr
     return decorator
 
 
-def require_role(role: Union[str, List[str]], require_all: bool = True):
+def require_role(role: Union[str, List[str]], require_all: bool = True) -> Any:
     """
     Decorator to require specific role(s) for a route.
     
@@ -83,9 +84,9 @@ def require_role(role: Union[str, List[str]], require_all: bool = True):
         require_all: If True and multiple roles provided, user must have ALL roles.
                     If False, user needs ANY of the roles.
     """
-    def decorator(func):
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
         @wraps(func)
-        async def wrapper(*args, **kwargs):
+        async def wrapper(*args: Any, **kwargs: Any) -> Any:
             # Get current user from the endpoint dependencies
             current_user = None
             
@@ -138,7 +139,7 @@ def require_role(role: Union[str, List[str]], require_all: bool = True):
     return decorator
 
 
-def require_permission_or_role(permission: Union[str, List[str]], role: Union[str, List[str]]):
+def require_permission_or_role(permission: Union[str, List[str]], role: Union[str, List[str]]) -> Any:
     """
     Decorator that allows access if user has either the required permission(s) OR role(s).
     
@@ -146,9 +147,9 @@ def require_permission_or_role(permission: Union[str, List[str]], role: Union[st
         permission: Single permission string or list of permissions
         role: Single role string or list of roles
     """
-    def decorator(func):
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
         @wraps(func)
-        async def wrapper(*args, **kwargs):
+        async def wrapper(*args: Any, **kwargs: Any) -> Any:
             # Get current user from the endpoint dependencies
             current_user = None
             
@@ -209,11 +210,11 @@ def require_permission_or_role(permission: Union[str, List[str]], role: Union[st
 
 
 # Dependency functions for FastAPI
-def check_permission(permission_name: str):
+def check_permission(permission_name: str) -> Callable[[Annotated[User, Depends(get_current_user)]], User]:
     """
     FastAPI dependency to check if current user has specific permission
     """
-    def permission_checker(current_user: User = Depends(get_current_user)):
+    def permission_checker(current_user: Annotated[User, Depends(get_current_user)]) -> User:
         if not current_user.has_permission_to(permission_name):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -223,11 +224,11 @@ def check_permission(permission_name: str):
     return permission_checker
 
 
-def check_role(role_name: str):
+def check_role(role_name: str) -> Callable[[Annotated[User, Depends(get_current_user)]], User]:
     """
     FastAPI dependency to check if current user has specific role
     """
-    def role_checker(current_user: User = Depends(get_current_user)):
+    def role_checker(current_user: Annotated[User, Depends(get_current_user)]) -> User:
         if not current_user.has_role(role_name):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -237,11 +238,11 @@ def check_role(role_name: str):
     return role_checker
 
 
-def check_any_permission(permission_names: List[str]):
+def check_any_permission(permission_names: List[str]) -> Callable[[Annotated[User, Depends(get_current_user)]], User]:
     """
     FastAPI dependency to check if current user has any of the specified permissions
     """
-    def permission_checker(current_user: User = Depends(get_current_user)):
+    def permission_checker(current_user: Annotated[User, Depends(get_current_user)]) -> User:
         if not current_user.has_any_permission(permission_names):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -251,11 +252,11 @@ def check_any_permission(permission_names: List[str]):
     return permission_checker
 
 
-def check_all_permissions(permission_names: List[str]):
+def check_all_permissions(permission_names: List[str]) -> Callable[[Annotated[User, Depends(get_current_user)]], User]:
     """
     FastAPI dependency to check if current user has all of the specified permissions
     """
-    def permission_checker(current_user: User = Depends(get_current_user)):
+    def permission_checker(current_user: Annotated[User, Depends(get_current_user)]) -> User:
         if not current_user.has_all_permissions(permission_names):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -265,11 +266,11 @@ def check_all_permissions(permission_names: List[str]):
     return permission_checker
 
 
-def check_any_role(role_names: List[str]):
+def check_any_role(role_names: List[str]) -> Callable[[Annotated[User, Depends(get_current_user)]], User]:
     """
     FastAPI dependency to check if current user has any of the specified roles
     """
-    def role_checker(current_user: User = Depends(get_current_user)):
+    def role_checker(current_user: Annotated[User, Depends(get_current_user)]) -> User:
         if not current_user.has_any_role(role_names):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -279,11 +280,11 @@ def check_any_role(role_names: List[str]):
     return role_checker
 
 
-def check_all_roles(role_names: List[str]):
+def check_all_roles(role_names: List[str]) -> Callable[[Annotated[User, Depends(get_current_user)]], User]:
     """
     FastAPI dependency to check if current user has all of the specified roles
     """
-    def role_checker(current_user: User = Depends(get_current_user)):
+    def role_checker(current_user: Annotated[User, Depends(get_current_user)]) -> User:
         if not current_user.has_all_roles(role_names):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -294,31 +295,31 @@ def check_all_roles(role_names: List[str]):
 
 
 # Convenience functions
-def can(permission: str):
+def can(permission: str) -> Callable[[Annotated[User, Depends(get_current_user)]], User]:
     """Alias for check_permission"""
     return check_permission(permission)
 
 
-def is_role(role: str):
+def is_role(role: str) -> Callable[[Annotated[User, Depends(get_current_user)]], User]:
     """Alias for check_role"""
     return check_role(role)
 
 
-def has_any_permission(permissions: List[str]):
+def has_any_permission(permissions: List[str]) -> Callable[[Annotated[User, Depends(get_current_user)]], User]:
     """Alias for check_any_permission"""
     return check_any_permission(permissions)
 
 
-def has_all_permissions(permissions: List[str]):
+def has_all_permissions(permissions: List[str]) -> Callable[[Annotated[User, Depends(get_current_user)]], User]:
     """Alias for check_all_permissions"""
     return check_all_permissions(permissions)
 
 
-def has_any_role(roles: List[str]):
+def has_any_role(roles: List[str]) -> Callable[[Annotated[User, Depends(get_current_user)]], User]:
     """Alias for check_any_role"""
     return check_any_role(roles)
 
 
-def has_all_roles(roles: List[str]):
+def has_all_roles(roles: List[str]) -> Callable[[Annotated[User, Depends(get_current_user)]], User]:
     """Alias for check_all_roles"""
     return check_all_roles(roles)

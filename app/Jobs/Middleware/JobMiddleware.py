@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Dict, TYPE_CHECKING
+from typing import Any, Callable, Dict, TYPE_CHECKING, List, Optional
 from datetime import datetime, timezone
 
 if TYPE_CHECKING:
@@ -145,7 +145,7 @@ class RetryMiddleware(JobMiddleware):
     def _calculate_delay(self, attempt: int) -> int:
         """Calculate retry delay based on backoff strategy."""
         if self.backoff_strategy == "exponential":
-            return min(2 ** attempt * 60, 3600)  # Cap at 1 hour
+            return int(min(2 ** attempt * 60, 3600))  # Cap at 1 hour
         elif self.backoff_strategy == "linear":
             return attempt * 60  # Linear increase
         elif self.backoff_strategy == "fixed":
@@ -159,7 +159,7 @@ class AuthenticationMiddleware(JobMiddleware):
     Middleware that validates job permissions and authentication.
     """
     
-    def __init__(self, required_permissions: list[str] = None) -> None:
+    def __init__(self, required_permissions: Optional[List[str]] = None) -> None:
         self.required_permissions = required_permissions or []
     
     def handle(self, job: ShouldQueue, next_handler: Callable[[], Any]) -> Any:

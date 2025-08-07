@@ -2,6 +2,7 @@ from typing import Optional, List, Tuple, Dict, Any
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import or_
+from sqlalchemy.sql.elements import ColumnElement
 
 from app.Models import Permission, Role, User
 from app.Http.Schemas import PermissionCreate, PermissionUpdate
@@ -17,7 +18,7 @@ class PermissionService(BaseService):
                 or_(
                     Permission.name == permission_data.name,
                     Permission.slug == permission_data.slug
-                )
+                )  # type: ignore[arg-type]
             ).first()
             
             if existing:
@@ -48,7 +49,7 @@ class PermissionService(BaseService):
     
     def get_permission_by_name(self, name: str) -> Optional[Permission]:
         return self.db.query(Permission).filter(
-            or_(Permission.name == name, Permission.slug == name)
+            or_(Permission.name == name, Permission.slug == name)  # type: ignore[arg-type]
         ).first()
     
     def get_all_permissions(self, skip: int = 0, limit: int = 100, active_only: bool = True) -> List[Permission]:
@@ -66,7 +67,7 @@ class PermissionService(BaseService):
                     or_(
                         Permission.name == (permission_data.name or permission.name),
                         Permission.slug == (permission_data.slug or permission.slug)
-                    )
+                    )  # type: ignore[arg-type]
                 ).first()
                 
                 if existing:
@@ -193,7 +194,7 @@ class PermissionService(BaseService):
             Permission.description.ilike(f"%{query}%")
         )
         
-        return self.db.query(Permission).filter(search_filter).offset(skip).limit(limit).all()
+        return self.db.query(Permission).filter(search_filter).offset(skip).limit(limit).all()  # type: ignore[arg-type]
     
     def get_permissions_count(self, active_only: bool = True) -> int:
         query = self.db.query(Permission)
@@ -211,7 +212,7 @@ class PermissionService(BaseService):
                     or_(
                         Permission.name == perm_data.name,
                         Permission.slug == perm_data.slug
-                    )
+                    )  # type: ignore[arg-type]
                 ).first()
                 
                 if not existing:

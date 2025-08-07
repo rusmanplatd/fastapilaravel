@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Dict, Any, Optional, List, TYPE_CHECKING
+from typing import Dict, Any, Optional, List, TYPE_CHECKING, cast
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
 
@@ -28,7 +28,7 @@ class QueueConfig:
     max_exceptions: int = 1  # Max exceptions before marking worker as failed
     
     # Priority settings
-    priority_weights: Dict[str, int] = None
+    priority_weights: Optional[Dict[str, int]] = None
     
     # Rate limiting
     rate_limit_enabled: bool = False
@@ -40,7 +40,7 @@ class QueueConfig:
     signing_enabled: bool = False
     
     # Middleware
-    middleware: List[str] = None
+    middleware: Optional[List[str]] = None
     
     def __post_init__(self) -> None:
         if self.priority_weights is None:
@@ -88,7 +88,9 @@ class DatabaseQueueDriver(QueueDriver):
     def push(self, job: ShouldQueue, queue: str = "default") -> str:
         """Push job to database queue."""
         from app.Services.QueueService import QueueService
-        queue_service = QueueService()
+        from config.database import get_database
+        db = next(get_database())
+        queue_service = QueueService(db)
         return queue_service.push(job, queue)
     
     def pop(self, queue: str = "default", timeout: int = 10) -> Optional[Dict[str, Any]]:
@@ -100,13 +102,17 @@ class DatabaseQueueDriver(QueueDriver):
     def size(self, queue: str = "default") -> int:
         """Get database queue size."""
         from app.Services.QueueService import QueueService
-        queue_service = QueueService()
+        from config.database import get_database
+        db = next(get_database())
+        queue_service = QueueService(db)
         return queue_service.size(queue)
     
     def clear(self, queue: str = "default") -> int:
         """Clear database queue."""
         from app.Services.QueueService import QueueService
-        queue_service = QueueService()
+        from config.database import get_database
+        db = next(get_database())
+        queue_service = QueueService(db)
         return queue_service.clear_queue(queue)
 
 
@@ -115,13 +121,16 @@ class RedisQueueDriver(QueueDriver):
     
     def __init__(self, config: Dict[str, Any]) -> None:
         self.config = config
-        self.driver = None
+        self.driver: Optional[QueueDriver] = None
     
-    def _get_driver(self):
+    def _get_driver(self) -> QueueDriver:
         """Get Redis driver instance."""
         if self.driver is None:
-            from app.Queue.Drivers.RedisDriver import RedisQueueDriver
-            self.driver = RedisQueueDriver(self.config)
+            from app.Queue.Drivers.RedisDriver import RedisQueueDriver as RedisDriver
+            self.driver = cast(QueueDriver, RedisDriver(self.config))
+        
+        # After assignment, driver is guaranteed to not be None
+        assert self.driver is not None
         return self.driver
     
     def push(self, job: ShouldQueue, queue: str = "default") -> str:
@@ -134,11 +143,11 @@ class RedisQueueDriver(QueueDriver):
     
     def size(self, queue: str = "default") -> int:
         """Get Redis queue size."""
-        return self._get_driver().get_queue_size(queue)
+        return self._get_driver().size(queue)
     
     def clear(self, queue: str = "default") -> int:
         """Clear Redis queue."""
-        return self._get_driver().clear_queue(queue)
+        return self._get_driver().clear(queue)
 
 
 class QueueManager:
@@ -158,7 +167,7 @@ class QueueManager:
         self,
         name: str,
         connection: str = "database",
-        **config_options
+        **config_options: Any
     ) -> QueueConfig:
         """Define a queue with specific configuration."""
         config = QueueConfig(
@@ -209,10 +218,11 @@ class QueueManager:
         if queue in self.middleware_stacks:
             middleware_stack = self.middleware_stacks[queue]
             
-            def push_job():
+            def push_job() -> str:
                 return driver.push(job, queue)
             
-            return middleware_stack.process(job, push_job)
+            result = middleware_stack.process(job, push_job)
+            return str(result)  # Ensure we return a string (job ID)
         
         return driver.push(job, queue)
     
@@ -285,9 +295,10 @@ class QueueManager:
         stack.add(MemoryLimitMiddleware(memory_limit_mb=config.memory_limit))
         
         # Add custom middleware from configuration
-        for middleware_class in config.middleware:
-            # In a full implementation, you'd dynamically load middleware classes
-            pass
+        if config.middleware:
+            for middleware_class in config.middleware:
+                # In a full implementation, you'd dynamically load middleware classes
+                pass
         
         self.middleware_stacks[queue] = stack
     
@@ -355,6 +366,8 @@ class QueueConfigBuilder:
     
     def middleware(self, *middleware_classes: str) -> QueueConfigBuilder:
         """Add middleware."""
+        if self.config.middleware is None:
+            self.config.middleware = []
         self.config.middleware.extend(middleware_classes)
         return self
     
@@ -367,7 +380,7 @@ class QueueConfigBuilder:
 global_queue_manager = QueueManager()
 
 # Convenience function for defining queues
-def define_queue(name: str, **options) -> QueueConfig:
+def define_queue(name: str, **options: Any) -> QueueConfig:
     """Define a queue with specific configuration."""
     return global_queue_manager.define_queue(name, **options)
 

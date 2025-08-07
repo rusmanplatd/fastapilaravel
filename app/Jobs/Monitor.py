@@ -137,10 +137,10 @@ class JobMonitor:
             
             completed_metrics = [m for m in metrics if m.duration_ms is not None]
             
-            avg_duration = sum(m.duration_ms for m in completed_metrics) / len(completed_metrics) if completed_metrics else 0
+            avg_duration = sum(m.duration_ms for m in completed_metrics if m.duration_ms is not None) / len(completed_metrics) if completed_metrics else 0
             
             memory_metrics = [m for m in metrics if m.memory_peak_mb is not None]
-            avg_memory = sum(m.memory_peak_mb for m in memory_metrics) / len(memory_metrics) if memory_metrics else 0
+            avg_memory = sum(m.memory_peak_mb for m in memory_metrics if m.memory_peak_mb is not None) / len(memory_metrics) if memory_metrics else 0
             
             avg_attempts = sum(m.attempts for m in metrics) / total_jobs
             success_rate = ((total_jobs - failed_jobs) / total_jobs) * 100 if total_jobs > 0 else 100
@@ -166,7 +166,7 @@ class JobMonitor:
             cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
             metrics = db.query(JobMetric).filter(JobMetric.started_at >= cutoff).all()
             
-            queue_stats = defaultdict(lambda: {
+            queue_stats: Dict[str, Dict[str, Any]] = defaultdict(lambda: {
                 "total_jobs": 0,
                 "completed_jobs": 0,
                 "failed_jobs": 0,
@@ -189,11 +189,11 @@ class JobMonitor:
                 
                 completed_metrics = [m for m in queue_metrics if m.duration_ms is not None]
                 if completed_metrics:
-                    stats["avg_duration_ms"] = sum(m.duration_ms for m in completed_metrics) / len(completed_metrics)
+                    stats["avg_duration_ms"] = sum(m.duration_ms for m in completed_metrics if m.duration_ms is not None) / len(completed_metrics)
                 
                 memory_metrics = [m for m in queue_metrics if m.memory_peak_mb is not None]
                 if memory_metrics:
-                    stats["avg_memory_mb"] = sum(m.memory_peak_mb for m in memory_metrics) / len(memory_metrics)
+                    stats["avg_memory_mb"] = sum(m.memory_peak_mb for m in memory_metrics if m.memory_peak_mb is not None) / len(memory_metrics)
                 
                 stats["success_rate"] = (stats["completed_jobs"] / stats["total_jobs"] * 100) if stats["total_jobs"] > 0 else 100
             

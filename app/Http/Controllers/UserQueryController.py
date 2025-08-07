@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from fastapi import Depends, Query as QueryParam
 from sqlalchemy.orm import Session
-from typing import Optional
+from typing import Optional, Dict, Any
+from typing_extensions import Annotated
 
 from app.Http.Controllers.BaseController import BaseController
 from app.Models import User
@@ -38,12 +39,12 @@ class UserQueryController(BaseController):
     @handle_query_builder_exceptions
     async def index(
         self,
-        page: int = QueryParam(1, ge=1),
-        per_page: int = QueryParam(15, ge=1, le=100),
-        current_user: User = Depends(get_current_user),
-        query_request: QueryBuilderRequest = Depends(get_query_builder_request),
-        db: Session = Depends(get_database)
-    ):
+        current_user: Annotated[User, Depends(get_current_user)],
+        query_request: Annotated[QueryBuilderRequest, Depends(get_query_builder_request)],
+        db: Annotated[Session, Depends(get_database)],
+        page: Annotated[int, QueryParam(1, ge=1)],
+        per_page: Annotated[int, QueryParam(15, ge=1, le=100)]
+    ) -> Dict[str, Any]:
         """
         List users with QueryBuilder support
         
@@ -98,10 +99,10 @@ class UserQueryController(BaseController):
     async def show(
         self,
         user_id: int,
-        current_user: User = Depends(get_current_user),
-        query_request: QueryBuilderRequest = Depends(get_query_builder_request),
-        db: Session = Depends(get_database)
-    ):
+        current_user: Annotated[User, Depends(get_current_user)],
+        query_request: Annotated[QueryBuilderRequest, Depends(get_query_builder_request)],
+        db: Annotated[Session, Depends(get_database)]
+    ) -> Dict[str, Any]:
         """
         Get single user with QueryBuilder support for includes and fields
         
@@ -147,11 +148,11 @@ class UserQueryController(BaseController):
     @handle_query_builder_exceptions
     async def search(
         self,
-        q: str = QueryParam(..., description="Search query"),
-        current_user: User = Depends(get_current_user),
-        query_request: QueryBuilderRequest = Depends(get_query_builder_request),
-        db: Session = Depends(get_database)
-    ):
+        current_user: Annotated[User, Depends(get_current_user)],
+        query_request: Annotated[QueryBuilderRequest, Depends(get_query_builder_request)],
+        db: Annotated[Session, Depends(get_database)],
+        q: Annotated[str, QueryParam(..., description="Search query")]
+    ) -> Dict[str, Any]:
         """
         Search users with additional QueryBuilder features
         
@@ -162,7 +163,7 @@ class UserQueryController(BaseController):
         
         # Base search query
         base_query = db.query(User).filter(
-            User.name.ilike(f"%{q}%") | User.email.ilike(f"%{q}%")  # type: ignore[attr-defined]
+            User.name.ilike(f"%{q}%") | User.email.ilike(f"%{q}%")
         )
         
         # Build query with QueryBuilder
@@ -192,10 +193,10 @@ class UserQueryController(BaseController):
     
     async def advanced_example(
         self,
-        current_user: User = Depends(get_current_user),
-        query_request: QueryBuilderRequest = Depends(get_query_builder_request),
-        db: Session = Depends(get_database)
-    ):
+        current_user: Annotated[User, Depends(get_current_user)],
+        query_request: Annotated[QueryBuilderRequest, Depends(get_query_builder_request)],
+        db: Annotated[Session, Depends(get_database)]
+    ) -> Dict[str, Any]:
         """
         Advanced QueryBuilder example with custom filters and sorts
         
@@ -208,13 +209,13 @@ class UserQueryController(BaseController):
             self.forbidden("You don't have permission to view users")
         
         # Custom filter for users with specific permission
-        def filter_by_permission(query, value, property_name):
+        def filter_by_permission(query: Any, value: Any, property_name: str) -> Any:
             return query.join(User.direct_permissions).filter(
                 # Permission.name == value  # Would need proper relationship handling
             )
         
         # Custom sort by name length  
-        def sort_by_name_length(query, descending, property_name):
+        def sort_by_name_length(query: Any, descending: bool, property_name: str) -> Any:
             direction = "DESC" if descending else "ASC"
             return query.order_by(f"LENGTH(users.name) {direction}")
         

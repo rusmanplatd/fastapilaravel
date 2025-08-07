@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import json
 import uuid
-from typing import Optional, List, Dict, Any, TYPE_CHECKING
+import logging
+from typing import Optional, List, Dict, Any, TYPE_CHECKING, Sequence
 from datetime import datetime, timedelta
-from sqlalchemy import and_, or_, desc, asc
+from sqlalchemy import and_, or_
+from sqlalchemy.sql import desc, asc
 from sqlalchemy.orm import Session
 
 from app.Services.BaseService import BaseService
@@ -22,9 +24,10 @@ class QueueService(BaseService):
     Similar to Laravel's Queue facade and queue manager.
     """
     
-    def __init__(self, connection: str = "default") -> None:
-        super().__init__()
+    def __init__(self, db: Session, connection: str = "default") -> None:
+        super().__init__(db)
         self.connection = connection
+        self.logger = logging.getLogger(__name__)
     
     def push(self, job: ShouldQueue, queue: Optional[str] = None) -> str:
         """
@@ -78,7 +81,7 @@ class QueueService(BaseService):
         job.delay_until(delay)
         return self.push(job, queue)
     
-    def bulk(self, jobs: List[ShouldQueue], queue: Optional[str] = None) -> List[str]:
+    def bulk(self, jobs: Sequence[ShouldQueue], queue: Optional[str] = None) -> List[str]:
         """Push multiple jobs to queue."""
         job_ids = []
         for job in jobs:

@@ -24,11 +24,11 @@ class LogOptions:
     log_name: str = "default"
     
     # Attributes to log (empty means all fillable)
-    log_attributes: List[str] = None
+    log_attributes: Optional[List[str]] = None
     log_only_changed: bool = True
     
     # Custom descriptions
-    description_for_event: Dict[str, str] = None
+    description_for_event: Optional[Dict[str, str]] = None
     
     def __post_init__(self) -> None:
         """Initialize defaults after dataclass creation."""
@@ -84,7 +84,10 @@ class LogsActivityMixin:
     def get_activity_description(self, event: str) -> str:
         """Get description for the given event."""
         options = self.get_activity_log_options()
-        description = options.description_for_event.get(event, event)
+        if options.description_for_event:
+            description = options.description_for_event.get(event, event)
+        else:
+            description = event
         
         # Replace placeholders
         model_name = self.__class__.__name__
@@ -120,6 +123,12 @@ class LogsActivityMixin:
             properties=properties,
             causer=causer
         )
+
+    @classmethod
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        """Automatically set up event listeners when a model inherits from this mixin."""
+        super().__init_subclass__(**kwargs)
+        setup_activity_logging_events(cls)
 
 
 def setup_activity_logging_events(model_class: Type[LogsActivityMixin]) -> None:
@@ -174,11 +183,12 @@ def setup_activity_logging_events(model_class: Type[LogsActivityMixin]) -> None:
         changes = {}
         old_values = {}
         
-        for attr in state.attrs:
-            if attr.history.has_changes():
-                if attr.history.deleted:
-                    old_values[attr.key] = attr.history.deleted[0]
-                changes[attr.key] = getattr(target, attr.key)
+        if state and state.attrs:
+            for attr in state.attrs:
+                if attr.history.has_changes():
+                    if attr.history.deleted:
+                        old_values[attr.key] = attr.history.deleted[0]
+                    changes[attr.key] = getattr(target, attr.key)
         
         if options.log_only_changed and not changes:
             return
@@ -225,11 +235,3 @@ def setup_activity_logging_events(model_class: Type[LogsActivityMixin]) -> None:
         )
 
 
-# Auto-register event listeners for models that use this mixin
-def __init_subclass__(cls: Type[LogsActivityMixin], **kwargs: Any) -> None:
-    """Automatically set up event listeners when a model inherits from this mixin."""
-    super().__init_subclass__(**kwargs)
-    setup_activity_logging_events(cls)
-
-# Monkey patch the __init_subclass__ method
-LogsActivityMixin.__init_subclass__ = classmethod(__init_subclass__)

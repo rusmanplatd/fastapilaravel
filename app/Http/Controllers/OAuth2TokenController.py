@@ -7,7 +7,9 @@ token issuance, introspection, and revocation.
 from __future__ import annotations
 
 from typing import Dict, Any, Optional, List
-from fastapi import HTTPException, status, Form, Query, Depends
+from fastapi import HTTPException, status, Query, Depends
+from fastapi.params import Form
+from typing_extensions import Annotated
 from sqlalchemy.orm import Session
 
 from app.Http.Controllers.BaseController import BaseController
@@ -28,17 +30,17 @@ class OAuth2TokenController(BaseController):
     
     async def token(
         self,
-        db: Session = Depends(get_db_session),
-        grant_type: str = Form(...),
-        client_id: str = Form(...),
-        client_secret: Optional[str] = Form(None),
-        code: Optional[str] = Form(None),
-        redirect_uri: Optional[str] = Form(None),
-        code_verifier: Optional[str] = Form(None),
-        username: Optional[str] = Form(None),
-        password: Optional[str] = Form(None),
-        refresh_token: Optional[str] = Form(None),
-        scope: Optional[str] = Form(None)
+        db: Annotated[Session, Depends(get_db_session)],
+        grant_type: Annotated[str, Form()],
+        client_id: Annotated[str, Form()],
+        client_secret: Annotated[Optional[str], Form()] = None,
+        code: Annotated[Optional[str], Form()] = None,
+        redirect_uri: Annotated[Optional[str], Form()] = None,
+        code_verifier: Annotated[Optional[str], Form()] = None,
+        username: Annotated[Optional[str], Form()] = None,
+        password: Annotated[Optional[str], Form()] = None,
+        refresh_token: Annotated[Optional[str], Form()] = None,
+        scope: Annotated[Optional[str], Form()] = None
     ) -> Dict[str, Any]:
         """
         OAuth2 token endpoint (RFC 6749).
@@ -144,11 +146,11 @@ class OAuth2TokenController(BaseController):
     
     async def introspect(
         self,
-        db: Session = Depends(get_db_session),
-        token: str = Form(...),
-        token_type_hint: Optional[str] = Form(None),
-        client_id: Optional[str] = Form(None),
-        client_secret: Optional[str] = Form(None)
+        db: Annotated[Session, Depends(get_db_session)],
+        token: Annotated[str, Form()],
+        token_type_hint: Annotated[Optional[str], Form()] = None,
+        client_id: Annotated[Optional[str], Form()] = None,
+        client_secret: Annotated[Optional[str], Form()] = None
     ) -> Dict[str, Any]:
         """
         OAuth2 token introspection endpoint (RFC 7662).
@@ -184,11 +186,11 @@ class OAuth2TokenController(BaseController):
     
     async def revoke(
         self,
-        db: Session = Depends(get_db_session),
-        token: str = Form(...),
-        token_type_hint: Optional[str] = Form(None),
-        client_id: str = Form(...),
-        client_secret: Optional[str] = Form(None)
+        db: Annotated[Session, Depends(get_db_session)],
+        token: Annotated[str, Form()],
+        client_id: Annotated[str, Form()],
+        token_type_hint: Annotated[Optional[str], Form()] = None,
+        client_secret: Annotated[Optional[str], Form()] = None
     ) -> Dict[str, Any]:
         """
         OAuth2 token revocation endpoint (RFC 7009).
@@ -227,12 +229,12 @@ class OAuth2TokenController(BaseController):
     
     async def authorize_url(
         self,
-        client_id: str = Query(...),
-        redirect_uri: str = Query(...),
-        scope: Optional[str] = Query(None),
-        state: Optional[str] = Query(None),
-        code_challenge: Optional[str] = Query(None),
-        code_challenge_method: Optional[str] = Query(None)
+        client_id: Annotated[str, Query()],
+        redirect_uri: Annotated[str, Query()],
+        scope: Annotated[Optional[str], Query()] = None,
+        state: Annotated[Optional[str], Query()] = None,
+        code_challenge: Annotated[Optional[str], Query()] = None,
+        code_challenge_method: Annotated[Optional[str], Query()] = None
     ) -> Dict[str, Any]:
         """
         Generate OAuth2 authorization URL.
@@ -346,21 +348,8 @@ class OAuth2TokenController(BaseController):
             List of personal access tokens
         """
         try:
-            tokens = self.auth_server.get_user_personal_access_tokens(
-                db=db,
-                user_id=user_id,
-                active_only=active_only
-            )
-            
-            token_data = []
-            for token in tokens:
-                if hasattr(token, 'to_dict'):
-                    token_data.append(token.to_dict())
-            
-            return self.success_response(
-                data={"tokens": token_data},
-                message=f"Found {len(token_data)} personal access tokens"
-            )
+            # TODO: Implement personal access tokens in OAuth2AuthServerService
+            raise NotImplementedError("Personal access tokens not yet implemented")
             
         except Exception as e:
             raise HTTPException(
@@ -390,19 +379,8 @@ class OAuth2TokenController(BaseController):
             Created personal access token
         """
         try:
-            token_response = self.auth_server.create_personal_access_token(
-                db=db,
-                user_id=user_id,
-                name=name,
-                scopes=scopes,
-                expires_days=expires_days or 365
-            )
-            
-            return self.success_response(
-                data=token_response,
-                message="Personal access token created successfully",
-                status_code=201
-            )
+            # TODO: Implement personal access tokens in OAuth2AuthServerService  
+            raise NotImplementedError("Personal access tokens not yet implemented")
             
         except Exception as e:
             raise HTTPException(
@@ -428,24 +406,8 @@ class OAuth2TokenController(BaseController):
             Personal access token details
         """
         try:
-            token = self.auth_server.get_personal_access_token(
-                db=db,
-                token_id=token_id,
-                user_id=user_id
-            )
-            
-            if not token:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Personal access token not found"
-                )
-            
-            token_data = token.to_dict() if hasattr(token, 'to_dict') else {}
-            
-            return self.success_response(
-                data={"token": token_data},
-                message="Personal access token retrieved successfully"
-            )
+            # TODO: Implement personal access tokens in OAuth2AuthServerService
+            raise NotImplementedError("Personal access tokens not yet implemented")
             
         except HTTPException:
             raise
@@ -473,22 +435,8 @@ class OAuth2TokenController(BaseController):
             Revocation response
         """
         try:
-            success = self.auth_server.revoke_personal_access_token(
-                db=db,
-                token_id=token_id,
-                user_id=user_id
-            )
-            
-            if not success:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Personal access token not found"
-                )
-            
-            return self.success_response(
-                data={"revoked": True},
-                message="Personal access token revoked successfully"
-            )
+            # TODO: Implement personal access tokens in OAuth2AuthServerService
+            raise NotImplementedError("Personal access tokens not yet implemented")
             
         except HTTPException:
             raise
@@ -516,22 +464,8 @@ class OAuth2TokenController(BaseController):
             Deletion response
         """
         try:
-            success = self.auth_server.delete_personal_access_token(
-                db=db,
-                token_id=token_id,
-                user_id=user_id
-            )
-            
-            if not success:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Personal access token not found"
-                )
-            
-            return self.success_response(
-                data={"deleted": True},
-                message="Personal access token deleted successfully"
-            )
+            # TODO: Implement personal access tokens in OAuth2AuthServerService
+            raise NotImplementedError("Personal access tokens not yet implemented")
             
         except HTTPException:
             raise

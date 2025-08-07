@@ -4,7 +4,7 @@ from typing_extensions import dataclass_transform
 
 T = TypeVar('T', bound='BaseModel')
 
-@dataclass_transform(kw_only_default=True, field_descriptors=True)
+@dataclass_transform(kw_only_default=True)
 class BaseModel:
     def __init__(self, **data: Any) -> None: ...
     

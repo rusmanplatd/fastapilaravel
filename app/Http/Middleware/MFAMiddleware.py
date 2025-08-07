@@ -1,7 +1,9 @@
 from __future__ import annotations
 
-from typing import Callable, Optional, Dict, Any
-from fastapi import Request, Response, HTTPException, status
+from typing import Callable, Optional, Dict, Any, Awaitable
+from starlette.requests import Request
+from starlette.responses import Response
+from fastapi import HTTPException, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
@@ -13,10 +15,10 @@ from config.database import get_db
 class MFAMiddleware:
     """Middleware to enforce MFA verification for protected endpoints"""
     
-    def __init__(self):
+    def __init__(self) -> None:
         pass
     
-    async def __call__(self, request: Request, call_next: Callable, user: Optional[User] = None) -> Response:
+    async def __call__(self, request: Request, call_next: Callable[[Request], Awaitable[Response]], user: Optional[User] = None) -> Response:
         """
         Middleware to check MFA requirements
         

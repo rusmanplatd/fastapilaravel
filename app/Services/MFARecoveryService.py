@@ -9,7 +9,8 @@ from sqlalchemy import and_
 
 from app.Models import User
 from app.Services.BaseService import BaseService
-from app.Services.MFAAuditService import MFAAuditService, MFAAuditEvent
+from app.Services.MFAAuditService import MFAAuditService
+from database.migrations.create_mfa_audit_log_table import MFAAuditEvent
 from database.migrations.create_mfa_codes_table import MFACode, MFACodeType
 
 
@@ -91,7 +92,7 @@ class MFARecoveryService(BaseService):
         try:
             # Find valid recovery code
             recovery_record = self.db.query(MFACode).filter(
-                and_(
+                and_(  # type: ignore[arg-type]
                     MFACode.user_id == user.id,
                     MFACode.code == recovery_code,
                     MFACode.code_type == MFACodeType.EMAIL,
@@ -215,7 +216,7 @@ class MFARecoveryService(BaseService):
         try:
             # Find valid bypass token
             bypass_record = self.db.query(MFACode).filter(
-                and_(
+                and_(  # type: ignore[arg-type]
                     MFACode.user_id == user.id,
                     MFACode.code == bypass_token,
                     MFACode.code_type == MFACodeType.EMAIL,
@@ -343,7 +344,7 @@ class MFARecoveryService(BaseService):
         
         # Check active bypass tokens
         active_bypasses = self.db.query(MFACode).filter(
-            and_(
+            and_(  # type: ignore[arg-type]
                 MFACode.user_id == user.id,
                 MFACode.code_type == MFACodeType.EMAIL,
                 MFACode.used == False,
@@ -402,7 +403,7 @@ class MFARecoveryService(BaseService):
         """Clean up expired recovery codes"""
         try:
             deleted_count = self.db.query(MFACode).filter(
-                and_(
+                and_(  # type: ignore[arg-type]
                     MFACode.expires_at <= datetime.utcnow(),
                     MFACode.code_type == MFACodeType.EMAIL  # Our bypass codes
                 )

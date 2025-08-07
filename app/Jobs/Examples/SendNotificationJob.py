@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Union
+from app.Notifications.Notification import Notification
 
 from app.Jobs.Job import Job
 
@@ -41,23 +42,37 @@ class SendNotificationJob(Job):
                 raise ValueError(f"User {self.user_id} not found")
             
             # Send notification using existing notification system
-            notification_service = NotificationService()
+            from config.database import get_database
+            db_session = next(get_database())
+            notification_service = NotificationService(db_session)
             
             # Create notification based on type
+            notification: Notification
             if self.notification_type == "welcome":
                 from app.Notifications.Examples.WelcomeNotification import WelcomeNotification
-                notification = WelcomeNotification()
+                user_name = self.notification_data.get("user_name", user.name if hasattr(user, 'name') else "User")
+                notification = WelcomeNotification(user_name=user_name)
             elif self.notification_type == "order_shipped":
                 from app.Notifications.Examples.OrderShippedNotification import OrderShippedNotification
+                order_id = self.notification_data.get("order_id")
+                tracking_number = self.notification_data.get("tracking_number")
+                if not order_id or not tracking_number:
+                    raise ValueError("order_id and tracking_number are required for order_shipped notifications")
                 notification = OrderShippedNotification(
-                    order_id=self.notification_data.get("order_id"),
-                    tracking_number=self.notification_data.get("tracking_number")
+                    order_id=order_id,
+                    tracking_number=tracking_number
                 )
             elif self.notification_type == "security_alert":
                 from app.Notifications.Examples.SecurityAlertNotification import SecurityAlertNotification
+                alert_type = self.notification_data.get("alert_type")
+                ip_address = self.notification_data.get("ip_address")
+                user_agent = self.notification_data.get("user_agent")
+                if not alert_type or not ip_address or not user_agent:
+                    raise ValueError("alert_type, ip_address, and user_agent are required for security_alert notifications")
                 notification = SecurityAlertNotification(
-                    alert_type=self.notification_data.get("alert_type"),
-                    description=self.notification_data.get("description")
+                    alert_type=alert_type,
+                    ip_address=ip_address,
+                    user_agent=user_agent
                 )
             else:
                 raise ValueError(f"Unknown notification type: {self.notification_type}")

@@ -43,7 +43,7 @@ class MFARateLimitService(BaseService):
             
             # Check if user is currently blocked
             blocked_attempt = self.db.query(MFAAttempt).filter(
-                and_(
+                and_(  # type: ignore[arg-type]  # type: ignore[arg-type]  # type: ignore[arg-type]
                     MFAAttempt.user_id == user.id,
                     MFAAttempt.blocked_until.is_not(None),
                     MFAAttempt.blocked_until > now
@@ -51,7 +51,7 @@ class MFARateLimitService(BaseService):
             ).first()
             
             if blocked_attempt:
-                retry_after = int((blocked_attempt.blocked_until - now).total_seconds())
+                retry_after = int((blocked_attempt.blocked_until - now).total_seconds()) if blocked_attempt.blocked_until else 0
                 return False, f"Account temporarily blocked. Try again in {retry_after} seconds", retry_after
             
             # Check attempts in different time windows
@@ -149,7 +149,7 @@ class MFARateLimitService(BaseService):
     def _count_failed_attempts(self, user_id: str, since: datetime) -> int:
         """Count failed MFA attempts for user since given time"""
         return self.db.query(MFAAttempt).filter(
-            and_(
+            and_(  # type: ignore[arg-type]  # type: ignore[arg-type]
                 MFAAttempt.user_id == user_id,
                 MFAAttempt.status == MFAAttemptStatus.FAILED,
                 MFAAttempt.created_at >= since
@@ -159,7 +159,7 @@ class MFARateLimitService(BaseService):
     def _count_failed_attempts_by_ip(self, ip_address: str, since: datetime) -> int:
         """Count failed MFA attempts from IP since given time"""
         return self.db.query(MFAAttempt).filter(
-            and_(
+            and_(  # type: ignore[arg-type]  # type: ignore[arg-type]
                 MFAAttempt.ip_address == ip_address,
                 MFAAttempt.status == MFAAttemptStatus.FAILED,
                 MFAAttempt.created_at >= since
@@ -169,7 +169,7 @@ class MFARateLimitService(BaseService):
     def _count_failed_attempts_by_device(self, device_fingerprint: str, since: datetime) -> int:
         """Count failed MFA attempts from device since given time"""
         return self.db.query(MFAAttempt).filter(
-            and_(
+            and_(  # type: ignore[arg-type]
                 MFAAttempt.device_fingerprint == device_fingerprint,
                 MFAAttempt.status == MFAAttemptStatus.FAILED,
                 MFAAttempt.created_at >= since
@@ -182,7 +182,7 @@ class MFARateLimitService(BaseService):
         
         # Get recent attempts in chronological order
         recent_attempts = self.db.query(MFAAttempt).filter(
-            and_(
+            and_(  # type: ignore[arg-type]
                 MFAAttempt.user_id == user_id,
                 MFAAttempt.created_at >= recent_time
             )
@@ -205,7 +205,7 @@ class MFARateLimitService(BaseService):
                 last_attempt = recent_attempts[0]
                 time_since_last = (datetime.utcnow() - last_attempt.created_at).total_seconds()
                 remaining_delay = max(0, delay - int(time_since_last))
-                return remaining_delay
+                return int(remaining_delay)
         
         return 0
     
@@ -225,7 +225,7 @@ class MFARateLimitService(BaseService):
         
         # Check if blocked
         blocked_attempt = self.db.query(MFAAttempt).filter(
-            and_(
+            and_(  # type: ignore[arg-type]
                 MFAAttempt.user_id == user.id,
                 MFAAttempt.blocked_until.is_not(None),
                 MFAAttempt.blocked_until > now
@@ -253,7 +253,7 @@ class MFARateLimitService(BaseService):
         try:
             # Remove all blocks for this user
             blocked_attempts = self.db.query(MFAAttempt).filter(
-                and_(
+                and_(  # type: ignore[arg-type]  # type: ignore[arg-type]
                     MFAAttempt.user_id == user.id,
                     MFAAttempt.blocked_until.is_not(None),
                     MFAAttempt.blocked_until > datetime.utcnow()

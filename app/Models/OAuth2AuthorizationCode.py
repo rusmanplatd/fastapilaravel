@@ -26,24 +26,24 @@ class OAuth2AuthorizationCode(BaseModel):
     __tablename__ = "oauth_authorization_codes"
     
     # Code identification - using ULID for code_id
-    code_id: Mapped[str] = mapped_column(String(26), unique=True, index=True, nullable=False)
-    code: Mapped[str] = mapped_column(Text, nullable=False)
+    code_id: Mapped[str] = mapped_column(unique=True, index=True, nullable=False)
+    code: Mapped[str] = mapped_column(nullable=False)
     
     # Authorization details
-    redirect_uri: Mapped[str] = mapped_column(Text, nullable=False)
-    scopes: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    redirect_uri: Mapped[str] = mapped_column(nullable=False)
+    scopes: Mapped[str] = mapped_column(nullable=False, default="")
     
     # PKCE support
-    code_challenge: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
-    code_challenge_method: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
+    code_challenge: Mapped[Optional[str]] = mapped_column(nullable=True)
+    code_challenge_method: Mapped[Optional[str]] = mapped_column(nullable=True)
     
     # Associations
-    user_id: Mapped[ULID] = mapped_column(String(26), ForeignKey("users.id"), nullable=False)
-    client_id: Mapped[str] = mapped_column(String(26), ForeignKey("oauth_clients.client_id"), nullable=False)
+    user_id: Mapped[ULID] = mapped_column(String(26), ForeignKey("users.id"), nullable=False)  # type: ignore[arg-type]
+    client_id: Mapped[str] = mapped_column(String(26), ForeignKey("oauth_clients.client_id"), nullable=False)  # type: ignore[arg-type]
     
     # Code status
-    is_revoked: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    is_revoked: Mapped[bool] = mapped_column(default=False, nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(nullable=False)
     
     # Relationships
     client = relationship("OAuth2Client", back_populates="authorization_codes")

@@ -27,7 +27,6 @@ class OAuth2GrantTypesService:
     
     def __init__(self) -> None:
         self.auth_server = OAuth2AuthServerService()
-        self.auth_service = AuthService()
     
     def authorization_code_grant(
         self,
@@ -72,7 +71,7 @@ class OAuth2GrantTypesService:
             )
         
         # Validate authorization code
-        if not auth_code.is_valid():
+        if not auth_code.is_valid:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Authorization code expired or revoked"
@@ -100,7 +99,7 @@ class OAuth2GrantTypesService:
                     detail="Code verifier required for PKCE"
                 )
             
-            if not auth_code.verify_code_challenge(code_verifier):
+            if not auth_code.verify_pkce_challenge(code_verifier):
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="Invalid code verifier"
@@ -120,7 +119,7 @@ class OAuth2GrantTypesService:
         
         # Create refresh token if client supports it
         refresh_token = None
-        if not client.is_personal_access_client():
+        if not client.is_personal_access_client:
             refresh_token = self.auth_server.create_refresh_token(db, access_token, client)
         
         # Generate JWT access token
@@ -166,7 +165,7 @@ class OAuth2GrantTypesService:
         """
         # Validate client (must be confidential for client credentials)
         client = self.auth_server.validate_client_credentials(db, client_id, client_secret)
-        if not client or client.is_public():
+        if not client or client.is_public:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid client credentials"
@@ -241,14 +240,18 @@ class OAuth2GrantTypesService:
             )
         
         # Check if client supports password grant
-        if not client.is_password_client():
+        if not client.is_password_client:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Client is not authorized for password grant"
             )
         
         # Authenticate user
-        user = self.auth_service.authenticate_user(db, username, password)
+        auth_service = AuthService(db)
+        # Authenticate user by finding and verifying password
+        user = db.query(User).filter(User.email == username).first()
+        if not user or not auth_service.verify_password(password, user.password):
+            user = None
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -334,7 +337,7 @@ class OAuth2GrantTypesService:
             )
         
         # Validate refresh token
-        if not refresh_token_record.is_valid():
+        if not refresh_token_record.is_valid:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Refresh token expired or revoked"
@@ -542,11 +545,19 @@ class OAuth2GrantTypesService:
                 detail="invalid_request: Invalid code_challenge_method"
             )
         
+        # Get user object
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
         # Generate authorization code
         authorization_code = self.auth_server.create_authorization_code(
             db=db,
-            user_id=user_id,
-            client_id=client_id,
+            client=client,
+            user=user,
             redirect_uri=redirect_uri,
             scopes=requested_scopes,
             code_challenge=code_challenge,

@@ -40,7 +40,7 @@ app = FastAPI(
     """
 )
 
-add_cors_middleware(app)  # type: ignore[no-untyped-call]
+add_cors_middleware(app)
 
 # Include routers
 app.include_router(web_router)
@@ -50,7 +50,7 @@ app.include_router(mfa_router)  # MFA endpoints
 
 
 # OAuth2 Server Metadata Endpoint
-@app.get(
+@app.get(  # type: ignore[attr-defined,misc]
     "/.well-known/oauth-authorization-server",
     tags=["OAuth2"],
     summary="OAuth2 Server Metadata",
@@ -63,7 +63,7 @@ async def oauth2_server_metadata() -> Dict[str, Any]:
 
 
 # OpenID Connect Discovery Endpoint
-@app.get(
+@app.get(  # type: ignore[attr-defined,misc]
     "/.well-known/openid_configuration",
     tags=["OpenID Connect"],
     summary="OpenID Connect Discovery",

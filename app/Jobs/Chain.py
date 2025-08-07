@@ -121,7 +121,9 @@ class JobChain:
             step.job.delay_until(step.delay)
         
         from app.Services.QueueService import QueueService
-        queue_service = QueueService()
+        from config.database import get_database
+        db = next(get_database())
+        queue_service = QueueService(db)
         queue_service.push(step.job, queue)
     
     def handle_step_completion(self, step_index: int, success: bool, error: Optional[Exception] = None) -> None:
@@ -302,7 +304,9 @@ class ParallelChain:
             else:
                 # Sequential execution
                 from app.Services.QueueService import QueueService
-                queue_service = QueueService()
+                from config.database import get_database
+                db = next(get_database())
+                queue_service = QueueService(db)
                 job_id = queue_service.push(step, queue)
                 job_ids.append(job_id)
         

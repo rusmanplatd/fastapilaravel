@@ -148,7 +148,9 @@ class Dispatchable:
             raise ValueError(f"Job {cls.__name__} must implement ShouldQueue interface")
         
         # Dispatch to queue
-        queue_service = QueueService()
+        from config.database import get_database
+        db = next(get_database())
+        queue_service = QueueService(db)
         return queue_service.push(job)
     
     @classmethod

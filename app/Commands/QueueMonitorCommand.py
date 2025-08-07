@@ -108,7 +108,7 @@ def queue_metrics_command() -> None:
     
     try:
         if args.format == 'json':
-            metrics_data = {}
+            metrics_data: Dict[str, Any] = {}
         
         print(f"Queue Metrics - Last {args.hours} hours")
         print("=" * 50)
@@ -198,7 +198,9 @@ def queue_health_command() -> None:
         print("Queue Health Check")
         print("=" * 50)
         
-        queue_service = QueueService()
+        from config.database import get_database
+        db = next(get_database())
+        queue_service = QueueService(db)
         issues_found = 0
         
         # Check for stuck jobs

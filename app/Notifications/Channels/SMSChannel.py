@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Optional, Dict, TYPE_CHECKING
 import logging
-import requests
+import requests  # type: ignore[import-untyped]
 
 if TYPE_CHECKING:
     from app.Notifications.Notification import Notification, SMSMessage
@@ -11,6 +11,7 @@ else:
 
 logger = logging.getLogger(__name__)
 
+__all__ = ['SMSMessage', 'SMSChannel']
 
 # SMSMessage is now imported from Notification.py
 

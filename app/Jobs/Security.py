@@ -53,7 +53,7 @@ class JobEncryption:
             # Generate random IV
             iv = os.urandom(16)
             cipher = Cipher(algorithms.AES(self.key), modes.CBC(iv))
-            encryptor = cipher.encryptor()
+            encryptor = cipher.encryptor()  # type: ignore[no-untyped-call]
             
             # Pad data to block size
             pad_length = 16 - (len(json_data) % 16)
@@ -74,7 +74,7 @@ class JobEncryption:
             
             if self.algorithm == "fernet":
                 decrypted = self.fernet.decrypt(encrypted_bytes)
-                return json.loads(decrypted.decode('utf-8'))
+                return json.loads(decrypted.decode('utf-8'))  # type: ignore[no-any-return]
             
             elif self.algorithm == "aes":
                 # Extract IV and encrypted data
@@ -82,7 +82,7 @@ class JobEncryption:
                 encrypted_payload = encrypted_bytes[16:]
                 
                 cipher = Cipher(algorithms.AES(self.key), modes.CBC(iv))
-                decryptor = cipher.decryptor()
+                decryptor = cipher.decryptor()  # type: ignore[no-untyped-call]
                 
                 decrypted_padded = decryptor.update(encrypted_payload) + decryptor.finalize()
                 
@@ -90,8 +90,11 @@ class JobEncryption:
                 pad_length = decrypted_padded[-1]
                 decrypted = decrypted_padded[:-pad_length]
                 
-                return json.loads(decrypted.decode('utf-8'))
+                return json.loads(decrypted.decode('utf-8'))  # type: ignore[no-any-return]
             
+            else:
+                raise ValueError(f"Unsupported encryption algorithm: {self.algorithm}")
+                
         except Exception as e:
             raise ValueError(f"Failed to decrypt job payload: {str(e)}")
     
@@ -112,7 +115,7 @@ class JobSigner:
     """
     
     def __init__(self, secret_key: Optional[str] = None) -> None:
-        self.secret_key = secret_key or os.getenv("QUEUE_SIGNING_KEY", "default-insecure-key")
+        self.secret_key: str = secret_key or os.getenv("QUEUE_SIGNING_KEY") or "default-insecure-key"
         self.algorithm = "sha256"
     
     def sign(self, payload: str) -> str:
@@ -150,7 +153,7 @@ class JobTokenizer:
     """
     
     def __init__(self, secret_key: Optional[str] = None) -> None:
-        self.secret_key = secret_key or os.getenv("QUEUE_TOKEN_KEY", "default-token-key")
+        self.secret_key: str = secret_key or os.getenv("QUEUE_TOKEN_KEY") or "default-token-key"
         self.signer = JobSigner(self.secret_key)
     
     def generate_token(self, job_id: str, expires_in: int = 3600) -> str:
@@ -181,7 +184,7 @@ class JobTokenizer:
             if token_data["expires_at"] < datetime.now(timezone.utc).timestamp():
                 raise ValueError("Token has expired")
             
-            return token_data
+            return token_data  # type: ignore[no-any-return]
             
         except Exception as e:
             raise ValueError(f"Invalid token: {str(e)}")
@@ -230,7 +233,7 @@ class SecureJobPayload:
         if self.encrypt:
             return self.encryptor.decrypt(processed_payload)
         else:
-            return json.loads(processed_payload)
+            return json.loads(processed_payload)  # type: ignore[no-any-return]
 
 
 class JobAccessControl:
@@ -295,7 +298,7 @@ class SecureJob:
     
     def serialize(self) -> Dict[str, Any]:
         """Serialize job with security features."""
-        data = super().serialize()
+        data = super().serialize()  # type: ignore[misc]
         
         # Extract sensitive data for encryption
         if self.sensitive_fields:
@@ -307,12 +310,12 @@ class SecureJob:
             if sensitive_data:
                 data["encrypted_data"] = self.secure_payload.encryptor.encrypt(sensitive_data)
         
-        return data
+        return data  # type: ignore[no-any-return]
     
     @classmethod
     def deserialize(cls, data: Dict[str, Any]) -> SecureJob:
         """Deserialize job with security features."""
-        job = super().deserialize(data)
+        job = super().deserialize(data)  # type: ignore[misc]
         
         # Decrypt sensitive data
         if "encrypted_data" in data and hasattr(job, 'secure_payload'):
@@ -322,11 +325,11 @@ class SecureJob:
             for field, value in sensitive_data.items():
                 setattr(job, field, value)
         
-        return job
+        return job  # type: ignore[no-any-return]
     
     def can_be_executed_by(self, user_id: str) -> bool:
         """Check if user can execute this job."""
-        return self.access_control.can_execute_job(user_id, self)
+        return self.access_control.can_execute_job(user_id, self)  # type: ignore[arg-type]
 
 
 class JobAuditLogger:

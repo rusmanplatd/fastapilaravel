@@ -1,9 +1,14 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Any
+from typing import Any, TypeVar
 from sqlalchemy import Column
-from sqlalchemy.orm import Query as SQLQuery
+from typing import Any as ColumnAny
+from sqlalchemy.orm import Query
+
+# Generic type for SQLAlchemy Query
+T = TypeVar('T')
+SQLQuery = Query[Any]
 
 
 class FilterOperator(Enum):

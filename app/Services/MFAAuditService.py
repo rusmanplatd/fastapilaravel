@@ -5,7 +5,8 @@ import hashlib
 from typing import Optional, Dict, Any, List
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
-from sqlalchemy import and_, desc
+from sqlalchemy import and_
+from sqlalchemy.sql import desc
 
 from app.Models import User
 from app.Services.BaseService import BaseService
@@ -241,7 +242,7 @@ class MFAAuditService(BaseService):
             since_date = datetime.utcnow() - timedelta(days=days)
             
             query = self.db.query(MFAAuditLog).filter(
-                and_(
+                and_(  # type: ignore[arg-type]  # type: ignore[arg-type]
                     MFAAuditLog.user_id == user.id,
                     MFAAuditLog.created_at >= since_date
                 )
@@ -277,13 +278,13 @@ class MFAAuditService(BaseService):
             
             # Count different event types
             events = self.db.query(MFAAuditLog).filter(
-                and_(
+                and_(  # type: ignore[arg-type]
                     MFAAuditLog.user_id == user.id,
                     MFAAuditLog.created_at >= since_date
                 )
             ).all()
             
-            event_counts = {}
+            event_counts: Dict[str, int] = {}
             high_risk_events = 0
             unique_ips = set()
             unique_devices = set()
@@ -365,11 +366,9 @@ class MFAAuditService(BaseService):
         # Check if we've seen this IP for this user in the last 30 days
         recent_date = datetime.utcnow() - timedelta(days=30)
         existing = self.db.query(MFAAuditLog).filter(
-            and_(
-                MFAAuditLog.user_id == user.id,
-                MFAAuditLog.ip_address == ip_address,
-                MFAAuditLog.created_at >= recent_date
-            )
+            MFAAuditLog.user_id == user.id,
+            MFAAuditLog.ip_address == ip_address,
+            MFAAuditLog.created_at >= recent_date
         ).first()
         
         return existing is None
@@ -381,11 +380,9 @@ class MFAAuditService(BaseService):
             
         recent_date = datetime.utcnow() - timedelta(days=30)
         existing = self.db.query(MFAAuditLog).filter(
-            and_(
-                MFAAuditLog.user_id == user.id,
-                MFAAuditLog.device_fingerprint == device_fingerprint,
-                MFAAuditLog.created_at >= recent_date
-            )
+            MFAAuditLog.user_id == user.id,
+            MFAAuditLog.device_fingerprint == device_fingerprint,
+            MFAAuditLog.created_at >= recent_date
         ).first()
         
         return existing is None
@@ -400,11 +397,9 @@ class MFAAuditService(BaseService):
         """Count recent verification failures for user"""
         since_date = datetime.utcnow() - time_window
         return self.db.query(MFAAuditLog).filter(
-            and_(
-                MFAAuditLog.user_id == user.id,
-                MFAAuditLog.event == MFAAuditEvent.VERIFICATION_FAILED.value,
-                MFAAuditLog.created_at >= since_date
-            )
+            MFAAuditLog.user_id == user.id,
+            MFAAuditLog.event == MFAAuditEvent.VERIFICATION_FAILED.value,
+            MFAAuditLog.created_at >= since_date
         ).count()
     
     def _is_distributed_attack(self, user: User, ip_address: Optional[str]) -> bool:
@@ -415,12 +410,10 @@ class MFAAuditService(BaseService):
         # Check if multiple IPs are failing for this user recently
         recent_date = datetime.utcnow() - timedelta(hours=1)
         failed_ips = self.db.query(MFAAuditLog.ip_address).filter(
-            and_(
-                MFAAuditLog.user_id == user.id,
-                MFAAuditLog.event == MFAAuditEvent.VERIFICATION_FAILED.value,
-                MFAAuditLog.created_at >= recent_date,
-                MFAAuditLog.ip_address.is_not(None)
-            )
+            MFAAuditLog.user_id == user.id,
+            MFAAuditLog.event == MFAAuditEvent.VERIFICATION_FAILED.value,
+            MFAAuditLog.created_at >= recent_date,
+            MFAAuditLog.ip_address.is_not(None)
         ).distinct().all()
         
         return len(failed_ips) >= 3  # 3+ different IPs in past hour

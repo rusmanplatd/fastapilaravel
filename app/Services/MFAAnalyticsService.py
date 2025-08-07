@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import json
+import statistics
 from typing import Dict, Any, List, Optional, Tuple
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
-from sqlalchemy import and_, func, desc, asc
+from sqlalchemy import and_, or_, func
+from sqlalchemy.sql import desc, asc
 from collections import defaultdict
-import statistics
 
 from app.Models import User, Role
 from app.Services.BaseService import BaseService
@@ -56,7 +58,7 @@ class MFAAnalyticsService(BaseService):
             mfa_enabled_users = self.db.query(User).join(
                 User.mfa_settings
             ).filter(
-                or_(
+                or_(  # type: ignore[arg-type]
                     User.mfa_settings.has(totp_enabled=True),
                     User.mfa_settings.has(webauthn_enabled=True),
                     User.mfa_settings.has(sms_enabled=True)
@@ -71,9 +73,7 @@ class MFAAnalyticsService(BaseService):
             ).count() if total_users > 0 else 0
             
             # Count WebAuthn credentials
-            webauthn_creds = self.db.query(func.count()).select_from(
-                self.db.query(User).join(User.webauthn_credentials).subquery()
-            ).scalar() or 0
+            webauthn_creds = self.db.query(User).join(User.webauthn_credentials).count()
             
             # Calculate percentages
             mfa_adoption_rate = (mfa_enabled_users / total_users * 100) if total_users > 0 else 0
@@ -97,7 +97,7 @@ class MFAAnalyticsService(BaseService):
     def _get_adoption_stats(self) -> Dict[str, Any]:
         """Get MFA adoption statistics by method"""
         try:
-            adoption = {
+            adoption: Dict[str, Any] = {
                 "by_method": {},
                 "by_role": {},
                 "by_registration_date": {},
@@ -143,9 +143,9 @@ class MFAAnalyticsService(BaseService):
                 }
             
             # Method combinations
-            combo_counts = defaultdict(int)
+            combo_counts: Dict[str, int] = defaultdict(int)
             users_with_mfa = self.db.query(User).join(User.mfa_settings).filter(
-                or_(
+                or_(  # type: ignore[arg-type]
                     User.mfa_settings.has(totp_enabled=True),
                     User.mfa_settings.has(webauthn_enabled=True),
                     User.mfa_settings.has(sms_enabled=True)
@@ -180,7 +180,7 @@ class MFAAnalyticsService(BaseService):
             
             # Count attempt types
             failed_attempts = self.db.query(MFAAttempt).filter(
-                and_(
+                and_(  # type: ignore[arg-type]
                     MFAAttempt.status == MFAAttemptStatus.FAILED,
                     MFAAttempt.created_at >= start_date,
                     MFAAttempt.created_at <= end_date
@@ -188,7 +188,7 @@ class MFAAnalyticsService(BaseService):
             ).count()
             
             successful_attempts = self.db.query(MFAAttempt).filter(
-                and_(
+                and_(  # type: ignore[arg-type]
                     MFAAttempt.status == MFAAttemptStatus.SUCCESS,
                     MFAAttempt.created_at >= start_date,
                     MFAAttempt.created_at <= end_date
@@ -196,7 +196,7 @@ class MFAAnalyticsService(BaseService):
             ).count()
             
             blocked_attempts = self.db.query(MFAAttempt).filter(
-                and_(
+                and_(  # type: ignore[arg-type]
                     MFAAttempt.status == MFAAttemptStatus.BLOCKED,
                     MFAAttempt.created_at >= start_date,
                     MFAAttempt.created_at <= end_date
@@ -205,7 +205,7 @@ class MFAAnalyticsService(BaseService):
             
             # Count high-risk events
             high_risk_events = self.db.query(MFAAuditLog).filter(
-                and_(
+                and_(  # type: ignore[arg-type]
                     MFAAuditLog.risk_score >= 70,
                     MFAAuditLog.created_at >= start_date,
                     MFAAuditLog.created_at <= end_date
@@ -214,7 +214,7 @@ class MFAAnalyticsService(BaseService):
             
             # Count backup code usage
             backup_codes_used = self.db.query(MFAAuditLog).filter(
-                and_(
+                and_(  # type: ignore[arg-type]
                     MFAAuditLog.event == MFAAuditEvent.BACKUP_CODE_USED.value,
                     MFAAuditLog.created_at >= start_date,
                     MFAAuditLog.created_at <= end_date
@@ -246,7 +246,7 @@ class MFAAnalyticsService(BaseService):
     def _get_usage_stats(self, start_date: datetime, end_date: datetime) -> Dict[str, Any]:
         """Get MFA usage statistics"""
         try:
-            usage = {
+            usage: Dict[str, Any] = {
                 "daily_verifications": {},
                 "method_usage": {},
                 "peak_hours": {},
@@ -263,7 +263,7 @@ class MFAAnalyticsService(BaseService):
                 day_end = day_start + timedelta(days=1)
                 
                 count = self.db.query(MFAAttempt).filter(
-                    and_(
+                    and_(  # type: ignore[arg-type]
                         MFAAttempt.status == MFAAttemptStatus.SUCCESS,
                         MFAAttempt.created_at >= day_start,
                         MFAAttempt.created_at < day_end
@@ -279,7 +279,7 @@ class MFAAnalyticsService(BaseService):
             method_usage = {}
             for attempt_type in MFAAttemptType:
                 count = self.db.query(MFAAttempt).filter(
-                    and_(
+                    and_(  # type: ignore[arg-type]
                         MFAAttempt.attempt_type == attempt_type,
                         MFAAttempt.status == MFAAttemptStatus.SUCCESS,
                         MFAAttempt.created_at >= start_date,
@@ -294,7 +294,7 @@ class MFAAnalyticsService(BaseService):
             peak_hours = {}
             for hour in range(24):
                 count = self.db.query(MFAAttempt).filter(
-                    and_(
+                    and_(  # type: ignore[arg-type]
                         MFAAttempt.status == MFAAttemptStatus.SUCCESS,
                         func.extract('hour', MFAAttempt.created_at) == hour,
                         MFAAttempt.created_at >= start_date,
@@ -313,7 +313,7 @@ class MFAAnalyticsService(BaseService):
     def _get_performance_stats(self, start_date: datetime, end_date: datetime) -> Dict[str, Any]:
         """Get MFA performance statistics"""
         try:
-            performance = {
+            performance: Dict[str, Any] = {
                 "average_setup_time": None,
                 "method_reliability": {},
                 "user_satisfaction_score": None,
@@ -323,7 +323,7 @@ class MFAAnalyticsService(BaseService):
             
             # Setup completion rate (initiated vs completed)
             setup_initiated = self.db.query(MFAAuditLog).filter(
-                and_(
+                and_(  # type: ignore[arg-type]
                     MFAAuditLog.event == MFAAuditEvent.SETUP_INITIATED.value,
                     MFAAuditLog.created_at >= start_date,
                     MFAAuditLog.created_at <= end_date
@@ -331,7 +331,7 @@ class MFAAnalyticsService(BaseService):
             ).count()
             
             setup_completed = self.db.query(MFAAuditLog).filter(
-                and_(
+                and_(  # type: ignore[arg-type]
                     MFAAuditLog.event == MFAAuditEvent.SETUP_COMPLETED.value,
                     MFAAuditLog.created_at >= start_date,
                     MFAAuditLog.created_at <= end_date
@@ -345,7 +345,7 @@ class MFAAnalyticsService(BaseService):
             method_reliability = {}
             for method in MFAAttemptType:
                 total_attempts = self.db.query(MFAAttempt).filter(
-                    and_(
+                    and_(  # type: ignore[arg-type]
                         MFAAttempt.attempt_type == method,
                         MFAAttempt.created_at >= start_date,
                         MFAAttempt.created_at <= end_date
@@ -353,7 +353,7 @@ class MFAAnalyticsService(BaseService):
                 ).count()
                 
                 successful_attempts = self.db.query(MFAAttempt).filter(
-                    and_(
+                    and_(  # type: ignore[arg-type]
                         MFAAttempt.attempt_type == method,
                         MFAAttempt.status == MFAAttemptStatus.SUCCESS,
                         MFAAttempt.created_at >= start_date,
@@ -378,7 +378,7 @@ class MFAAnalyticsService(BaseService):
     def _get_trend_analysis(self, start_date: datetime, end_date: datetime) -> Dict[str, Any]:
         """Analyze MFA trends over time"""
         try:
-            trends = {
+            trends: Dict[str, Any] = {
                 "adoption_trend": {},
                 "security_trend": {},
                 "usage_trend": {},
@@ -393,7 +393,7 @@ class MFAAnalyticsService(BaseService):
                 
                 # Count new MFA setups in this week
                 new_setups = self.db.query(MFAAuditLog).filter(
-                    and_(
+                    and_(  # type: ignore[arg-type]
                         MFAAuditLog.event == MFAAuditEvent.SETUP_COMPLETED.value,
                         MFAAuditLog.created_at >= current_week,
                         MFAAuditLog.created_at <= week_end
@@ -427,10 +427,8 @@ class MFAAnalyticsService(BaseService):
                 MFAAuditLog.event,
                 func.count(MFAAuditLog.id).label('count')
             ).filter(
-                and_(
-                    MFAAuditLog.created_at >= start_date,
-                    MFAAuditLog.created_at <= end_date
-                )
+                MFAAuditLog.created_at >= start_date,
+                MFAAuditLog.created_at <= end_date
             ).group_by(MFAAuditLog.event).order_by(desc('count')).limit(10).all()
             
             return [
@@ -444,7 +442,7 @@ class MFAAnalyticsService(BaseService):
     def _get_risk_analysis(self, start_date: datetime, end_date: datetime) -> Dict[str, Any]:
         """Analyze MFA-related risks"""
         try:
-            risk_analysis = {
+            risk_analysis: Dict[str, Any] = {
                 "risk_distribution": {},
                 "top_risk_factors": {},
                 "risk_trend": {},
@@ -461,7 +459,7 @@ class MFAAnalyticsService(BaseService):
             
             for range_name, min_score, max_score in risk_ranges:
                 count = self.db.query(MFAAuditLog).filter(
-                    and_(
+                    and_(  # type: ignore[arg-type]
                         MFAAuditLog.risk_score >= min_score,
                         MFAAuditLog.risk_score <= max_score,
                         MFAAuditLog.created_at >= start_date,
@@ -472,9 +470,9 @@ class MFAAnalyticsService(BaseService):
                 risk_analysis["risk_distribution"][range_name] = count
             
             # Top risk factors
-            risk_factors = {}
+            risk_factors: Dict[str, int] = {}
             logs_with_factors = self.db.query(MFAAuditLog).filter(
-                and_(
+                and_(  # type: ignore[arg-type]
                     MFAAuditLog.risk_factors.is_not(None),
                     MFAAuditLog.created_at >= start_date,
                     MFAAuditLog.created_at <= end_date
@@ -514,12 +512,10 @@ class MFAAnalyticsService(BaseService):
                 MFAAttempt.ip_address,
                 func.count(MFAAttempt.id).label('failure_count')
             ).filter(
-                and_(
-                    MFAAttempt.status == MFAAttemptStatus.FAILED,
-                    MFAAttempt.ip_address.is_not(None),
-                    MFAAttempt.created_at >= start_date,
-                    MFAAttempt.created_at <= end_date
-                )
+                MFAAttempt.status == MFAAttemptStatus.FAILED,
+                MFAAttempt.ip_address.is_not(None),
+                MFAAttempt.created_at >= start_date,
+                MFAAttempt.created_at <= end_date
             ).group_by(MFAAttempt.ip_address).having(
                 func.count(MFAAttempt.id) > 10
             ).all()

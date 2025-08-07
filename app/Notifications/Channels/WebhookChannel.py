@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any, Optional, Dict, TYPE_CHECKING
 import logging
 import json
-import requests
+import requests  # type: ignore[import-untyped]
 from datetime import datetime, timezone
 
 if TYPE_CHECKING:
@@ -13,6 +13,7 @@ else:
 
 logger = logging.getLogger(__name__)
 
+__all__ = ['WebhookMessage', 'WebhookChannel']
 
 # WebhookMessage is now imported from Notification.py
 

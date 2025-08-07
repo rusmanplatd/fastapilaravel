@@ -8,8 +8,8 @@ from __future__ import annotations
 
 from typing import List, Optional, TYPE_CHECKING
 from datetime import datetime
-from sqlalchemy import Column, String, Text, Boolean, DateTime, func
-from sqlalchemy.orm import Mapped, relationship
+from sqlalchemy import String, Text, Boolean, DateTime, func
+from sqlalchemy.orm import Mapped, relationship, mapped_column
 from app.Models.BaseModel import BaseModel
 
 if TYPE_CHECKING:
@@ -24,22 +24,22 @@ class OAuthClient(BaseModel):
     __tablename__ = "oauth_clients"
     
     # Client identification - using ULID for client_id
-    client_id: Mapped[str] = Column(String(26), unique=True, index=True, nullable=False)
-    client_secret: Mapped[Optional[str]] = Column(String(100), nullable=True)
+    client_id: Mapped[str] = mapped_column(String(26), unique=True, index=True, nullable=False)  # type: ignore[arg-type]
+    client_secret: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)  # type: ignore[arg-type]
     
     # Client details
-    name: Mapped[str] = Column(String(191), nullable=False)
-    redirect: Mapped[str] = Column(Text, nullable=False)
+    name: Mapped[str] = mapped_column(String(191), nullable=False)  # type: ignore[arg-type]
+    redirect: Mapped[str] = mapped_column(Text, nullable=False)  # type: ignore[arg-type]
     
     # Client configuration
-    personal_access_client: Mapped[bool] = Column(Boolean, default=False, nullable=False)
-    password_client: Mapped[bool] = Column(Boolean, default=False, nullable=False)
-    revoked: Mapped[bool] = Column(Boolean, default=False, nullable=False)
+    personal_access_client: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)  # type: ignore[arg-type]
+    password_client: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)  # type: ignore[arg-type]
+    revoked: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)  # type: ignore[arg-type]
     
     # Timestamps
-    created_at: Mapped[datetime] = Column(DateTime, default=func.now(), nullable=False)
-    updated_at: Mapped[datetime] = Column(
-        DateTime, default=func.now(), onupdate=func.now(), nullable=False
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=func.now(), nullable=False)  # type: ignore[arg-type]
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=func.now(), onupdate=func.now(), nullable=False  # type: ignore[arg-type]
     )
     
     # Relationships

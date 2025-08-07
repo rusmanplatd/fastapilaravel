@@ -1,9 +1,16 @@
 from __future__ import annotations
 
-from typing import Optional, List, Dict, Any, Union
+from typing import Optional, List, Dict, Any, Union, cast
 from abc import ABC, abstractmethod
-from sqlalchemy.orm import Query as SQLQuery
+from sqlalchemy.orm import Query
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    SQLQuery = Query[Any]
+else:
+    SQLQuery = Query
 from sqlalchemy import Column
+from typing import Any as ColumnAny
 
 
 class AllowedField:
@@ -76,7 +83,8 @@ class FieldSelector:
                         columns.append(column)
                 
                 if columns:
-                    query = query.with_entities(*columns)
+                    # Type ignore for SQLAlchemy overload issue
+                    query = query.with_entities(*columns)  # type: ignore[call-overload]
         
         # Handle relationship fields
         for table_name, fields in requested_fields.items():
@@ -116,11 +124,12 @@ class FieldSelector:
                 # Get the column from the model
                 column = getattr(self.model_class, field_name, None)
                 if column is not None:
-                    return column
+                    return cast(Column, column)
                 break
         
         # Fallback: try to get column directly from model
-        return getattr(self.model_class, field_name, None)
+        column = getattr(self.model_class, field_name, None)
+        return cast(Column, column) if column is not None else None
     
     def get_selected_fields(self) -> List[str]:
         """Get list of selected fields"""
@@ -239,7 +248,8 @@ class SparseFieldset:
                 columns.append(column)
         
         if columns:
-            return query.with_entities(*columns)
+            # Type ignore for SQLAlchemy overload issue
+            return query.with_entities(*columns)  # type: ignore[no-any-return]
         
         return query
     

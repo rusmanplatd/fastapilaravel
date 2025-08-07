@@ -268,12 +268,12 @@ class OAuth2Seeder:
         for client in clients:
             print(f"📋 {client.name}")
             print(f"   Client ID: {client.client_id}")
-            print(f"   Confidential: {'Yes' if client.is_confidential() else 'No'}")
-            print(f"   Personal Access: {'Yes' if client.personal_access_client else 'No'}")
-            print(f"   Password Grant: {'Yes' if client.password_client else 'No'}")
-            print(f"   Redirect URI: {client.redirect}")
+            print(f"   Confidential: {'Yes' if client.is_confidential else 'No'}")
+            print(f"   Personal Access: {'Yes' if client.is_personal_access_client else 'No'}")
+            print(f"   Password Grant: {'Yes' if client.is_password_client else 'No'}")
+            print(f"   Redirect URI: {client.redirect_uris}")
             
-            if client.is_confidential():
+            if client.is_confidential:
                 print("   ⚠️  Client Secret: [HASHED - Use OAuth2 endpoints to authenticate]")
             
             print()

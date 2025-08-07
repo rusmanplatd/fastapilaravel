@@ -8,8 +8,8 @@ from __future__ import annotations
 
 from typing import Optional, TYPE_CHECKING
 from datetime import datetime
-from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey, func
-from sqlalchemy.orm import Mapped, relationship
+from sqlalchemy import String, Boolean, DateTime, ForeignKey, func
+from sqlalchemy.orm import Mapped, relationship, mapped_column
 from app.Models.BaseModel import BaseModel
 
 if TYPE_CHECKING:
@@ -23,23 +23,23 @@ class OAuthRefreshToken(BaseModel):
     __tablename__ = "oauth_refresh_tokens"
     
     # Token identification - using ULID for token_id
-    token_id: Mapped[str] = Column(String(26), unique=True, index=True, nullable=False)
+    token_id: Mapped[str] = mapped_column(String(26), unique=True, index=True, nullable=False)  # type: ignore[arg-type]
     
     # Relationships
-    access_token_id: Mapped[str] = Column(String(26), ForeignKey("oauth_access_tokens.token_id", ondelete="CASCADE"), nullable=False, index=True)
-    client_id: Mapped[str] = Column(
-        String(26), ForeignKey("oauth_clients.client_id", ondelete="CASCADE"), nullable=False, index=True
+    access_token_id: Mapped[str] = mapped_column(String(26), ForeignKey("oauth_access_tokens.token_id", ondelete="CASCADE"), nullable=False, index=True)  # type: ignore[arg-type]
+    client_id: Mapped[str] = mapped_column(
+        String(26), ForeignKey("oauth_clients.client_id", ondelete="CASCADE"), nullable=False, index=True  # type: ignore[arg-type]
     )
     
     # Token status
-    revoked: Mapped[bool] = Column(Boolean, default=False, nullable=False)
+    revoked: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)  # type: ignore[arg-type]
     
     # Timestamps
-    created_at: Mapped[datetime] = Column(DateTime, default=func.now(), nullable=False)
-    updated_at: Mapped[datetime] = Column(
-        DateTime, default=func.now(), onupdate=func.now(), nullable=False
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=func.now(), nullable=False)  # type: ignore[arg-type]
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=func.now(), onupdate=func.now(), nullable=False  # type: ignore[arg-type]
     )
-    expires_at: Mapped[Optional[datetime]] = Column(DateTime, nullable=True)
+    expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)  # type: ignore[arg-type]
     
     # Relationships
     client: Mapped[OAuthClient] = relationship("OAuthClient", back_populates="refresh_tokens")

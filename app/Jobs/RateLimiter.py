@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import time
-from typing import Dict, List, Optional, TYPE_CHECKING
+from typing import Dict, List, Optional, TYPE_CHECKING, Any, Callable
 from datetime import datetime, timezone, timedelta
 from dataclasses import dataclass
 from enum import Enum
@@ -25,7 +25,7 @@ class RateLimit:
     per_seconds: int
     strategy: RateLimitStrategy = RateLimitStrategy.SLIDING_WINDOW
     burst_limit: Optional[int] = None  # For token bucket
-    key_generator: Optional[callable] = None
+    key_generator: Optional[Callable[..., str]] = None
 
 
 class TokenBucket:
@@ -57,7 +57,7 @@ class TokenBucket:
         time_passed = now - self.last_refill
         
         tokens_to_add = time_passed * self.refill_rate
-        self.tokens = min(self.capacity, self.tokens + tokens_to_add)
+        self.tokens = int(min(self.capacity, self.tokens + tokens_to_add))
         self.last_refill = now
 
 
@@ -124,7 +124,7 @@ class JobRateLimiter:
     """
     
     def __init__(self) -> None:
-        self.limiters: Dict[str, Dict[str, any]] = {}
+        self.limiters: Dict[str, Dict[str, Any]] = {}
     
     def limit(self, job: ShouldQueue, rate_limit: RateLimit) -> bool:
         """
@@ -142,7 +142,7 @@ class JobRateLimiter:
         strategy = rate_limit.strategy
         
         if strategy == RateLimitStrategy.TOKEN_BUCKET:
-            return limiter["bucket"].consume()
+            return limiter["bucket"].consume()  # type: ignore[no-any-return]
         
         elif strategy == RateLimitStrategy.SLIDING_WINDOW:
             if limiter["window"].is_allowed():
@@ -173,7 +173,8 @@ class JobRateLimiter:
             
             return False
         
-        return True  # Default allow
+        # All enum values handled above
+        raise ValueError(f"Unknown rate limit strategy: {strategy}")
     
     def _get_rate_limit_key(self, job: ShouldQueue, rate_limit: RateLimit) -> str:
         """Generate rate limit key for job."""
@@ -183,7 +184,7 @@ class JobRateLimiter:
         # Default key: job class + queue
         return f"{job.__class__.__module__}.{job.__class__.__name__}:{job.options.queue}"
     
-    def _create_limiter(self, rate_limit: RateLimit) -> Dict[str, any]:
+    def _create_limiter(self, rate_limit: RateLimit) -> Dict[str, Any]:
         """Create appropriate limiter based on strategy."""
         if rate_limit.strategy == RateLimitStrategy.TOKEN_BUCKET:
             refill_rate = rate_limit.max_attempts / rate_limit.per_seconds
@@ -211,7 +212,8 @@ class JobRateLimiter:
                 "last_leak": time.time()
             }
         
-        return {}
+        # All enum values handled above
+        raise ValueError(f"Unknown rate limit strategy: {rate_limit.strategy}")
     
     def get_wait_time(self, job: ShouldQueue, rate_limit: RateLimit) -> int:
         """
@@ -268,9 +270,9 @@ class RateLimited:
         rate_limits = self.get_rate_limits()
         
         for rate_limit in rate_limits:
-            if not self._rate_limiter.limit(self, rate_limit):
+            if not self._rate_limiter.limit(self, rate_limit):  # type: ignore[arg-type]
                 # Rate limited, calculate wait time
-                wait_time = self._rate_limiter.get_wait_time(self, rate_limit)
+                wait_time = self._rate_limiter.get_wait_time(self, rate_limit)  # type: ignore[arg-type]
                 
                 from app.Jobs.Job import JobRetryException
                 raise JobRetryException(

@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from typing import Optional, Dict, Any, TYPE_CHECKING
 from datetime import datetime
-from sqlalchemy import String, DateTime, ForeignKey, Text, JSON
+from sqlalchemy import String, DateTime, ForeignKey, Text
+from sqlalchemy.types import JSON
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from app.Models.BaseModel import BaseModel
 from enum import Enum
@@ -31,22 +32,22 @@ class MFAAuditEvent(str, Enum):
 class MFAAuditLog(BaseModel):
     __tablename__ = "mfa_audit_logs"
     
-    user_id: Mapped[Optional[str]] = mapped_column(ForeignKey("users.id"), nullable=True, index=True)
-    event: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
-    mfa_method: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
-    ip_address: Mapped[Optional[str]] = mapped_column(String(45), nullable=True)
-    user_agent: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
-    device_fingerprint: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
-    session_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    admin_user_id: Mapped[Optional[str]] = mapped_column(ForeignKey("users.id"), nullable=True)
+    user_id: Mapped[Optional[str]] = mapped_column(String(26), ForeignKey("users.id"), nullable=True, index=True)  # type: ignore[arg-type]
+    event: Mapped[str] = mapped_column(nullable=False, index=True)
+    mfa_method: Mapped[Optional[str]] = mapped_column(nullable=True)
+    ip_address: Mapped[Optional[str]] = mapped_column(nullable=True)
+    user_agent: Mapped[Optional[str]] = mapped_column(nullable=True)
+    device_fingerprint: Mapped[Optional[str]] = mapped_column(nullable=True)
+    session_id: Mapped[Optional[str]] = mapped_column(nullable=True)
+    admin_user_id: Mapped[Optional[str]] = mapped_column(String(26), ForeignKey("users.id"), nullable=True)  # type: ignore[arg-type]
     
     # Event details
     details: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSON, nullable=True)
-    error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    error_message: Mapped[Optional[str]] = mapped_column(nullable=True)
     
     # Risk assessment
     risk_score: Mapped[Optional[int]] = mapped_column(nullable=True)  # 0-100
-    risk_factors: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # JSON array
+    risk_factors: Mapped[Optional[str]] = mapped_column(nullable=True)  # JSON array
     
     # Relationships
     user: Mapped[Optional[User]] = relationship("User", foreign_keys=[user_id], back_populates="mfa_audit_logs")

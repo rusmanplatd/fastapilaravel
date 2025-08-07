@@ -12,6 +12,7 @@ from app.Services.MFAAuditService import MFAAuditService
 from app.Services.MFARateLimitService import MFARateLimitService
 from database.migrations.create_mfa_codes_table import MFACodeType, MFACode as MFACodeModel
 from database.migrations.create_mfa_attempts_table import MFAAttemptType, MFAAttemptStatus
+from database.migrations.create_mfa_audit_log_table import MFAAuditEvent
 from config.settings import settings
 
 # Optional Twilio import (install with: pip install twilio)
@@ -21,8 +22,8 @@ try:
     TWILIO_AVAILABLE = True
 except ImportError:
     TWILIO_AVAILABLE = False
-    TwilioClient = None
-    TwilioRestException = Exception
+    TwilioClient = None  # type: ignore[assignment,misc]
+    TwilioRestException = Exception  # type: ignore[assignment,misc]
 
 
 class SMSService(BaseService):
@@ -83,7 +84,7 @@ class SMSService(BaseService):
                 user, normalized_phone, ip_address, user_agent
             )
             
-            if not success:
+            if not success or verification_code is None:
                 return False, message, None
             
             # Send verification code
@@ -139,7 +140,7 @@ class SMSService(BaseService):
                 )
                 
                 self.audit_service.log_event(
-                    "SETUP_FAILED", user=user, mfa_method="sms",
+                    MFAAuditEvent.SETUP_FAILED, user=user, mfa_method="sms",
                     error_message=message, ip_address=ip_address
                 )
                 return False, message
@@ -202,7 +203,7 @@ class SMSService(BaseService):
                 user, user.mfa_settings.sms_phone_number, ip_address, user_agent
             )
             
-            if not success:
+            if not success or code is None:
                 return False, message, None
             
             send_success, send_message = self._send_sms_code(
@@ -314,7 +315,7 @@ class SMSService(BaseService):
                 )
             else:
                 self.audit_service.log_event(
-                    "MFA_DISABLED", user=user, mfa_method="sms",
+                    MFAAuditEvent.MFA_DISABLED, user=user, mfa_method="sms",
                     details={"phone_number": self._mask_phone_number(old_phone) if old_phone else None}
                 )
             

@@ -5,7 +5,7 @@ from database.migrations.create_users_table import User
 from config.database import SessionLocal
 
 
-def seed_permissions():
+def seed_permissions() -> None:
     db: Session = SessionLocal()
     
     try:
@@ -78,7 +78,7 @@ def seed_permissions():
         db.close()
 
 
-def seed_roles():
+def seed_roles() -> None:
     db: Session = SessionLocal()
     
     try:
@@ -165,7 +165,7 @@ def seed_roles():
                     role.give_permission_to(permission)
             else:
                 # Assign specific permissions
-                for perm_slug in role_data["permissions"]:
+                for perm_slug in role_data["permissions"]:  # type: ignore[attr-defined]
                     if perm_slug in permissions_by_slug:
                         role.give_permission_to(permissions_by_slug[perm_slug])
         
@@ -179,7 +179,7 @@ def seed_roles():
         db.close()
 
 
-def assign_super_admin_role():
+def assign_super_admin_role() -> None:
     """Assign Super Admin role to the first user (if exists)"""
     db: Session = SessionLocal()
     
@@ -214,7 +214,7 @@ def assign_super_admin_role():
         db.close()
 
 
-def seed_all_permissions():
+def seed_all_permissions() -> None:
     """Seed all permissions and roles"""
     print("Starting permission and role seeding...")
     seed_permissions()

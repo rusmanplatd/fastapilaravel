@@ -96,7 +96,7 @@ class WebAuthnDeleteRequest(BaseModel):
 
 
 class SMSSetupRequest(BaseModel):
-    phone_number: str = Field(..., regex=r'^\+?1?\d{9,15}$')
+    phone_number: str = Field(..., pattern=r'^\+?1?\d{9,15}$')
     verification_code: str = Field(..., min_length=6, max_length=6)
 
 
@@ -149,7 +149,7 @@ class MFARequireRequest(BaseModel):
 
 
 class DisableAllMFARequest(BaseModel):
-    verification_method: str = Field(..., regex=r'^(totp|webauthn|password)$')
+    verification_method: str = Field(..., pattern=r'^(totp|webauthn|password)$')
     verification_data: Dict[str, Any]
 
 

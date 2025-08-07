@@ -3,7 +3,7 @@ from database.migrations.create_users_table import User
 from config.database import SessionLocal
 
 
-def seed_users():
+def seed_users() -> None:
     db: Session = SessionLocal()
     
     try:

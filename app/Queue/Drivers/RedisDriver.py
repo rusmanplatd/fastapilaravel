@@ -19,7 +19,7 @@ class RedisQueueDriver:
     
     def __init__(
         self,
-        connection_params: Dict[str, Any] = None,
+        connection_params: Optional[Dict[str, Any]] = None,
         key_prefix: str = "queue:"
     ) -> None:
         self.connection_params = connection_params or {
@@ -85,7 +85,7 @@ class RedisQueueDriver:
         # Mark job as reserved
         self._reserve_job(job_id, job_data)
         
-        return job_data
+        return job_data  # type: ignore[no-any-return]
     
     def reserve_job(self, job_id: str, worker_id: str, timeout: int = 3600) -> bool:
         """Reserve a job for processing."""
@@ -148,19 +148,19 @@ class RedisQueueDriver:
     
     def get_queue_size(self, queue: str = "default") -> int:
         """Get number of jobs in queue."""
-        return self.redis.zcard(f"{self.key_prefix}{queue}")
+        return self.redis.zcard(f"{self.key_prefix}{queue}")  # type: ignore[no-any-return]
     
     def get_delayed_count(self) -> int:
         """Get number of delayed jobs."""
-        return self.redis.zcard(f"{self.key_prefix}delayed")
+        return self.redis.zcard(f"{self.key_prefix}delayed")  # type: ignore[no-any-return]
     
     def get_reserved_count(self) -> int:
         """Get number of reserved jobs."""
-        return self.redis.scard(f"{self.key_prefix}reserved")
+        return self.redis.scard(f"{self.key_prefix}reserved")  # type: ignore[no-any-return]
     
     def get_failed_count(self) -> int:
         """Get number of failed jobs."""
-        return self.redis.hlen(f"{self.key_prefix}failed")
+        return self.redis.hlen(f"{self.key_prefix}failed")  # type: ignore[no-any-return]
     
     def clear_queue(self, queue: str = "default") -> int:
         """Clear all jobs from queue."""
@@ -175,13 +175,13 @@ class RedisQueueDriver:
         count = self.redis.zcard(f"{self.key_prefix}{queue}")
         self.redis.delete(f"{self.key_prefix}{queue}")
         
-        return count
+        return count  # type: ignore[no-any-return]
     
     def clear_failed_jobs(self) -> int:
         """Clear all failed jobs."""
         count = self.redis.hlen(f"{self.key_prefix}failed")
         self.redis.delete(f"{self.key_prefix}failed")
-        return count
+        return count  # type: ignore[no-any-return]
     
     def retry_failed_job(self, job_id: str) -> bool:
         """Retry a failed job."""
@@ -263,7 +263,7 @@ class RedisQueueDriver:
         })
         return job_data
     
-    def _reserve_job(self, job_id: str, extra_data: Dict[str, Any] = None, timeout: int = 3600) -> bool:
+    def _reserve_job(self, job_id: str, extra_data: Optional[Dict[str, Any]] = None, timeout: int = 3600) -> bool:
         """Mark job as reserved."""
         reserved_data = {
             "reserved_at": time.time(),

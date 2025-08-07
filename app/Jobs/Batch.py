@@ -75,7 +75,9 @@ class JobBatcher:
         
         # Dispatch all jobs with batch ID
         from app.Services.QueueService import QueueService
-        queue_service = QueueService()
+        from config.database import get_database
+        db = next(get_database())
+        queue_service = QueueService(db)
         
         for job in self.jobs:
             # Add batch ID to job payload
@@ -177,7 +179,7 @@ class Batchable:
         finally:
             db.close()
     
-    def _cancel_remaining_batch_jobs(self, db, batch_id: str) -> None:
+    def _cancel_remaining_batch_jobs(self, db: Any, batch_id: str) -> None:
         """Cancel remaining jobs in the batch."""
         from database.migrations.create_jobs_table import Job as JobModel
         

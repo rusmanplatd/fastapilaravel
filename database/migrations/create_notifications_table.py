@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from typing import Optional, Dict, Any, TYPE_CHECKING
 from datetime import datetime
-from sqlalchemy import String, DateTime, Text, JSON, Index
+from sqlalchemy import String, DateTime, Text, Index
+from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.Models.BaseModel import BaseModel
 
@@ -14,17 +15,17 @@ class DatabaseNotification(BaseModel):
     __tablename__ = "notifications"
     
     # Notifiable polymorphic relationship
-    notifiable_type: Mapped[str] = mapped_column(String(255), nullable=False)
-    notifiable_id: Mapped[str] = mapped_column(String(26), nullable=False)
+    notifiable_type: Mapped[str] = mapped_column(nullable=False)
+    notifiable_id: Mapped[str] = mapped_column(nullable=False)
     
     # Notification type (class name)
-    type: Mapped[str] = mapped_column(String(255), nullable=False)
+    type: Mapped[str] = mapped_column(nullable=False)
     
     # Notification data as JSON
-    data: Mapped[Dict[str, Any]] = mapped_column(JSON, nullable=False)
+    data: Mapped[Dict[str, Any]] = mapped_column(nullable=False)
     
     # Read timestamp
-    read_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    read_at: Mapped[Optional[datetime]] = mapped_column(nullable=True)
     
     # Indexes for performance
     __table_args__ = (

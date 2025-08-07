@@ -8,9 +8,9 @@ This file demonstrates various usage patterns for the FastAPI QueryBuilder
 inspired by Spatie Laravel Query Builder.
 """
 
-from typing import List, Optional
-from sqlalchemy.orm import Session
-from fastapi import Request
+from typing import List, Optional, Dict, Any, Callable
+from sqlalchemy.orm import Session, Query
+from starlette.requests import Request
 
 from app.Utils.QueryBuilder import (
     QueryBuilder,
@@ -135,14 +135,14 @@ def custom_filters_example(db: Session, request: Request) -> List[User]:
     query_request = QueryBuilderRequest.from_request(request)
     
     # Custom filter using callback
-    def filter_users_with_posts(query, value, property_name):
+    def filter_users_with_posts(query: Query[User], value: bool, property_name: str) -> Query[User]:
         if value:
             return query.join(User.posts).distinct()  # type: ignore[attr-defined]
         else:
             return query.filter(~User.posts.any())  # type: ignore[attr-defined]
     
     # Custom filter for users with specific permission
-    def filter_by_permission(query, value, property_name):
+    def filter_by_permission(query: Query[User], value: str, property_name: str) -> Query[User]:
         return query.join(User.direct_permissions).filter(
             # Permission.name == value  # Would need proper model reference
         )
@@ -171,7 +171,7 @@ def custom_sorts_example(db: Session, request: Request) -> List[User]:
     query_request = QueryBuilderRequest.from_request(request)
     
     # Custom sort callback
-    def sort_by_posts_count(query, descending, property_name):
+    def sort_by_posts_count(query: Query[User], descending: bool, property_name: str) -> Query[User]:
         direction = "DESC" if descending else "ASC"
         # This would need proper subquery implementation
         return query.order_by(f"posts_count {direction}")
@@ -199,7 +199,7 @@ def chaining_with_existing_query_example(db: Session, request: Request) -> List[
     query_request = QueryBuilderRequest.from_request(request)
     
     # Start with existing query constraints
-    base_query = db.query(User).filter(User.is_active == True)  # type: ignore[comparison-overlap]
+    base_query = db.query(User).filter(User.is_active == True)
     
     users = QueryBuilder.for_query(base_query, query_request, User) \
         .allowed_filters(['name', 'email']) \
@@ -210,7 +210,7 @@ def chaining_with_existing_query_example(db: Session, request: Request) -> List[
     return users
 
 
-def pagination_example(db: Session, request: Request) -> dict:
+def pagination_example(db: Session, request: Request) -> Dict[str, Any]:
     """
     Paginated results with QueryBuilder
     
@@ -219,8 +219,8 @@ def pagination_example(db: Session, request: Request) -> dict:
     query_request = QueryBuilderRequest.from_request(request)
     
     # Extract pagination params from request (in real app, use FastAPI Query params)
-    page = int(request.query_params.get('page', 1))
-    per_page = int(request.query_params.get('per_page', 15))
+    page = int(request.query_params.get('page', '1'))
+    per_page = int(request.query_params.get('per_page', '15'))
     
     result = QueryBuilder.for_model(User, db, query_request) \
         .allowed_filters(['name', 'email', 'is_active']) \
@@ -228,7 +228,7 @@ def pagination_example(db: Session, request: Request) -> dict:
         .allowed_includes(['rolesCount']) \
         .paginate(page=page, per_page=per_page)
     
-    return result
+    return result  # type: ignore[no-any-return]
 
 
 def configuration_example(db: Session, request: Request) -> List[User]:
@@ -254,16 +254,16 @@ def configuration_example(db: Session, request: Request) -> List[User]:
     return users
 
 
-def fastapi_dependency_example():
+def fastapi_dependency_example() -> None:
     """
     Example of creating FastAPI dependencies for QueryBuilder
     """
-    from config import get_database
+    from config.database import get_db_session
     
     # Create a pre-configured dependency for user listing
     user_list_dependency = create_list_endpoint_dependency(
         model_class=User,
-        get_db=get_database,
+        get_db=get_db_session,  # type: ignore[arg-type]
         allowed_filters=['name', 'email', 'is_active'],
         allowed_sorts=['name', 'created_at'],
         allowed_includes=['roles', 'rolesCount'],
@@ -274,13 +274,16 @@ def fastapi_dependency_example():
     # Create a pre-configured dependency for showing single user
     user_show_dependency = create_show_endpoint_dependency(
         model_class=User,
-        get_db=get_database,
+        get_db=get_db_session,  # type: ignore[arg-type]
         allowed_includes=['roles', 'permissions'],
         allowed_fields=['id', 'name', 'email', 'roles.name']
     )
     
     # These can be used directly in FastAPI route handlers
-    return user_list_dependency, user_show_dependency
+    # Example usage:
+    # @app.get("/users")
+    # async def list_users(users=Depends(user_list_dependency)):
+    #     return users
 
 
 # SQL Query Examples that would be generated:

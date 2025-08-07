@@ -1,8 +1,16 @@
 from __future__ import annotations
 
-from typing import Optional, Callable, Union, List
+from typing import Optional, Callable, Union, List, TypeVar, Any, TYPE_CHECKING
 from abc import ABC, abstractmethod
-from sqlalchemy.orm import Query as SQLQuery
+from sqlalchemy.orm import Query
+
+# Generic type for SQLAlchemy Query
+T = TypeVar('T')
+
+if TYPE_CHECKING:
+    SQLQuery = Query[Any]
+else:
+    SQLQuery = Query
 
 
 class IncludeInterface(ABC):
@@ -132,13 +140,28 @@ class RelationshipInclude(IncludeInterface):
             from sqlalchemy.orm import selectinload, joinedload
             
             # For nested relationships, we need to build the loading path
-            if len(parts) == 1:
-                # Simple relationship
-                return query.options(selectinload(relations))
-            else:
+            # Get the model from the query
+            model_class = query.column_descriptions[0]['type'] if query.column_descriptions else None
+            
+            if model_class and len(parts) == 1:
+                # Simple relationship - get the attribute from the model class
+                if hasattr(model_class, relations):
+                    relationship_attr = getattr(model_class, relations)
+                    return query.options(selectinload(relationship_attr))
+                else:
+                    # Fallback - return query unchanged
+                    return query
+            elif model_class and len(parts) > 1:
                 # Nested relationship - would need more complex handling
                 # For now, just load the first level
-                return query.options(selectinload(parts[0]))
+                if hasattr(model_class, parts[0]):
+                    relationship_attr = getattr(model_class, parts[0])
+                    return query.options(selectinload(relationship_attr))
+                else:
+                    return query
+            else:
+                # No model class found - return query unchanged
+                return query
         except ImportError:
             # Fallback if SQLAlchemy imports fail
             return query
@@ -174,7 +197,7 @@ class ExistsInclude(IncludeInterface):
         # Add exists check for the relationship
         # In SQLAlchemy, this would use exists() subquery
         try:
-            from sqlalchemy import exists, select
+            from sqlalchemy.sql import exists, select
             
             # This is a simplified approach
             # In practice, you'd need to handle the specific relationship exists check

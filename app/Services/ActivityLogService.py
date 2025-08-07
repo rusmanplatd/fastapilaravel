@@ -1,11 +1,13 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Type, Union, TYPE_CHECKING
+from typing import Any, Dict, List, Optional, Type, Union, TYPE_CHECKING, cast
 from datetime import datetime, timedelta
 from contextvars import ContextVar
 import uuid
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, and_, or_
+from sqlalchemy import and_, or_
+from sqlalchemy.sql import desc
+from sqlalchemy.sql.elements import ColumnElement
 from app.Models.BaseModel import BaseModel
 
 if TYPE_CHECKING:
@@ -71,7 +73,7 @@ class ActivityLogService:
         cls,
         log_name: str,
         description: str,
-        subject: Optional[BaseModel] = None,
+        subject: Optional[Union[BaseModel, Any]] = None,
         causer: Optional[User] = None,
         properties: Optional[Dict[str, Any]] = None,
         event: Optional[str] = None,
@@ -130,10 +132,17 @@ class ActivityLogService:
         
         # Save to database
         if db_session is None:
-            with get_db_session() as session:
+            session_gen = get_db_session()
+            session = next(session_gen)
+            try:
                 session.add(activity_log)
                 session.commit()
                 session.refresh(activity_log)
+            finally:
+                try:
+                    next(session_gen)
+                except StopIteration:
+                    pass
         else:
             db_session.add(activity_log)
             db_session.commit()
@@ -173,8 +182,10 @@ class ActivityLogService:
         from config.database import get_db_session
         
         if db_session is None:
-            session = get_db_session()
+            session_gen = get_db_session()
+            session = next(session_gen)
         else:
+            session_gen = None
             session = db_session
         
         try:
@@ -188,12 +199,11 @@ class ActivityLogService:
                 query = query.filter(ActivityLog.causer_id == str(causer.id))
             
             if subject is not None:
-                query = query.filter(
-                    and_(
-                        ActivityLog.subject_type == subject.__class__.__name__,
-                        ActivityLog.subject_id == str(subject.id)
-                    )
+                subject_filter = and_(
+                    ActivityLog.subject_type == subject.__class__.__name__,
+                    ActivityLog.subject_id == str(subject.id)
                 )
+                query = query.filter(subject_filter)  # type: ignore[arg-type]
             
             if event is not None:
                 query = query.filter(ActivityLog.event == event)
@@ -210,8 +220,11 @@ class ActivityLogService:
             return query.all()
         
         finally:
-            if db_session is None:
-                session.close()
+            if db_session is None and session_gen is not None:
+                try:
+                    next(session_gen)
+                except StopIteration:
+                    pass
     
     @classmethod
     def count_logs(
@@ -241,8 +254,10 @@ class ActivityLogService:
         from config.database import get_db_session
         
         if db_session is None:
-            session = get_db_session()
+            session_gen = get_db_session()
+            session = next(session_gen)
         else:
+            session_gen = None
             session = db_session
         
         try:
@@ -256,12 +271,11 @@ class ActivityLogService:
                 query = query.filter(ActivityLog.causer_id == str(causer.id))
             
             if subject is not None:
-                query = query.filter(
-                    and_(
-                        ActivityLog.subject_type == subject.__class__.__name__,
-                        ActivityLog.subject_id == str(subject.id)
-                    )
+                subject_filter = and_(
+                    ActivityLog.subject_type == subject.__class__.__name__,
+                    ActivityLog.subject_id == str(subject.id)
                 )
+                query = query.filter(subject_filter)  # type: ignore[arg-type]
             
             if event is not None:
                 query = query.filter(ActivityLog.event == event)
@@ -272,8 +286,11 @@ class ActivityLogService:
             return query.count()
         
         finally:
-            if db_session is None:
-                session.close()
+            if db_session is None and session_gen is not None:
+                try:
+                    next(session_gen)
+                except StopIteration:
+                    pass
     
     @classmethod
     def clean_old_logs(
@@ -297,8 +314,10 @@ class ActivityLogService:
         from config.database import get_db_session
         
         if db_session is None:
-            session = get_db_session()
+            session_gen = get_db_session()
+            session = next(session_gen)
         else:
+            session_gen = None
             session = db_session
         
         try:
@@ -318,8 +337,11 @@ class ActivityLogService:
             return count
         
         finally:
-            if db_session is None:
-                session.close()
+            if db_session is None and session_gen is not None:
+                try:
+                    next(session_gen)
+                except StopIteration:
+                    pass
     
     @classmethod
     def get_logs_for_subject(

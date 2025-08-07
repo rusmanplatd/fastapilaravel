@@ -148,7 +148,7 @@ class OAuth2IntrospectionService:
             # Validate JWT and get access token record
             access_token = self.auth_server.validate_access_token(db, token)
             
-            if not access_token or not access_token.is_valid():
+            if not access_token or not access_token.is_valid:
                 return OAuth2IntrospectionResponse(active=False)
             
             # Build introspection response
@@ -175,7 +175,7 @@ class OAuth2IntrospectionService:
         try:
             refresh_token = self.auth_server.find_refresh_token_by_id(db, token)
             
-            if not refresh_token or not refresh_token.is_valid():
+            if not refresh_token or not refresh_token.is_valid:
                 return OAuth2IntrospectionResponse(active=False)
             
             # Get associated access token for additional info
@@ -185,7 +185,7 @@ class OAuth2IntrospectionService:
             
             return OAuth2IntrospectionResponse(
                 active=True,
-                client_id=refresh_token.client.client_id,
+                client_id=refresh_token.client_id,
                 token_type="refresh_token",
                 exp=int(refresh_token.expires_at.timestamp()) if refresh_token.expires_at else None,
                 iat=int(refresh_token.created_at.timestamp()),
@@ -274,7 +274,7 @@ class OAuth2IntrospectionService:
             # Also revoke associated refresh tokens
             refresh_tokens = db.query(OAuth2RefreshToken).filter(
                 OAuth2RefreshToken.access_token_id == access_token.token_id,
-                OAuth2RefreshToken.revoked == False
+                OAuth2RefreshToken.is_revoked == False
             ).all()
             
             for refresh_token in refresh_tokens:
@@ -305,7 +305,7 @@ class OAuth2IntrospectionService:
             access_token = self.auth_server.find_access_token_by_id(
                 db, refresh_token.access_token_id
             )
-            if access_token and not access_token.is_revoked():
+            if access_token and not access_token.is_revoked:
                 access_token.revoke()
             
             db.commit()
@@ -333,7 +333,7 @@ class OAuth2IntrospectionService:
         """
         query = db.query(OAuth2AccessToken).filter(
             OAuth2AccessToken.user_id == user_id,
-            OAuth2AccessToken.revoked == False
+            OAuth2AccessToken.is_revoked == False
         )
         
         if client_id:
@@ -349,7 +349,7 @@ class OAuth2IntrospectionService:
             # Also revoke associated refresh tokens
             refresh_tokens = db.query(OAuth2RefreshToken).filter(
                 OAuth2RefreshToken.access_token_id == access_token.token_id,
-                OAuth2RefreshToken.revoked == False
+                OAuth2RefreshToken.is_revoked == False
             ).all()
             
             for refresh_token in refresh_tokens:
@@ -373,13 +373,15 @@ class OAuth2IntrospectionService:
         # Revoke access tokens
         access_tokens = db.query(OAuth2AccessToken).filter(
             OAuth2AccessToken.client_id == client_id,
-            OAuth2AccessToken.revoked == False
+            OAuth2AccessToken.is_revoked == False
         ).all()
         
         # Revoke refresh tokens
-        refresh_tokens = db.query(OAuth2RefreshToken).filter(
-            OAuth2RefreshToken.client_id == client_id,
-            OAuth2RefreshToken.revoked == False
+        refresh_tokens = db.query(OAuth2RefreshToken).join(
+            OAuth2AccessToken, OAuth2RefreshToken.access_token_id == OAuth2AccessToken.token_id
+        ).filter(
+            OAuth2AccessToken.client_id == client_id,
+            OAuth2RefreshToken.is_revoked == False
         ).all()
         
         revoked_count = 0
@@ -410,7 +412,7 @@ class OAuth2IntrospectionService:
         """
         access_tokens = db.query(OAuth2AccessToken).filter(
             OAuth2AccessToken.user_id == user_id,
-            OAuth2AccessToken.revoked == False
+            OAuth2AccessToken.is_revoked == False
         ).order_by(OAuth2AccessToken.created_at.desc()).limit(limit).all()
         
         token_list = []
@@ -426,7 +428,7 @@ class OAuth2IntrospectionService:
                 },
                 "created_at": token.created_at,
                 "expires_at": token.expires_at,
-                "is_expired": token.is_expired()
+                "is_expired": token.is_expired
             }
             token_list.append(token_info)
         

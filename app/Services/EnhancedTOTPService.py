@@ -4,7 +4,7 @@ import pyotp
 import secrets
 import base64
 import hashlib
-from typing import Tuple, List, Dict, Any, Optional
+from typing import Tuple, List, Dict, Any, Optional, cast
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 import qrcode
@@ -19,6 +19,7 @@ from app.Services.BaseService import BaseService
 from app.Services.MFAAuditService import MFAAuditService
 from app.Services.MFARateLimitService import MFARateLimitService
 from database.migrations.create_mfa_attempts_table import MFAAttemptType, MFAAttemptStatus
+from database.migrations.create_mfa_audit_log_table import MFAAuditEvent
 
 
 class EnhancedTOTPService(BaseService):
@@ -80,11 +81,11 @@ class EnhancedTOTPService(BaseService):
             interval=self.interval
         )
         
-        return totp.provisioning_uri(
+        return cast(str, totp.provisioning_uri(
             name=user.email,
             issuer_name=issuer,
             image="https://your-domain.com/logo.png"  # Optional logo URL
-        )
+        ))
     
     def generate_styled_qr_code(
         self, 
@@ -342,7 +343,7 @@ class EnhancedTOTPService(BaseService):
                 
                 # Log failed verification
                 self.audit_service.log_event(
-                    "SETUP_FAILED", user=user, mfa_method="totp",
+                    MFAAuditEvent.SETUP_FAILED, user=user, mfa_method="totp",
                     error_message="Invalid TOTP token during setup",
                     ip_address=ip_address
                 )
@@ -494,7 +495,7 @@ class EnhancedTOTPService(BaseService):
                 # If running low on backup codes, log a warning
                 if len(backup_codes) <= 2:
                     self.audit_service.log_event(
-                        "LOW_BACKUP_CODES", user=user, mfa_method="totp",
+                        MFAAuditEvent.BACKUP_CODE_USED, user=user, mfa_method="totp",
                         details={"remaining_codes": len(backup_codes)}
                     )
                 
