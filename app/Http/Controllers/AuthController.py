@@ -11,9 +11,11 @@ from app.Http.Schemas import (
     UpdateProfileRequest,
     ForgotPasswordRequest,
     ResetPasswordRequest,
-    UserResponse
+    UserResponse,
+    MFALoginChallengeResponse,
+    MFACompletedLoginResponse
 )
-from app.Services import AuthService
+from app.Services import AuthService, MFAService
 from app.Models import User
 from config import get_database
 
@@ -58,6 +60,24 @@ class AuthController(BaseController):
         
         if not success:
             self.error_response(message, status.HTTP_401_UNAUTHORIZED)
+        
+        # Check if user requires MFA
+        user = auth_service.db.query(User).filter(User.email == login_data.email).first()
+        if user and user.has_mfa_enabled() and user.is_mfa_required():
+            mfa_service = MFAService(db)
+            
+            # Create MFA session
+            mfa_success, mfa_message, session_token = mfa_service.create_mfa_session(user)
+            if not mfa_success:
+                self.error_response(mfa_message, status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
+            # Return MFA challenge instead of tokens
+            return MFALoginChallengeResponse(
+                requires_mfa=True,
+                session_token=session_token,
+                available_methods=mfa_service.get_available_mfa_methods(user),
+                user_id=user.id
+            )
         
         return self.success_response(
             data=tokens,
@@ -170,3 +190,26 @@ class AuthController(BaseController):
             self.error_response(message, status.HTTP_400_BAD_REQUEST)
         
         return self.success_response(message=message)
+    
+    def complete_mfa_login(self, session_token: str, db: Session = Depends(get_database)):
+        """Complete MFA login after verification"""
+        mfa_service = MFAService(db)
+        mfa_session = mfa_service.get_mfa_session(session_token)
+        
+        if not mfa_session:
+            self.error_response("Invalid or expired MFA session", status.HTTP_401_UNAUTHORIZED)
+        
+        if mfa_session.status.value != "verified":
+            self.error_response("MFA session not verified", status.HTTP_401_UNAUTHORIZED)
+        
+        # Generate tokens for the user
+        auth_service = AuthService(db)
+        user = mfa_session.user
+        tokens = auth_service._generate_tokens(user)
+        
+        return MFACompletedLoginResponse(
+            access_token=tokens.access_token,
+            refresh_token=tokens.refresh_token,
+            expires_in=tokens.expires_in,
+            user=tokens.user.dict()
+        )

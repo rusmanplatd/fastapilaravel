@@ -6,6 +6,7 @@ from sqlalchemy import String, Boolean, DateTime, func, Text
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from app.Models.BaseModel import BaseModel
 from app.Traits.LogsActivity import LogsActivityMixin, LogOptions
+from app.Traits.Notifiable import NotifiableMixin
 from database.migrations.create_user_role_table import user_role_table
 from database.migrations.create_user_permission_table import user_permission_table
 
@@ -15,9 +16,15 @@ if TYPE_CHECKING:
     from app.Models.OAuth2AccessToken import OAuth2AccessToken
     from app.Models.OAuth2AuthorizationCode import OAuth2AuthorizationCode
     from app.Models.OAuth2Client import OAuth2Client
+    from database.migrations.create_user_mfa_settings_table import UserMFASettings
+    from database.migrations.create_mfa_codes_table import MFACode
+    from database.migrations.create_webauthn_credentials_table import WebAuthnCredential
+    from database.migrations.create_mfa_sessions_table import MFASession
+    from database.migrations.create_mfa_attempts_table import MFAAttempt
+    from database.migrations.create_mfa_audit_log_table import MFAAuditLog
 
 
-class User(BaseModel, LogsActivityMixin):
+class User(BaseModel, LogsActivityMixin, NotifiableMixin):
     __tablename__ = "users"
     
     name: Mapped[str] = mapped_column(String(255), nullable=False)
@@ -41,6 +48,26 @@ class User(BaseModel, LogsActivityMixin):
     )
     oauth_clients: Mapped[List[OAuth2Client]] = relationship(
         "OAuth2Client", back_populates="user", cascade="all, delete-orphan"
+    )
+    
+    # MFA relationships
+    mfa_settings: Mapped[Optional[UserMFASettings]] = relationship(
+        "UserMFASettings", back_populates="user", cascade="all, delete-orphan", uselist=False
+    )
+    mfa_codes: Mapped[List[MFACode]] = relationship(
+        "MFACode", back_populates="user", cascade="all, delete-orphan"
+    )
+    webauthn_credentials: Mapped[List[WebAuthnCredential]] = relationship(
+        "WebAuthnCredential", back_populates="user", cascade="all, delete-orphan"
+    )
+    mfa_sessions: Mapped[List[MFASession]] = relationship(
+        "MFASession", back_populates="user", cascade="all, delete-orphan"
+    )
+    mfa_attempts: Mapped[List[MFAAttempt]] = relationship(
+        "MFAAttempt", back_populates="user", cascade="all, delete-orphan"
+    )
+    mfa_audit_logs: Mapped[List[MFAAuditLog]] = relationship(
+        "MFAAuditLog", foreign_keys="[MFAAuditLog.user_id]", back_populates="user", cascade="all, delete-orphan"
     )
     
     @classmethod
@@ -156,6 +183,43 @@ class User(BaseModel, LogsActivityMixin):
     def cannot(self, permission_name: str) -> bool:
         """Opposite of can"""
         return not self.has_permission_to(permission_name)
+    
+    # MFA Methods
+    
+    def has_mfa_enabled(self) -> bool:
+        """Check if user has any MFA method enabled"""
+        if not self.mfa_settings:
+            return False
+        return (
+            self.mfa_settings.totp_enabled or 
+            self.mfa_settings.webauthn_enabled or 
+            self.mfa_settings.sms_enabled
+        )
+    
+    def is_mfa_required(self) -> bool:
+        """Check if MFA is required for this user"""
+        if not self.mfa_settings:
+            return False
+        return self.mfa_settings.is_required
+    
+    def get_enabled_mfa_methods(self) -> List[str]:
+        """Get list of enabled MFA methods"""
+        if not self.mfa_settings:
+            return []
+        
+        methods = []
+        if self.mfa_settings.totp_enabled:
+            methods.append("totp")
+        if self.mfa_settings.webauthn_enabled:
+            methods.append("webauthn")
+        if self.mfa_settings.sms_enabled:
+            methods.append("sms")
+        
+        return methods
+    
+    def has_webauthn_credentials(self) -> bool:
+        """Check if user has any WebAuthn credentials registered"""
+        return len(self.webauthn_credentials) > 0
     
     def to_dict_safe(self) -> Dict[str, Any]:
         return {

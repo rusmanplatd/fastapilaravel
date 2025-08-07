@@ -17,6 +17,7 @@ from .PermissionMiddleware import (
     has_any_role,
     has_all_roles
 )
+from .MFAMiddleware import MFAMiddleware, require_mfa, verify_mfa_session
 
 __all__ = [
     "add_cors_middleware", 
@@ -36,5 +37,8 @@ __all__ = [
     "has_any_permission",
     "has_all_permissions",
     "has_any_role",
-    "has_all_roles"
+    "has_all_roles",
+    "MFAMiddleware",
+    "require_mfa",
+    "verify_mfa_session"
 ]

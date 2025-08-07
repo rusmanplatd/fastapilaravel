@@ -4,6 +4,7 @@ from typing import Dict, Any
 from fastapi import FastAPI
 from routes import api_router, web_router
 from routes.oauth2 import router as oauth2_router
+from routes.mfa import router as mfa_router
 from app.Http.Middleware import add_cors_middleware
 from config import create_tables, settings
 from config.oauth2 import oauth2_settings
@@ -22,6 +23,7 @@ app = FastAPI(
     - **Strict Type Checking**: Full mypy coverage with comprehensive type hints
     - **Role-Based Access Control**: Spatie-like permissions and roles
     - **JWT Authentication**: Secure token-based authentication
+    - **Multi-Factor Authentication**: TOTP and WebAuthn support
     - **Database Migrations**: SQLAlchemy models with relationships
     
     ## OAuth2 Grant Types
@@ -44,6 +46,7 @@ add_cors_middleware(app)  # type: ignore[no-untyped-call]
 app.include_router(web_router)
 app.include_router(api_router)
 app.include_router(oauth2_router)  # OAuth2 endpoints
+app.include_router(mfa_router)  # MFA endpoints
 
 
 # OAuth2 Server Metadata Endpoint

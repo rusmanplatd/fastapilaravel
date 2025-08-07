@@ -28,6 +28,34 @@ from .PermissionSchemas import (
     UserPermissionsResponse
 )
 
+from .MFASchemas import (
+    MFAStatusResponse,
+    TOTPSetupRequest,
+    TOTPSetupResponse,
+    TOTPVerifyRequest,
+    TOTPDisableRequest,
+    BackupCodesRegenerateRequest,
+    BackupCodesResponse,
+    WebAuthnRegistrationOptionsResponse,
+    WebAuthnRegisterRequest,
+    WebAuthnAuthenticationOptionsResponse,
+    WebAuthnCredentialResponse,
+    WebAuthnCredentialsResponse,
+    WebAuthnDeleteRequest,
+    SMSSetupRequest,
+    MFASessionCreateResponse,
+    MFAVerifyTOTPRequest,
+    MFAVerifyWebAuthnRequest,
+    MFAVerifySMSRequest,
+    MFAVerifyResponse,
+    MFARequireRequest,
+    DisableAllMFARequest,
+    MFALoginChallengeResponse,
+    MFACompletedLoginResponse,
+    ErrorResponse,
+    SuccessResponse
+)
+
 __all__ = [
     # Auth Schemas
     "UserRegister",
@@ -55,5 +83,32 @@ __all__ = [
     "RoleCheck",
     "MultiplePermissionCheck",
     "MultipleRoleCheck",
-    "UserPermissionsResponse"
+    "UserPermissionsResponse",
+    
+    # MFA Schemas
+    "MFAStatusResponse",
+    "TOTPSetupRequest",
+    "TOTPSetupResponse",
+    "TOTPVerifyRequest",
+    "TOTPDisableRequest",
+    "BackupCodesRegenerateRequest",
+    "BackupCodesResponse",
+    "WebAuthnRegistrationOptionsResponse",
+    "WebAuthnRegisterRequest",
+    "WebAuthnAuthenticationOptionsResponse",
+    "WebAuthnCredentialResponse",
+    "WebAuthnCredentialsResponse",
+    "WebAuthnDeleteRequest",
+    "SMSSetupRequest",
+    "MFASessionCreateResponse",
+    "MFAVerifyTOTPRequest",
+    "MFAVerifyWebAuthnRequest",
+    "MFAVerifySMSRequest",
+    "MFAVerifyResponse",
+    "MFARequireRequest",
+    "DisableAllMFARequest",
+    "MFALoginChallengeResponse",
+    "MFACompletedLoginResponse",
+    "ErrorResponse",
+    "SuccessResponse"
 ]
