@@ -105,6 +105,160 @@ database/seeders/         # Data seeding scripts
 - **Token Storage**: SQLAlchemy models for all token types
 - **Introspection**: RFC 7662 compliant token introspection endpoint
 
+## Queue System
+
+Complete Laravel-style queue implementation for background job processing.
+
+### Queue Commands
+```bash
+# Basic Operations
+make queue-work                 # Start default queue worker
+make queue-work-emails          # Start worker for emails queue
+make queue-work-notifications   # Start worker for notifications queue
+make queue-stats               # Show queue statistics
+make queue-failed              # List failed jobs
+make queue-retry-failed        # Retry all failed jobs
+make queue-clear               # Clear queue (with confirmation)
+
+# Advanced Monitoring & Management
+make queue-dashboard           # Real-time monitoring dashboard
+make queue-metrics            # Detailed analytics & performance
+make queue-health             # Health check & diagnostics  
+make queue-top                # htop-style process monitor
+
+# Examples & Demos
+make queue-example            # Basic queue usage examples
+make queue-advanced-example   # Advanced features demonstration
+```
+
+### Job Creation
+Create jobs by inheriting from `app.Jobs.Job`:
+```python
+from app.Jobs.Job import Job
+
+class SendEmailJob(Job):
+    def __init__(self, to_email: str, subject: str, body: str):
+        super().__init__()
+        self.to_email = to_email
+        self.subject = subject
+        self.body = body
+        self.options.queue = "emails"
+    
+    def handle(self) -> None:
+        # Job logic here
+        pass
+    
+    def serialize(self) -> Dict[str, Any]:
+        data = super().serialize()
+        data["data"] = {"to_email": self.to_email, ...}
+        return data
+```
+
+### Job Dispatching
+```python
+# Basic dispatch
+job_id = SendEmailJob.dispatch("user@example.com", "Subject", "Body")
+
+# With options
+job_id = SendEmailJob("user@example.com", "Subject", "Body") \
+    .on_queue("high-priority") \
+    .delay_until(60) \
+    .with_priority(10) \
+    .dispatch()
+
+# Conditional dispatch
+SendEmailJob.dispatch_if(condition, ...)
+SendEmailJob.dispatch_unless(condition, ...)
+
+# Immediate execution (no queue)
+SendEmailJob.dispatch_now(...)
+```
+
+### Advanced Features
+
+#### Job Batching
+```python
+from app.Jobs.Batch import batch, BatchableJob
+
+# Create batchable job
+class ProcessDataJob(BatchableJob):
+    def _handle(self): # Use _handle instead of handle
+        # Job logic here
+        pass
+
+# Dispatch batch
+batch_id = batch([
+    ProcessDataJob("data1"),
+    ProcessDataJob("data2"),
+    ProcessDataJob("data3")
+]).name("Data Processing").allow_failures(1).dispatch()
+```
+
+#### Job Chaining
+```python
+from app.Jobs.Chain import chain, ChainableJob
+
+# Sequential job execution
+chain_id = chain([
+    ExtractDataJob(),
+    TransformDataJob(), 
+    LoadDataJob(),
+    NotifyCompletionJob()
+]).name("ETL Pipeline").dispatch()
+```
+
+#### Rate Limiting
+```python
+from app.Jobs.RateLimiter import RateLimit, RateLimited
+
+class EmailJob(Job, RateLimited):
+    def get_rate_limits(self):
+        return [RateLimit(max_attempts=100, per_seconds=3600)] # 100/hour
+```
+
+#### Job Middleware
+```python
+from app.Jobs.Middleware import MiddlewareStack, LoggingMiddleware
+
+# Apply middleware to jobs
+middleware = MiddlewareStack()
+middleware.add(LoggingMiddleware())
+middleware.add(ThrottleMiddleware())
+```
+
+#### Security & Encryption
+```python
+from app.Jobs.Security import SecureJob
+
+class SecureDataJob(SecureJob):
+    def __init__(self, sensitive_data):
+        super().__init__()
+        self.set_sensitive_fields(["sensitive_data"])
+        self.set_required_permissions(["process_data"])
+```
+
+#### Queue Configurations
+```python
+from app.Queue.QueueManager import define_queue
+
+# Define specialized queues
+define_queue("high-priority", 
+    connection="redis",
+    max_jobs=1000,
+    rate_limit_enabled=True)
+```
+
+### Queue Architecture
+- **Models**: `jobs`, `failed_jobs`, `job_batches`, `job_metrics` tables
+- **Worker**: `app.Queue.Worker.QueueWorker` with middleware support
+- **Service**: `app.Services.QueueService` with advanced management
+- **Drivers**: Database and Redis queue drivers
+- **Security**: Job encryption, signing, and access control
+- **Monitoring**: Real-time metrics, performance tracking
+- **Batching**: Bulk job processing with progress tracking
+- **Chaining**: Sequential job workflows
+- **Events**: Lifecycle hooks and event system
+
 ## Testing
 
 Currently tests are not implemented (placeholders in Makefile). When adding tests:

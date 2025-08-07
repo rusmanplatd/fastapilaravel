@@ -87,6 +87,67 @@ db-reseed-oauth2: ## Reseed OAuth2 data (clean + seed)
 db-reset: ## Reset database (remove sqlite file)
 	rm -f storage/database.db
 
+# Queue Management
+.PHONY: queue-work
+queue-work: ## Start queue worker (default queue)
+	$(PYTHON) -m app.Commands.QueueWorkerCommand
+
+.PHONY: queue-work-emails
+queue-work-emails: ## Start queue worker for emails queue
+	$(PYTHON) -m app.Commands.QueueWorkerCommand --queue emails
+
+.PHONY: queue-work-notifications
+queue-work-notifications: ## Start queue worker for notifications queue
+	$(PYTHON) -m app.Commands.QueueWorkerCommand --queue notifications
+
+.PHONY: queue-stats
+queue-stats: ## Show queue statistics
+	$(PYTHON) -m app.Commands.QueueManagementCommand stats
+
+.PHONY: queue-clear
+queue-clear: ## Clear default queue (with confirmation)
+	$(PYTHON) -m app.Commands.QueueManagementCommand clear
+
+.PHONY: queue-failed
+queue-failed: ## List failed jobs
+	$(PYTHON) -m app.Commands.QueueManagementCommand failed list
+
+.PHONY: queue-retry-failed
+queue-retry-failed: ## Retry all failed jobs (with confirmation)
+	$(PYTHON) -m app.Commands.QueueManagementCommand failed retry-all
+
+.PHONY: queue-clear-failed
+queue-clear-failed: ## Clear all failed jobs (with confirmation)
+	$(PYTHON) -m app.Commands.QueueManagementCommand failed clear
+
+.PHONY: queue-release-reserved
+queue-release-reserved: ## Release timed out reserved jobs
+	$(PYTHON) -m app.Commands.QueueManagementCommand release
+
+.PHONY: queue-example
+queue-example: ## Run queue usage examples
+	$(PYTHON) examples/queue_usage.py
+
+.PHONY: queue-advanced-example
+queue-advanced-example: ## Run advanced queue features demo
+	$(PYTHON) examples/advanced_queue_features.py
+
+.PHONY: queue-dashboard
+queue-dashboard: ## Start real-time queue monitoring dashboard
+	$(PYTHON) -m app.Commands.QueueMonitorCommand dashboard
+
+.PHONY: queue-metrics
+queue-metrics: ## Show detailed queue metrics and analytics
+	$(PYTHON) -m app.Commands.QueueMonitorCommand metrics
+
+.PHONY: queue-health
+queue-health: ## Run queue health check
+	$(PYTHON) -m app.Commands.QueueMonitorCommand health
+
+.PHONY: queue-top
+queue-top: ## Start htop-style queue monitor
+	$(PYTHON) -m app.Commands.QueueMonitorCommand top
+
 # Development server
 .PHONY: dev
 dev: ## Start development server
