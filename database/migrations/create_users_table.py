@@ -5,6 +5,7 @@ from datetime import datetime
 from sqlalchemy import String, Boolean, DateTime, func, Text
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from app.Models.BaseModel import BaseModel
+from app.Traits.LogsActivity import LogsActivityMixin, LogOptions
 from database.migrations.create_user_role_table import user_role_table
 from database.migrations.create_user_permission_table import user_permission_table
 
@@ -16,7 +17,7 @@ if TYPE_CHECKING:
     from app.Models.OAuth2Client import OAuth2Client
 
 
-class User(BaseModel):
+class User(BaseModel, LogsActivityMixin):
     __tablename__ = "users"
     
     name: Mapped[str] = mapped_column(String(255), nullable=False)
@@ -41,6 +42,19 @@ class User(BaseModel):
     oauth_clients: Mapped[List[OAuth2Client]] = relationship(
         "OAuth2Client", back_populates="user", cascade="all, delete-orphan"
     )
+    
+    @classmethod
+    def get_activity_log_options(cls) -> LogOptions:
+        """Configure activity logging for User model."""
+        return LogOptions(
+            log_name="users",
+            log_attributes=["name", "email", "is_active", "is_verified"],
+            description_for_event={
+                "created": "User account was created",
+                "updated": "User account was updated", 
+                "deleted": "User account was deleted"
+            }
+        )
     
     def verify_password(self, password: str) -> bool:
         from app.Services.AuthService import AuthService

@@ -1,11 +1,14 @@
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, TYPE_CHECKING
 from datetime import datetime
-from sqlalchemy import String, DateTime, func, event
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy import String, DateTime, func, event, ForeignKey
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 from app.Utils.ULIDUtils import generate_ulid, ULID
+
+if TYPE_CHECKING:
+    from database.migrations.create_users_table import User
 
 
 class Base(DeclarativeBase):
@@ -18,6 +21,18 @@ class BaseModel(Base):
     id: Mapped[ULID] = mapped_column(String(26), primary_key=True, index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
+    
+    # Audit columns for tracking who created/updated the record
+    created_by: Mapped[Optional[ULID]] = mapped_column(String(26), ForeignKey("users.id"), nullable=True)
+    updated_by: Mapped[Optional[ULID]] = mapped_column(String(26), ForeignKey("users.id"), nullable=True)
+    
+    # Audit relationships
+    created_by_user: Mapped[Optional[User]] = relationship(
+        "User", foreign_keys=[created_by], post_update=True
+    )
+    updated_by_user: Mapped[Optional[User]] = relationship(
+        "User", foreign_keys=[updated_by], post_update=True
+    )
     
     def __init__(self, **kwargs: Any) -> None:
         if 'id' not in kwargs:
@@ -33,5 +48,6 @@ class BaseModel(Base):
 @event.listens_for(BaseModel, 'before_insert', propagate=True)
 def generate_ulid_before_insert(mapper: Any, connection: Any, target: BaseModel) -> None:
     """Generate ULID for new instances if not provided."""
+    del mapper, connection  # Unused parameters required by SQLAlchemy
     if not target.id:
         target.id = generate_ulid()

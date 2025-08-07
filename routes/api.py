@@ -11,6 +11,7 @@ from .user import user_router
 from .permissions import permissions_router
 from .roles import roles_router
 from .examples import examples_router
+from .activity_log import activity_log_router
 
 api_router = APIRouter(prefix="/api/v1")
 
@@ -19,6 +20,7 @@ api_router.include_router(user_router)
 api_router.include_router(permissions_router)
 api_router.include_router(roles_router)
 api_router.include_router(examples_router)
+api_router.include_router(activity_log_router)
 
 
 @api_router.get("/")
