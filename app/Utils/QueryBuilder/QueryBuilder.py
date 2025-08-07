@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import List, Optional, Union, Dict, Any, Type, TypeVar, Generic
 from sqlalchemy.orm import Query as SQLQuery, Session
-from sqlalchemy import inspect
+# from sqlalchemy import inspect as sqlalchemy_inspect  # type: ignore[attr-defined]
 from starlette.requests import Request
 
 from .QueryBuilderRequest import QueryBuilderRequest
@@ -30,7 +30,7 @@ class QueryBuilder(Generic[T]):
     
     def __init__(
         self, 
-        query: SQLQuery,
+        query: SQLQuery[T],
         request: Optional[QueryBuilderRequest] = None,
         model_class: Optional[Type[T]] = None
     ) -> None:
@@ -66,7 +66,7 @@ class QueryBuilder(Generic[T]):
     @classmethod
     def for_query(
         cls, 
-        query: SQLQuery,
+        query: SQLQuery[T],
         request: Optional[QueryBuilderRequest] = None,
         model_class: Optional[Type[T]] = None
     ) -> QueryBuilder[T]:
@@ -163,7 +163,7 @@ class QueryBuilder(Generic[T]):
         
         # Apply each filter
         for filter_name, filter_value in requested_filters.items():
-            if filter_name in allowed_filter_names:
+            if filter_name in allowed_filter_names and self.model_class is not None:
                 allowed_filter = next(f for f in self._allowed_filters if f.name == filter_name)
                 self.query = allowed_filter.apply(self.query, filter_value, self.model_class)
         
@@ -197,7 +197,7 @@ class QueryBuilder(Generic[T]):
             descending = sort.startswith('-')
             sort_name = sort.lstrip('-')
             
-            if sort_name in allowed_sort_names:
+            if sort_name in allowed_sort_names and self.model_class is not None:
                 allowed_sort = next(s for s in self._allowed_sorts if s.name == sort_name)
                 self.query = allowed_sort.apply(self.query, descending, self.model_class)
         
@@ -222,7 +222,7 @@ class QueryBuilder(Generic[T]):
         
         # Apply each include
         for include_name in requested_includes:
-            if include_name in allowed_include_names:
+            if include_name in allowed_include_names and self.model_class is not None:
                 allowed_include = next(i for i in self._allowed_includes if i.name == include_name)
                 self.query = allowed_include.apply(self.query, self.model_class)
         
@@ -275,11 +275,12 @@ class QueryBuilder(Generic[T]):
                 if allowed_sort.is_descending_by_default():
                     descending = not descending  # Flip if default is descending
                 
-                self.query = allowed_sort.apply(self.query, descending, self.model_class)
+                if self.model_class is not None:
+                    self.query = allowed_sort.apply(self.query, descending, self.model_class)
         
         return self
     
-    def build(self) -> SQLQuery:
+    def build(self) -> SQLQuery[T]:
         """Build and return the final query"""
         if self.request:
             self.apply_filters()
@@ -352,41 +353,41 @@ class QueryBuilder(Generic[T]):
         return self
     
     # Chaining methods for SQLAlchemy compatibility
-    def filter(self, *args, **kwargs) -> QueryBuilder[T]:
+    def filter(self, *args: Any, **kwargs: Any) -> QueryBuilder[T]:
         """Chain SQLAlchemy filter"""
         self.query = self.query.filter(*args, **kwargs)
         return self
     
-    def join(self, *args, **kwargs) -> QueryBuilder[T]:
+    def join(self, *args: Any, **kwargs: Any) -> QueryBuilder[T]:
         """Chain SQLAlchemy join"""
         self.query = self.query.join(*args, **kwargs)
         return self
     
-    def where(self, *args, **kwargs) -> QueryBuilder[T]:
+    def where(self, *args: Any, **kwargs: Any) -> QueryBuilder[T]:
         """Alias for filter"""
         return self.filter(*args, **kwargs)
     
-    def order_by(self, *args, **kwargs) -> QueryBuilder[T]:
+    def order_by(self, *args: Any, **kwargs: Any) -> QueryBuilder[T]:
         """Chain SQLAlchemy order_by"""
         self.query = self.query.order_by(*args, **kwargs)
         return self
     
-    def group_by(self, *args, **kwargs) -> QueryBuilder[T]:
+    def group_by(self, *args: Any, **kwargs: Any) -> QueryBuilder[T]:
         """Chain SQLAlchemy group_by"""
         self.query = self.query.group_by(*args, **kwargs)
         return self
     
-    def having(self, *args, **kwargs) -> QueryBuilder[T]:
+    def having(self, *args: Any, **kwargs: Any) -> QueryBuilder[T]:
         """Chain SQLAlchemy having"""
         self.query = self.query.having(*args, **kwargs)
         return self
     
-    def limit(self, *args, **kwargs) -> QueryBuilder[T]:
+    def limit(self, *args: Any, **kwargs: Any) -> QueryBuilder[T]:
         """Chain SQLAlchemy limit"""
         self.query = self.query.limit(*args, **kwargs)
         return self
     
-    def offset(self, *args, **kwargs) -> QueryBuilder[T]:
+    def offset(self, *args: Any, **kwargs: Any) -> QueryBuilder[T]:
         """Chain SQLAlchemy offset"""
         self.query = self.query.offset(*args, **kwargs)
         return self

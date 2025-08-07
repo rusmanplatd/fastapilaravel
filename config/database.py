@@ -27,5 +27,10 @@ def get_database() -> Generator[Session, None, None]:
         db.close()
 
 
+# Alias for FastAPI dependency injection
+get_db = get_database
+get_db_session = get_database
+
+
 def create_tables() -> None:
     Base.metadata.create_all(bind=engine)

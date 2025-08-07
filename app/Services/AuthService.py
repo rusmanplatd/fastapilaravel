@@ -186,7 +186,7 @@ class AuthService(BaseService):
         access_token = JWTUtils.create_access_token({"sub": str(user.id)})
         refresh_token = JWTUtils.create_refresh_token({"sub": str(user.id)})
         
-        user_response = UserResponse.from_orm(user)
+        user_response = UserResponse.model_validate(user)
         
         return TokenResponse(
             access_token=access_token,

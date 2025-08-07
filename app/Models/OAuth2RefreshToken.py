@@ -25,20 +25,20 @@ class OAuth2RefreshToken(BaseModel):
     __tablename__ = "oauth_refresh_tokens"
     
     # Token identification - using ULID for token_id
-    token_id: Mapped[str] = mapped_column(String(26), unique=True, index=True, nullable=False)
-    token: Mapped[str] = mapped_column(Text, nullable=False)
+    token_id: Mapped[str] = mapped_column(unique=True, index=True, nullable=False)
+    token: Mapped[str] = mapped_column(nullable=False)
     
     # Associated access token
     access_token_id: Mapped[str] = mapped_column(
-        String(26), 
-        ForeignKey("oauth_access_tokens.token_id"), 
+        String(26),  # type: ignore[arg-type]
+        ForeignKey("oauth_access_tokens.token_id"),  # type: ignore[arg-type]
         nullable=False,
         unique=True  # One refresh token per access token
     )
     
     # Token status
-    is_revoked: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    is_revoked: Mapped[bool] = mapped_column(default=False, nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(nullable=False)
     
     # Relationships
     access_token = relationship(

@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any, Optional, Dict, List, TYPE_CHECKING
 import logging
 import json
-import requests
+import requests  # type: ignore[import-untyped]
 
 if TYPE_CHECKING:
     from app.Notifications.Notification import Notification, DiscordMessage, DiscordEmbed
@@ -12,6 +12,7 @@ else:
 
 logger = logging.getLogger(__name__)
 
+__all__ = ['DiscordMessage', 'DiscordEmbed', 'DiscordChannel']
 
 # DiscordMessage and DiscordEmbed are now imported from Notification.py
 

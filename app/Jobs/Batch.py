@@ -177,7 +177,7 @@ class Batchable:
         finally:
             db.close()
     
-    def _cancel_remaining_batch_jobs(self, db, batch_id: str) -> None:
+    def _cancel_remaining_batch_jobs(self, db: Any, batch_id: str) -> None:
         """Cancel remaining jobs in the batch."""
         from database.migrations.create_jobs_table import Job as JobModel
         

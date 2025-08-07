@@ -158,7 +158,7 @@ class QueueManager:
         self,
         name: str,
         connection: str = "database",
-        **config_options
+        **config_options: Any
     ) -> QueueConfig:
         """Define a queue with specific configuration."""
         config = QueueConfig(
@@ -367,7 +367,7 @@ class QueueConfigBuilder:
 global_queue_manager = QueueManager()
 
 # Convenience function for defining queues
-def define_queue(name: str, **options) -> QueueConfig:
+def define_queue(name: str, **options: Any) -> QueueConfig:
     """Define a queue with specific configuration."""
     return global_queue_manager.define_queue(name, **options)
 

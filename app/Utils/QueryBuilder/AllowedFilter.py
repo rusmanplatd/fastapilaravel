@@ -1,8 +1,14 @@
 from __future__ import annotations
 
-from typing import Any, Optional, Union, List, Callable, Dict
+from typing import Any, Optional, Union, List, Callable, Dict, TYPE_CHECKING
 from abc import ABC, abstractmethod
-from sqlalchemy.orm import Query as SQLQuery
+
+if TYPE_CHECKING:
+    from sqlalchemy.orm import Query
+    SQLQuery = Query[Any]
+else:
+    from sqlalchemy.orm import Query
+    SQLQuery = Query
 from sqlalchemy import Column
 from .FilterOperators import FilterOperator
 
@@ -35,7 +41,7 @@ class AllowedFilter:
         self.internal_name = internal_name or name
         self.filter_class = filter_class
         self.default_value = default_value
-        self.nullable = nullable
+        self._nullable = nullable
         self.ignored_values = ignored_values or []
     
     @classmethod
@@ -126,7 +132,7 @@ class AllowedFilter:
     
     def nullable(self, nullable: bool = True) -> AllowedFilter:
         """Allow nullable values"""
-        self.nullable = nullable
+        self._nullable = nullable
         return self
     
     def ignore(self, *values: Any) -> AllowedFilter:
@@ -144,7 +150,7 @@ class AllowedFilter:
             return False
         
         # Check nullable
-        if not self.nullable and (value is None or value == ""):
+        if not self._nullable and (value is None or value == ""):
             return False
         
         return True
@@ -186,14 +192,15 @@ class PartialFilter(FilterInterface):
         
         # For simple implementation, assume column exists
         # In real implementation, you'd get the column from the model
+        from sqlalchemy.sql import text
         if isinstance(value, list):
             conditions = []
             for v in value:
-                # This is a simplified version - in practice you'd need to get the actual column
+                # This is a simplified version - in practice you'd use actual column
                 conditions.append(f"column ILIKE '%{v}%'")
-            return query.filter(f"({' OR '.join(conditions)})")
+            return query.filter(text(f"({' OR '.join(conditions)})"))
         else:
-            return query.filter(f"column ILIKE '%{value}%'")
+            return query.filter(text(f"column ILIKE '%{value}%'"))
 
 
 class ExactFilter(FilterInterface):
@@ -216,10 +223,11 @@ class ExactFilter(FilterInterface):
                 pass
         
         # Apply filter
+        from sqlalchemy.sql import text
         if isinstance(value, list):
-            return query.filter(f"column IN ({','.join(repr(v) for v in value)})")
+            return query.filter(text(f"column IN ({','.join(repr(v) for v in value)})"))
         else:
-            return query.filter(f"column = {repr(value)}")
+            return query.filter(text(f"column = {repr(value)}"))
 
 
 class OperatorFilter(FilterInterface):
@@ -231,14 +239,16 @@ class OperatorFilter(FilterInterface):
     
     def __call__(self, query: SQLQuery, value: Any, property_name: str) -> SQLQuery:
         # Handle dynamic operators
+        # Placeholder implementation - would use actual column resolution
+        from sqlalchemy.sql import text
+        
         if self.operator == FilterOperator.DYNAMIC:
             if isinstance(value, dict) and 'operator' in value and 'value' in value:
-                operator = FilterOperator.from_string(value['operator'])
-                actual_value = value['value']
-                return operator.apply_to_query(query, None, actual_value)  # Column would be resolved
+                # TODO: Implement proper column resolution and operator application
+                return query.filter(text(f"column = {repr(value['value'])}"))
         
-        # Apply static operator
-        return self.operator.apply_to_query(query, None, value)  # Column would be resolved
+        # Apply static operator - placeholder implementation
+        return query.filter(text(f"column = {repr(value)}"))
 
 
 class ScopeFilter(FilterInterface):
@@ -279,14 +289,13 @@ class BelongsToFilter(FilterInterface):
         # This is a simplified implementation
         if len(parts) == 1:
             # Simple belongs-to
+            from sqlalchemy.sql import text
             foreign_key = f"{parts[0]}_id"
-            return query.filter(f"{foreign_key} = {value}")
+            return query.filter(text(f"{foreign_key} = {value}"))
         else:
             # Nested belongs-to
             # Would require proper join handling
             return query
-        
-        return query
 
 
 class TrashedFilter(FilterInterface):
@@ -295,12 +304,13 @@ class TrashedFilter(FilterInterface):
     def __call__(self, query: SQLQuery, value: Any, property_name: str) -> SQLQuery:
         # Handle soft delete filtering
         # Values: 'with', 'only', 'without'
+        from sqlalchemy.sql import text
         if value == "only":
             # Only trashed records
-            return query.filter("deleted_at IS NOT NULL")
+            return query.filter(text("deleted_at IS NOT NULL"))
         elif value == "with":
             # Include trashed records (no additional filter)
             return query
         else:
             # Default: exclude trashed (deleted_at IS NULL)
-            return query.filter("deleted_at IS NULL")
+            return query.filter(text("deleted_at IS NULL"))

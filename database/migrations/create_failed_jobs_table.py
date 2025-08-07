@@ -15,26 +15,26 @@ class FailedJob(BaseModel):
     __tablename__ = "failed_jobs"
     
     # Original job information
-    uuid: Mapped[str] = mapped_column(String(36), unique=True, index=True, nullable=False)
-    connection: Mapped[str] = mapped_column(String(255), nullable=False)
-    queue: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    uuid: Mapped[str] = mapped_column(unique=True, index=True, nullable=False)
+    connection: Mapped[str] = mapped_column(nullable=False)
+    queue: Mapped[str] = mapped_column(nullable=False, index=True)
     
     # Job payload and metadata
-    payload: Mapped[str] = mapped_column(Text, nullable=False)  # JSON-encoded job data
-    exception: Mapped[str] = mapped_column(Text, nullable=False)  # Exception details
+    payload: Mapped[str] = mapped_column(nullable=False)  # JSON-encoded job data
+    exception: Mapped[str] = mapped_column(nullable=False)  # Exception details
     
     # Job class and method information
-    job_class: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
-    job_method: Mapped[str] = mapped_column(String(255), default="handle", nullable=False)
+    job_class: Mapped[str] = mapped_column(nullable=False, index=True)
+    job_method: Mapped[str] = mapped_column(default="handle", nullable=False)
     
     # Failure metadata
-    attempts: Mapped[int] = mapped_column(Integer, nullable=False)
-    worker_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    failed_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), nullable=False, index=True)
+    attempts: Mapped[int] = mapped_column(nullable=False)
+    worker_id: Mapped[Optional[str]] = mapped_column(nullable=True)
+    failed_at: Mapped[datetime] = mapped_column(server_default=func.now(), nullable=False, index=True)
     
     # Additional context
-    context: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # JSON-encoded context data
-    tags: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)  # Comma-separated tags
+    context: Mapped[Optional[str]] = mapped_column(nullable=True)  # JSON-encoded context data
+    tags: Mapped[Optional[str]] = mapped_column(nullable=True)  # Comma-separated tags
     
     def __repr__(self) -> str:
         return f"<FailedJob(id='{self.id}', uuid='{self.uuid}', job_class='{self.job_class}', failed_at='{self.failed_at}')>"

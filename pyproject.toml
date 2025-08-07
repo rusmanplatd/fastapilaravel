@@ -24,6 +24,7 @@ classifiers = [
 ]
 
 [tool.mypy]
+strict = true
 python_version = "3.9"
 warn_return_any = true
 warn_unused_configs = true
@@ -50,9 +51,27 @@ module = [
     "passlib.*",
     "jose.*",
     "uvicorn.*",
-    "pytest.*"
+    "pytest.*",
+    "fastapi.*",
+    "starlette.*",
+    "pydantic.*",
+    "redis.*",
+    "celery.*",
+    "alembic.*",
+    "email_validator.*",
+    "bcrypt.*",
+    "cryptography.*",
+    "webauthn.*",
+    "pyotp.*",
+    "qrcode.*",
+    "PIL.*"
 ]
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "stubs.*"
+follow_imports = "skip"
+ignore_errors = true
 
 [[tool.mypy.overrides]]
 module = "database.migrations.*"

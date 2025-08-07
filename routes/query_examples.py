@@ -1,7 +1,15 @@
 from __future__ import annotations
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from typing import Dict, Any
+from typing_extensions import Annotated
+from sqlalchemy.orm import Session
 from app.Http.Controllers.UserQueryController import UserQueryController
+from app.Models import User
+from app.Http.Controllers import get_current_user
+from config import get_database
+from app.Utils.QueryBuilder import QueryBuilderRequest
+from app.Utils.QueryBuilder.FastAPIIntegration import get_query_builder_request
 
 # Create router for QueryBuilder examples
 router = APIRouter(
@@ -14,10 +22,8 @@ router = APIRouter(
 user_query_controller = UserQueryController()
 
 # Routes demonstrating QueryBuilder usage
-router.add_api_route(
+@router.get(
     "/query",
-    user_query_controller.index,
-    methods=["GET"],
     summary="List users with QueryBuilder",
     description="""
     List users with advanced querying capabilities:
@@ -48,11 +54,17 @@ router.add_api_route(
     ```
     """
 )
+async def list_users_with_query_builder(
+    current_user: Annotated[User, Depends(get_current_user)],
+    query_request: Annotated[QueryBuilderRequest, Depends(get_query_builder_request)],
+    db: Annotated[Session, Depends(get_database)],
+    page: Annotated[int, Depends(lambda: 1)],
+    per_page: Annotated[int, Depends(lambda: 15)]
+) -> Any:
+    return await user_query_controller.index(current_user, query_request, db, page, per_page)
 
-router.add_api_route(
+@router.get(
     "/{user_id}",
-    user_query_controller.show,
-    methods=["GET"],
     summary="Get user with QueryBuilder",
     description="""
     Get single user with includes and field selection:
@@ -62,11 +74,16 @@ router.add_api_route(
     - `GET /api/users/1?fields[users]=id,name,email&fields[roles]=name`
     """
 )
+async def get_user_with_query_builder(
+    user_id: int,
+    current_user: Annotated[User, Depends(get_current_user)],
+    query_request: Annotated[QueryBuilderRequest, Depends(get_query_builder_request)],
+    db: Annotated[Session, Depends(get_database)]
+) -> Any:
+    return await user_query_controller.show(user_id, current_user, query_request, db)
 
-router.add_api_route(
+@router.get(
     "/search",
-    user_query_controller.search,
-    methods=["GET"],
     summary="Search users with QueryBuilder",
     description="""
     Search users by name or email with additional QueryBuilder features:
@@ -76,11 +93,16 @@ router.add_api_route(
     - `GET /api/users/search?q=admin&include=rolesCount&sort=-created_at`
     """
 )
+async def search_users_with_query_builder(
+    q: str,
+    current_user: Annotated[User, Depends(get_current_user)],
+    query_request: Annotated[QueryBuilderRequest, Depends(get_query_builder_request)],
+    db: Annotated[Session, Depends(get_database)]
+) -> Any:
+    return await user_query_controller.search(current_user, query_request, db, q)
 
-router.add_api_route(
+@router.get(
     "/advanced",
-    user_query_controller.advanced_example,
-    methods=["GET"],
     summary="Advanced QueryBuilder example",
     description="""
     Demonstrates advanced QueryBuilder features:
@@ -93,3 +115,9 @@ router.add_api_route(
     - `GET /api/users/advanced?sort=name_length&include=latestPost`
     """
 )
+async def advanced_query_builder_example(
+    current_user: Annotated[User, Depends(get_current_user)],
+    query_request: Annotated[QueryBuilderRequest, Depends(get_query_builder_request)],
+    db: Annotated[Session, Depends(get_database)]
+) -> Any:
+    return await user_query_controller.advanced_example(current_user, query_request, db)

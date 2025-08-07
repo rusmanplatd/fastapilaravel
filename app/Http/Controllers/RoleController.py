@@ -1,6 +1,7 @@
 from fastapi import Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
+from typing_extensions import Annotated
 
 from app.Http.Controllers.BaseController import BaseController
 from app.Http.Schemas import (
@@ -25,8 +26,8 @@ class RoleController(BaseController):
     def create_role(
         self,
         role_data: RoleCreate,
-        current_user: User = Depends(get_current_user),
-        db: Session = Depends(get_database)
+        current_user: Annotated[User, Depends(get_current_user)],
+        db: Annotated[Session, Depends(get_database)]
     ):
         if not current_user.can('create-roles'):
             self.forbidden("You don't have permission to create roles")
@@ -37,7 +38,7 @@ class RoleController(BaseController):
         if not success:
             self.error_response(message, status.HTTP_400_BAD_REQUEST)
         
-        role_response = RoleResponse.from_orm(role)
+        role_response = RoleResponse.model_validate(role)
         return self.success_response(
             data=role_response,
             message=message,
@@ -46,13 +47,13 @@ class RoleController(BaseController):
     
     def get_roles(
         self,
+        current_user: Annotated[User, Depends(get_current_user)],
+        db: Annotated[Session, Depends(get_database)],
         skip: int = Query(0, ge=0),
         limit: int = Query(100, ge=1, le=1000),
         active_only: bool = Query(True),
         search: Optional[str] = Query(None),
-        include_permissions: bool = Query(False),
-        current_user: User = Depends(get_current_user),
-        db: Session = Depends(get_database)
+        include_permissions: bool = Query(False)
     ):
         if not current_user.can('view-roles'):
             self.forbidden("You don't have permission to view roles")
@@ -67,11 +68,11 @@ class RoleController(BaseController):
         if include_permissions:
             role_responses = []
             for role in roles:
-                role_dict = RoleResponse.from_orm(role).dict()
-                role_dict['permissions'] = [PermissionResponse.from_orm(perm) for perm in role.permissions]
+                role_dict = RoleResponse.model_validate(role).model_dump()
+                role_dict['permissions'] = [PermissionResponse.model_validate(perm).model_dump() for perm in role.permissions]
                 role_responses.append(role_dict)
         else:
-            role_responses = [RoleResponse.from_orm(role) for role in roles]
+            role_responses = [RoleResponse.model_validate(role).model_dump() for role in roles]
         
         return self.success_response(
             data={
@@ -86,9 +87,9 @@ class RoleController(BaseController):
     def get_role(
         self,
         role_id: int,
-        include_permissions: bool = Query(False),
-        current_user: User = Depends(get_current_user),
-        db: Session = Depends(get_database)
+        current_user: Annotated[User, Depends(get_current_user)],
+        db: Annotated[Session, Depends(get_database)],
+        include_permissions: bool = Query(False)
     ):
         if not current_user.can('view-roles'):
             self.forbidden("You don't have permission to view roles")
@@ -100,14 +101,14 @@ class RoleController(BaseController):
             self.not_found("Role not found")
         
         if include_permissions:
-            role_dict = RoleResponse.from_orm(role).dict()
-            role_dict['permissions'] = [PermissionResponse.from_orm(perm) for perm in role.permissions]
+            role_dict = RoleResponse.model_validate(role).model_dump()
+            role_dict['permissions'] = [PermissionResponse.model_validate(perm).model_dump() for perm in role.permissions]
             return self.success_response(
                 data=role_dict,
                 message="Role retrieved successfully"
             )
         else:
-            role_response = RoleResponse.from_orm(role)
+            role_response = RoleResponse.model_validate(role)
             return self.success_response(
                 data=role_response,
                 message="Role retrieved successfully"
@@ -117,8 +118,8 @@ class RoleController(BaseController):
         self,
         role_id: int,
         role_data: RoleUpdate,
-        current_user: User = Depends(get_current_user),
-        db: Session = Depends(get_database)
+        current_user: Annotated[User, Depends(get_current_user)],
+        db: Annotated[Session, Depends(get_database)]
     ):
         if not current_user.can('edit-roles'):
             self.forbidden("You don't have permission to edit roles")
@@ -134,7 +135,7 @@ class RoleController(BaseController):
         if not success:
             self.error_response(message, status.HTTP_400_BAD_REQUEST)
         
-        role_response = RoleResponse.from_orm(updated_role)
+        role_response = RoleResponse.model_validate(updated_role)
         return self.success_response(
             data=role_response,
             message=message
@@ -143,8 +144,8 @@ class RoleController(BaseController):
     def delete_role(
         self,
         role_id: int,
-        current_user: User = Depends(get_current_user),
-        db: Session = Depends(get_database)
+        current_user: Annotated[User, Depends(get_current_user)],
+        db: Annotated[Session, Depends(get_database)]
     ):
         if not current_user.can('delete-roles'):
             self.forbidden("You don't have permission to delete roles")
@@ -166,8 +167,8 @@ class RoleController(BaseController):
         self,
         role_id: int,
         assignment_data: RolePermissionAssignment,
-        current_user: User = Depends(get_current_user),
-        db: Session = Depends(get_database)
+        current_user: Annotated[User, Depends(get_current_user)],
+        db: Annotated[Session, Depends(get_database)]
     ):
         if not current_user.can('assign-permissions'):
             self.forbidden("You don't have permission to assign permissions")
@@ -188,8 +189,8 @@ class RoleController(BaseController):
     def assign_role_to_user(
         self,
         assignment_data: UserRoleAssignment,
-        current_user: User = Depends(get_current_user),
-        db: Session = Depends(get_database)
+        current_user: Annotated[User, Depends(get_current_user)],
+        db: Annotated[Session, Depends(get_database)]
     ):
         if not current_user.can('assign-roles'):
             self.forbidden("You don't have permission to assign roles")
@@ -212,8 +213,8 @@ class RoleController(BaseController):
         self,
         user_id: int,
         role_check: RoleCheck,
-        current_user: User = Depends(get_current_user),
-        db: Session = Depends(get_database)
+        current_user: Annotated[User, Depends(get_current_user)],
+        db: Annotated[Session, Depends(get_database)]
     ):
         if not current_user.can('view-roles'):
             self.forbidden("You don't have permission to check roles")
@@ -238,8 +239,8 @@ class RoleController(BaseController):
         self,
         user_id: int,
         role_check: MultipleRoleCheck,
-        current_user: User = Depends(get_current_user),
-        db: Session = Depends(get_database)
+        current_user: Annotated[User, Depends(get_current_user)],
+        db: Annotated[Session, Depends(get_database)]
     ):
         if not current_user.can('view-roles'):
             self.forbidden("You don't have permission to check roles")
@@ -268,8 +269,8 @@ class RoleController(BaseController):
     def get_user_roles(
         self,
         user_id: int,
-        current_user: User = Depends(get_current_user),
-        db: Session = Depends(get_database)
+        current_user: Annotated[User, Depends(get_current_user)],
+        db: Annotated[Session, Depends(get_database)]
     ):
         if not current_user.can('view-roles'):
             self.forbidden("You don't have permission to view roles")
@@ -284,7 +285,7 @@ class RoleController(BaseController):
         return self.success_response(
             data={
                 "user_id": user_id,
-                "roles": [RoleResponse.from_orm(role) for role in user_roles]
+                "roles": [RoleResponse.model_validate(role) for role in user_roles]
             },
             message="User roles retrieved successfully"
         )
@@ -292,8 +293,8 @@ class RoleController(BaseController):
     def get_role_permissions(
         self,
         role_id: int,
-        current_user: User = Depends(get_current_user),
-        db: Session = Depends(get_database)
+        current_user: Annotated[User, Depends(get_current_user)],
+        db: Annotated[Session, Depends(get_database)]
     ):
         if not current_user.can('view-roles'):
             self.forbidden("You don't have permission to view roles")
@@ -310,7 +311,7 @@ class RoleController(BaseController):
             data={
                 "role_id": role_id,
                 "role_name": role.name,
-                "permissions": [PermissionResponse.from_orm(perm) for perm in role_permissions]
+                "permissions": [PermissionResponse.model_validate(perm) for perm in role_permissions]
             },
             message="Role permissions retrieved successfully"
         )
@@ -318,8 +319,8 @@ class RoleController(BaseController):
     def get_role_users(
         self,
         role_id: int,
-        current_user: User = Depends(get_current_user),
-        db: Session = Depends(get_database)
+        current_user: Annotated[User, Depends(get_current_user)],
+        db: Annotated[Session, Depends(get_database)]
     ):
         if not current_user.can('view-roles'):
             self.forbidden("You don't have permission to view roles")
@@ -344,8 +345,8 @@ class RoleController(BaseController):
     def bulk_create_roles(
         self,
         roles_data: List[RoleCreate],
-        current_user: User = Depends(get_current_user),
-        db: Session = Depends(get_database)
+        current_user: Annotated[User, Depends(get_current_user)],
+        db: Annotated[Session, Depends(get_database)]
     ):
         if not current_user.can('create-roles'):
             self.forbidden("You don't have permission to create roles")
@@ -356,7 +357,7 @@ class RoleController(BaseController):
         if not success:
             self.error_response(message, status.HTTP_400_BAD_REQUEST)
         
-        role_responses = [RoleResponse.from_orm(role) for role in created_roles]
+        role_responses = [RoleResponse.model_validate(role) for role in created_roles]
         return self.success_response(
             data=role_responses,
             message=message,
@@ -366,8 +367,8 @@ class RoleController(BaseController):
     def activate_role(
         self,
         role_id: int,
-        current_user: User = Depends(get_current_user),
-        db: Session = Depends(get_database)
+        current_user: Annotated[User, Depends(get_current_user)],
+        db: Annotated[Session, Depends(get_database)]
     ):
         if not current_user.can('edit-roles'):
             self.forbidden("You don't have permission to edit roles")
@@ -388,8 +389,8 @@ class RoleController(BaseController):
     def deactivate_role(
         self,
         role_id: int,
-        current_user: User = Depends(get_current_user),
-        db: Session = Depends(get_database)
+        current_user: Annotated[User, Depends(get_current_user)],
+        db: Annotated[Session, Depends(get_database)]
     ):
         if not current_user.can('edit-roles'):
             self.forbidden("You don't have permission to edit roles")

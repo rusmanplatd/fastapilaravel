@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Optional
+from typing_extensions import Annotated
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
@@ -24,10 +25,10 @@ router = APIRouter(prefix="/api/v1/notifications", tags=["Notifications"])
 
 @router.get("/", response_model=NotificationListResponse)
 async def get_notifications(
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_database)],
     limit: Optional[int] = Query(None, description="Limit number of notifications"),
-    unread_only: bool = Query(False, description="Get only unread notifications"),
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_database)
+    unread_only: bool = Query(False, description="Get only unread notifications")
 ):
     """Get notifications for the authenticated user."""
     controller = NotificationController(db)
@@ -36,8 +37,8 @@ async def get_notifications(
 
 @router.get("/counts", response_model=NotificationCountsResponse)
 async def get_notification_counts(
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_database)
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_database)]
 ):
     """Get notification counts for the authenticated user."""
     controller = NotificationController(db)
@@ -46,9 +47,9 @@ async def get_notification_counts(
 
 @router.get("/unread", response_model=NotificationListResponse)
 async def get_unread_notifications(
-    limit: Optional[int] = Query(None, description="Limit number of notifications"),
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_database)
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_database)],
+    limit: Optional[int] = Query(None, description="Limit number of notifications")
 ):
     """Get unread notifications for the authenticated user."""
     controller = NotificationController(db)
@@ -58,8 +59,8 @@ async def get_unread_notifications(
 @router.post("/mark-as-read")
 async def mark_as_read(
     request: MarkAsReadRequest,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_database)
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_database)]
 ):
     """Mark a notification as read."""
     controller = NotificationController(db)
@@ -68,8 +69,8 @@ async def mark_as_read(
 
 @router.post("/mark-all-as-read", response_model=MarkAllAsReadResponse)
 async def mark_all_as_read(
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_database)
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_database)]
 ):
     """Mark all notifications as read for the authenticated user."""
     controller = NotificationController(db)
@@ -79,8 +80,8 @@ async def mark_all_as_read(
 @router.delete("/{notification_id}", response_model=DeleteNotificationResponse)
 async def delete_notification(
     notification_id: str,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_database)
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_database)]
 ):
     """Delete a notification."""
     controller = NotificationController(db)
@@ -89,8 +90,8 @@ async def delete_notification(
 
 @router.delete("/", response_model=DeleteAllNotificationsResponse)
 async def delete_all_notifications(
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_database)
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_database)]
 ):
     """Delete all notifications for the authenticated user."""
     controller = NotificationController(db)
@@ -100,8 +101,8 @@ async def delete_all_notifications(
 @router.post("/send", response_model=SendNotificationResponse)
 async def send_notification(
     request: SendNotificationRequest,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_database)
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_database)]
 ):
     """Send a notification to specified recipients (admin only)."""
     # In a real implementation, you'd check if the user has admin permissions

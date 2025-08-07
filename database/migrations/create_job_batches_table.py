@@ -15,22 +15,22 @@ class JobBatch(BaseModel):
     __tablename__ = "job_batches"
     
     # Batch identification
-    name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
-    total_jobs: Mapped[int] = mapped_column(Integer, nullable=False)
-    pending_jobs: Mapped[int] = mapped_column(Integer, nullable=False)
-    failed_jobs: Mapped[int] = mapped_column(Integer, default=0)
+    name: Mapped[str] = mapped_column(nullable=False, index=True)
+    total_jobs: Mapped[int] = mapped_column(nullable=False)
+    pending_jobs: Mapped[int] = mapped_column(nullable=False)
+    failed_jobs: Mapped[int] = mapped_column(default=0)
     
     # Batch options and metadata
-    options: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # JSON
-    cancelled_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
-    finished_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    options: Mapped[Optional[str]] = mapped_column(nullable=True)  # JSON
+    cancelled_at: Mapped[Optional[datetime]] = mapped_column(nullable=True)
+    finished_at: Mapped[Optional[datetime]] = mapped_column(nullable=True)
     
     # Progress tracking
-    progress: Mapped[float] = mapped_column(Float, default=0.0)  # Percentage completed
+    progress: Mapped[float] = mapped_column(default=0.0)  # Percentage completed
     
     # Failure handling
-    allow_failures: Mapped[bool] = mapped_column(Boolean, default=False)
-    failure_threshold: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    allow_failures: Mapped[bool] = mapped_column(default=False)
+    failure_threshold: Mapped[Optional[int]] = mapped_column(nullable=True)
     
     def __repr__(self) -> str:
         return f"<JobBatch(id='{self.id}', name='{self.name}', progress={self.progress}%)>"

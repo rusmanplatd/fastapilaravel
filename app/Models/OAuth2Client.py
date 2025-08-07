@@ -26,31 +26,31 @@ class OAuth2Client(BaseModel):
     __tablename__ = "oauth_clients"
     
     # Primary identification - using ULID for client_id
-    client_id: Mapped[str] = mapped_column(String(26), unique=True, index=True, nullable=False)
-    client_secret: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-    name: Mapped[str] = mapped_column(String(191), nullable=False)
+    client_id: Mapped[str] = mapped_column(unique=True, index=True, nullable=False)
+    client_secret: Mapped[Optional[str]] = mapped_column(nullable=True)
+    name: Mapped[str] = mapped_column(nullable=False)
     
     # Client configuration
-    redirect_uris: Mapped[str] = mapped_column(Text, nullable=False, default="")
-    allowed_scopes: Mapped[str] = mapped_column(Text, nullable=False, default="")
-    grant_types: Mapped[str] = mapped_column(Text, nullable=False, default="authorization_code")
-    response_types: Mapped[str] = mapped_column(Text, nullable=False, default="code")
+    redirect_uris: Mapped[str] = mapped_column(nullable=False, default="")
+    allowed_scopes: Mapped[str] = mapped_column(nullable=False, default="")
+    grant_types: Mapped[str] = mapped_column(nullable=False, default="authorization_code")
+    response_types: Mapped[str] = mapped_column(nullable=False, default="code")
     
     # Client type and settings
-    is_confidential: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    is_first_party: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    is_password_client: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    is_personal_access_client: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    is_confidential: Mapped[bool] = mapped_column(default=True, nullable=False)
+    is_first_party: Mapped[bool] = mapped_column(default=False, nullable=False)
+    is_password_client: Mapped[bool] = mapped_column(default=False, nullable=False)
+    is_personal_access_client: Mapped[bool] = mapped_column(default=False, nullable=False)
     
     # Client status
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    is_revoked: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    is_active: Mapped[bool] = mapped_column(default=True, nullable=False)
+    is_revoked: Mapped[bool] = mapped_column(default=False, nullable=False)
     
     # User association (for personal access clients)
-    user_id: Mapped[Optional[ULID]] = mapped_column(String(26), ForeignKey("users.id"), nullable=True)
+    user_id: Mapped[Optional[ULID]] = mapped_column(String(26), ForeignKey("users.id"), nullable=True)  # type: ignore[arg-type]
     
     # Timestamps
-    expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    expires_at: Mapped[Optional[datetime]] = mapped_column(nullable=True)
     
     # Relationships
     access_tokens = relationship(

@@ -4,7 +4,7 @@ import pyotp
 import secrets
 import base64
 import hashlib
-from typing import Tuple, List, Dict, Any, Optional
+from typing import Tuple, List, Dict, Any, Optional, cast
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 import qrcode
@@ -80,11 +80,11 @@ class EnhancedTOTPService(BaseService):
             interval=self.interval
         )
         
-        return totp.provisioning_uri(
+        return cast(str, totp.provisioning_uri(
             name=user.email,
             issuer_name=issuer,
             image="https://your-domain.com/logo.png"  # Optional logo URL
-        )
+        ))
     
     def generate_styled_qr_code(
         self, 

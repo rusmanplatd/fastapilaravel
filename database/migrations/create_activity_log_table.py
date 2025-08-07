@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from typing import Optional, Dict, Any, TYPE_CHECKING
 from datetime import datetime
-from sqlalchemy import String, Text, JSON, DateTime, func, ForeignKey
+from sqlalchemy import String, Text, DateTime, func, ForeignKey
+from sqlalchemy import JSON
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from app.Models.BaseModel import BaseModel
 
@@ -16,23 +17,23 @@ class ActivityLog(BaseModel):
     __tablename__ = "activity_log"
     
     # Core activity information
-    log_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True, index=True)
-    description: Mapped[str] = mapped_column(Text, nullable=False)
+    log_name: Mapped[Optional[str]] = mapped_column(nullable=True, index=True)
+    description: Mapped[str] = mapped_column(nullable=False)
     
     # Subject (the model being acted upon)
-    subject_type: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    subject_id: Mapped[Optional[str]] = mapped_column(String(26), nullable=True)
+    subject_type: Mapped[Optional[str]] = mapped_column(nullable=True)
+    subject_id: Mapped[Optional[str]] = mapped_column(nullable=True)
     
     # Causer (who performed the action) - always a User in this implementation
-    causer_type: Mapped[Optional[str]] = mapped_column(String(255), nullable=True, default="User")
-    causer_id: Mapped[Optional[str]] = mapped_column(String(26), ForeignKey("users.id"), nullable=True, index=True)
+    causer_type: Mapped[Optional[str]] = mapped_column(nullable=True, default="User")
+    causer_id: Mapped[Optional[str]] = mapped_column(String(26), ForeignKey("users.id"), nullable=True, index=True)  # type: ignore[arg-type]
     
     # Properties and changes
     properties: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSON, nullable=True)
-    batch_uuid: Mapped[Optional[str]] = mapped_column(String(36), nullable=True, index=True)
+    batch_uuid: Mapped[Optional[str]] = mapped_column(nullable=True, index=True)
     
     # Event information
-    event: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    event: Mapped[Optional[str]] = mapped_column(nullable=True)
     
     # Relationships
     causer: Mapped[Optional[User]] = relationship(

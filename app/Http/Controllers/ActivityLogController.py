@@ -4,6 +4,7 @@ import math
 from typing import Dict, List, Any
 from datetime import datetime, timedelta
 from fastapi import HTTPException, Depends, Query
+from typing_extensions import Annotated
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc, and_
 
@@ -30,6 +31,8 @@ class ActivityLogController:
     
     @staticmethod
     def get_activity_logs(
+        db: Annotated[Session, Depends(get_db_session)],
+        current_user: Annotated[User, Depends(AuthService.get_current_user)],
         log_name: str = Query(None, description="Filter by log name"),
         event: str = Query(None, description="Filter by event type"),
         subject_type: str = Query(None, description="Filter by subject type"),
@@ -39,9 +42,7 @@ class ActivityLogController:
         page: int = Query(1, ge=1, description="Page number"),
         per_page: int = Query(20, ge=1, le=100, description="Items per page"),
         from_date: datetime = Query(None, description="Filter from date"),
-        to_date: datetime = Query(None, description="Filter to date"),
-        db: Session = Depends(get_db_session),
-        current_user: User = Depends(AuthService.get_current_user)
+        to_date: datetime = Query(None, description="Filter to date")
     ) -> ActivityLogListResponse:
         """
         Get paginated list of activity logs with optional filters.
@@ -116,8 +117,8 @@ class ActivityLogController:
     @staticmethod
     def get_activity_log(
         log_id: str,
-        db: Session = Depends(get_db_session),
-        current_user: User = Depends(AuthService.get_current_user)
+        db: Annotated[Session, Depends(get_db_session)],
+        current_user: Annotated[User, Depends(AuthService.get_current_user)]
     ) -> ActivityLogResponse:
         """
         Get a specific activity log by ID.
@@ -145,8 +146,8 @@ class ActivityLogController:
     @staticmethod
     def create_activity_log(
         request: CreateActivityLogRequest,
-        db: Session = Depends(get_db_session),
-        current_user: User = Depends(AuthService.get_current_user)
+        db: Annotated[Session, Depends(get_db_session)],
+        current_user: Annotated[User, Depends(AuthService.get_current_user)]
     ) -> ActivityLogResponse:
         """
         Manually create an activity log entry.
@@ -186,9 +187,9 @@ class ActivityLogController:
     
     @staticmethod
     def get_activity_stats(
-        days: int = Query(30, ge=1, le=365, description="Number of days to analyze"),
-        db: Session = Depends(get_db_session),
-        current_user: User = Depends(AuthService.get_current_user)
+        db: Annotated[Session, Depends(get_db_session)],
+        current_user: Annotated[User, Depends(AuthService.get_current_user)],
+        days: int = Query(30, ge=1, le=365, description="Number of days to analyze")
     ) -> ActivityLogStatsResponse:
         """
         Get activity log statistics.
@@ -282,8 +283,8 @@ class ActivityLogController:
     @staticmethod
     def clean_old_logs(
         request: CleanLogsRequest,
-        db: Session = Depends(get_db_session),
-        current_user: User = Depends(AuthService.get_current_user)
+        db: Annotated[Session, Depends(get_db_session)],
+        current_user: Annotated[User, Depends(AuthService.get_current_user)]
     ) -> CleanLogsResponse:
         """
         Clean old activity logs.
@@ -331,10 +332,10 @@ class ActivityLogController:
     def get_logs_for_subject(
         subject_type: str,
         subject_id: str,
+        db: Annotated[Session, Depends(get_db_session)],
+        current_user: Annotated[User, Depends(AuthService.get_current_user)],
         page: int = Query(1, ge=1),
-        per_page: int = Query(20, ge=1, le=100),
-        db: Session = Depends(get_db_session),
-        current_user: User = Depends(AuthService.get_current_user)
+        per_page: int = Query(20, ge=1, le=100)
     ) -> ActivityLogListResponse:
         """
         Get activity logs for a specific subject (model instance).
@@ -383,7 +384,7 @@ class ActivityLogController:
     @staticmethod
     def start_batch_operation(
         request: BatchOperationRequest,
-        current_user: User = Depends(AuthService.get_current_user)
+        current_user: Annotated[User, Depends(AuthService.get_current_user)]
     ) -> BatchOperationResponse:
         """
         Start a batch operation for grouped activity logging.
@@ -419,7 +420,7 @@ class ActivityLogController:
     
     @staticmethod
     def end_batch_operation(
-        current_user: User = Depends(AuthService.get_current_user)
+        current_user: Annotated[User, Depends(AuthService.get_current_user)]
     ) -> Dict[str, Any]:
         """
         End the current batch operation.

@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from typing import Dict, Any
-from fastapi import Depends, HTTPException, status, Request
+from typing_extensions import Annotated
+from fastapi import Depends, HTTPException, status
+from starlette.requests import Request
 from sqlalchemy.orm import Session
 
 from app.Http.Controllers.BaseController import BaseController
@@ -20,13 +22,13 @@ from config.database import get_db
 
 class MFAController(BaseController):
     
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
     
     def get_mfa_status(
         self,
-        db: Session = Depends(get_db),
-        current_user: User = Depends(verify_token)
+        db: Annotated[Session, Depends(get_db)],
+        current_user: Annotated[User, Depends(verify_token)]
     ) -> MFAStatusResponse:
         """Get current MFA status for user"""
         try:
@@ -44,13 +46,14 @@ class MFAController(BaseController):
     def setup_totp(
         self,
         request_data: TOTPSetupRequest,
-        db: Session = Depends(get_db),
-        current_user: User = Depends(verify_token)
+        db: Annotated[Session, Depends(get_db)],
+        current_user: Annotated[User, Depends(verify_token)]
     ) -> TOTPSetupResponse | ErrorResponse:
         """Setup TOTP authentication for user"""
         try:
             totp_service = TOTPService(db)
-            success, message, data = totp_service.setup_totp(current_user, request_data.issuer)
+            issuer = request_data.issuer or "FastAPI Laravel"
+            success, message, data = totp_service.setup_totp(current_user, issuer)
             
             if not success:
                 return ErrorResponse(message=message)
@@ -66,8 +69,8 @@ class MFAController(BaseController):
     def verify_totp_setup(
         self,
         request_data: TOTPVerifyRequest,
-        db: Session = Depends(get_db),
-        current_user: User = Depends(verify_token)
+        db: Annotated[Session, Depends(get_db)],
+        current_user: Annotated[User, Depends(verify_token)]
     ) -> SuccessResponse | ErrorResponse:
         """Verify TOTP setup and enable TOTP"""
         try:
@@ -88,8 +91,8 @@ class MFAController(BaseController):
     def disable_totp(
         self,
         request_data: TOTPDisableRequest,
-        db: Session = Depends(get_db),
-        current_user: User = Depends(verify_token)
+        db: Annotated[Session, Depends(get_db)],
+        current_user: Annotated[User, Depends(verify_token)]
     ) -> SuccessResponse | ErrorResponse:
         """Disable TOTP authentication"""
         try:
@@ -110,8 +113,8 @@ class MFAController(BaseController):
     def regenerate_backup_codes(
         self,
         request_data: BackupCodesRegenerateRequest,
-        db: Session = Depends(get_db),
-        current_user: User = Depends(verify_token)
+        db: Annotated[Session, Depends(get_db)],
+        current_user: Annotated[User, Depends(verify_token)]
     ) -> BackupCodesResponse | ErrorResponse:
         """Regenerate TOTP backup codes"""
         try:
@@ -134,8 +137,8 @@ class MFAController(BaseController):
     def require_mfa(
         self,
         request_data: MFARequireRequest,
-        db: Session = Depends(get_db),
-        current_user: User = Depends(verify_token)
+        db: Annotated[Session, Depends(get_db)],
+        current_user: Annotated[User, Depends(verify_token)]
     ) -> SuccessResponse | ErrorResponse:
         """Enable or disable MFA requirement for user"""
         try:
@@ -160,8 +163,8 @@ class MFAController(BaseController):
     def disable_all_mfa(
         self,
         request_data: DisableAllMFARequest,
-        db: Session = Depends(get_db),
-        current_user: User = Depends(verify_token)
+        db: Annotated[Session, Depends(get_db)],
+        current_user: Annotated[User, Depends(verify_token)]
     ) -> SuccessResponse | ErrorResponse:
         """Disable all MFA methods for user"""
         try:
@@ -186,8 +189,8 @@ class MFAController(BaseController):
     def create_mfa_session(
         self,
         request: Request,
-        db: Session = Depends(get_db),
-        current_user: User = Depends(verify_token)
+        db: Annotated[Session, Depends(get_db)],
+        current_user: Annotated[User, Depends(verify_token)]
     ) -> MFASessionCreateResponse | ErrorResponse:
         """Create MFA session for authentication"""
         try:
@@ -201,7 +204,7 @@ class MFAController(BaseController):
                 current_user, ip_address, user_agent
             )
             
-            if not success:
+            if not success or session_token is None:
                 return ErrorResponse(message=message)
             
             available_methods = mfa_service.get_available_mfa_methods(current_user)
@@ -221,7 +224,7 @@ class MFAController(BaseController):
     def verify_mfa_totp(
         self,
         request_data: MFAVerifyTOTPRequest,
-        db: Session = Depends(get_db)
+        db: Annotated[Session, Depends(get_db)]
     ) -> MFAVerifyResponse:
         """Verify MFA using TOTP"""
         try:
@@ -246,7 +249,7 @@ class MFAController(BaseController):
     def verify_mfa_webauthn(
         self,
         request_data: MFAVerifyWebAuthnRequest,
-        db: Session = Depends(get_db)
+        db: Annotated[Session, Depends(get_db)]
     ) -> MFAVerifyResponse:
         """Verify MFA using WebAuthn"""
         try:
@@ -272,7 +275,7 @@ class MFAController(BaseController):
     def verify_mfa_sms(
         self,
         request_data: MFAVerifySMSRequest,
-        db: Session = Depends(get_db)
+        db: Annotated[Session, Depends(get_db)]
     ) -> MFAVerifyResponse:
         """Verify MFA using SMS"""
         try:

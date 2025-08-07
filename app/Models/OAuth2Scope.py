@@ -22,19 +22,19 @@ class OAuth2Scope(BaseModel):
     __tablename__ = "oauth_scopes"
     
     # Scope identification - using ULID for scope_id
-    scope_id: Mapped[str] = mapped_column(String(26), unique=True, index=True, nullable=False)
-    name: Mapped[str] = mapped_column(String(191), nullable=False)
-    description: Mapped[str] = mapped_column(Text, nullable=False)
+    scope_id: Mapped[str] = mapped_column(unique=True, index=True, nullable=False)
+    name: Mapped[str] = mapped_column(nullable=False)
+    description: Mapped[str] = mapped_column(nullable=False)
     
     # Scope configuration
-    is_default: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    is_personal_access_client: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    is_password_client: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    is_client_credentials: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    is_authorization_code: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    is_default: Mapped[bool] = mapped_column(default=False, nullable=False)
+    is_personal_access_client: Mapped[bool] = mapped_column(default=True, nullable=False)
+    is_password_client: Mapped[bool] = mapped_column(default=True, nullable=False)
+    is_client_credentials: Mapped[bool] = mapped_column(default=True, nullable=False)
+    is_authorization_code: Mapped[bool] = mapped_column(default=True, nullable=False)
     
     # Scope status
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    is_active: Mapped[bool] = mapped_column(default=True, nullable=False)
     
     def __repr__(self) -> str:
         return f"<OAuth2Scope(scope_id='{self.scope_id}', name='{self.name}')>"

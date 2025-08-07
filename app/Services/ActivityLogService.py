@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Type, Union, TYPE_CHECKING
+from typing import Any, Dict, List, Optional, Type, Union, TYPE_CHECKING, cast
 from datetime import datetime, timedelta
 from contextvars import ContextVar
 import uuid
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, and_, or_
+from sqlalchemy import and_, or_
+from sqlalchemy import desc
 from app.Models.BaseModel import BaseModel
 
 if TYPE_CHECKING:
@@ -71,7 +72,7 @@ class ActivityLogService:
         cls,
         log_name: str,
         description: str,
-        subject: Optional[BaseModel] = None,
+        subject: Optional[Union[BaseModel, Any]] = None,
         causer: Optional[User] = None,
         properties: Optional[Dict[str, Any]] = None,
         event: Optional[str] = None,
@@ -207,7 +208,7 @@ class ActivityLogService:
             # Apply pagination
             query = query.offset(offset).limit(limit)
             
-            return query.all()
+            return cast(list[ActivityLog], query.all())
         
         finally:
             if db_session is None:
@@ -269,7 +270,7 @@ class ActivityLogService:
             if batch_uuid is not None:
                 query = query.filter(ActivityLog.batch_uuid == batch_uuid)
             
-            return query.count()
+            return cast(int, query.count())
         
         finally:
             if db_session is None:
@@ -311,7 +312,7 @@ class ActivityLogService:
             if log_name is not None:
                 query = query.filter(ActivityLog.log_name == log_name)
             
-            count = query.count()
+            count = cast(int, query.count())
             query.delete(synchronize_session=False)
             session.commit()
             

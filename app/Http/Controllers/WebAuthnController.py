@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Dict, Any
+from typing_extensions import Annotated
 from fastapi import Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -19,13 +20,13 @@ from config.database import get_db
 
 class WebAuthnController(BaseController):
     
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
     
     def get_registration_options(
         self,
-        db: Session = Depends(get_db),
-        current_user: User = Depends(verify_token)
+        db: Annotated[Session, Depends(get_db)],
+        current_user: Annotated[User, Depends(verify_token)]
     ) -> WebAuthnRegistrationOptionsResponse | ErrorResponse:
         """Get WebAuthn registration options for credential registration"""
         try:
@@ -75,8 +76,8 @@ class WebAuthnController(BaseController):
     def register_credential(
         self,
         request_data: WebAuthnRegisterRequest,
-        db: Session = Depends(get_db),
-        current_user: User = Depends(verify_token)
+        db: Annotated[Session, Depends(get_db)],
+        current_user: Annotated[User, Depends(verify_token)]
     ) -> SuccessResponse | ErrorResponse:
         """Register a new WebAuthn credential"""
         try:
@@ -101,8 +102,8 @@ class WebAuthnController(BaseController):
     
     def get_authentication_options(
         self,
-        db: Session = Depends(get_db),
-        current_user: User = Depends(verify_token)
+        db: Annotated[Session, Depends(get_db)],
+        current_user: Annotated[User, Depends(verify_token)]
     ) -> WebAuthnAuthenticationOptionsResponse | ErrorResponse:
         """Get WebAuthn authentication options"""
         try:
@@ -139,8 +140,8 @@ class WebAuthnController(BaseController):
     
     def get_user_credentials(
         self,
-        db: Session = Depends(get_db),
-        current_user: User = Depends(verify_token)
+        db: Annotated[Session, Depends(get_db)],
+        current_user: Annotated[User, Depends(verify_token)]
     ) -> WebAuthnCredentialsResponse:
         """Get all WebAuthn credentials for current user"""
         try:
@@ -163,8 +164,8 @@ class WebAuthnController(BaseController):
     def delete_credential(
         self,
         request_data: WebAuthnDeleteRequest,
-        db: Session = Depends(get_db),
-        current_user: User = Depends(verify_token)
+        db: Annotated[Session, Depends(get_db)],
+        current_user: Annotated[User, Depends(verify_token)]
     ) -> SuccessResponse | ErrorResponse:
         """Delete a WebAuthn credential"""
         try:
@@ -187,8 +188,8 @@ class WebAuthnController(BaseController):
     
     def disable_webauthn(
         self,
-        db: Session = Depends(get_db),
-        current_user: User = Depends(verify_token)
+        db: Annotated[Session, Depends(get_db)],
+        current_user: Annotated[User, Depends(verify_token)]
     ) -> SuccessResponse | ErrorResponse:
         """Disable WebAuthn authentication (delete all credentials)"""
         try:

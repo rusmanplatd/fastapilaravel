@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from typing import Dict, Any, List
 from fastapi import HTTPException, status, Depends, Query
+from typing_extensions import Annotated
 from sqlalchemy.orm import Session
 
 from app.Http.Controllers.BaseController import BaseController
@@ -26,8 +27,8 @@ class OAuth2ScopeController(BaseController):
     
     async def index(
         self,
-        db: Session = Depends(get_db_session),
-        _token_data = Depends(require_scope("admin"))
+        db: Annotated[Session, Depends(get_db_session)],
+        _token_data: Annotated[Any, Depends(require_scope("admin"))] = Depends(require_scope("admin"))
     ) -> Dict[str, Any]:
         """
         Get list of OAuth2 scopes.
@@ -67,8 +68,8 @@ class OAuth2ScopeController(BaseController):
     async def show(
         self,
         scope_id: str,
-        db: Session = Depends(get_db_session),
-        _token_data = Depends(require_scope("admin"))
+        db: Annotated[Session, Depends(get_db_session)],
+        _token_data: Annotated[Any, Depends(require_scope("admin"))] = Depends(require_scope("admin"))
     ) -> Dict[str, Any]:
         """
         Get specific OAuth2 scope details.
@@ -119,8 +120,8 @@ class OAuth2ScopeController(BaseController):
         scope_id: str,
         name: str,
         description: str,
-        db: Session = Depends(get_db_session),
-        _token_data = Depends(require_scope("admin"))
+        db: Annotated[Session, Depends(get_db_session)],
+        _token_data: Annotated[Any, Depends(require_scope("admin"))] = Depends(require_scope("admin"))
     ) -> Dict[str, Any]:
         """
         Create OAuth2 scope.
@@ -174,10 +175,10 @@ class OAuth2ScopeController(BaseController):
     async def update(
         self,
         scope_id: str,
+        db: Annotated[Session, Depends(get_db_session)],
+        _token_data: Annotated[Any, Depends(require_scope("admin"))] = Depends(require_scope("admin")),
         name: str = None,
-        description: str = None,
-        db: Session = Depends(get_db_session),
-        _token_data = Depends(require_scope("admin"))
+        description: str = None
     ) -> Dict[str, Any]:
         """
         Update OAuth2 scope.
@@ -233,8 +234,8 @@ class OAuth2ScopeController(BaseController):
     async def delete(
         self,
         scope_id: str,
-        db: Session = Depends(get_db_session),
-        _token_data = Depends(require_scope("admin"))
+        db: Annotated[Session, Depends(get_db_session)],
+        _token_data: Annotated[Any, Depends(require_scope("admin"))] = Depends(require_scope("admin"))
     ) -> Dict[str, Any]:
         """
         Delete OAuth2 scope.
@@ -273,10 +274,10 @@ class OAuth2ScopeController(BaseController):
     
     async def search(
         self,
+        db: Annotated[Session, Depends(get_db_session)],
+        _token_data: Annotated[Any, Depends(require_scope("admin"))] = Depends(require_scope("admin")),
         q: str = Query(..., min_length=2),
-        limit: int = Query(20, ge=1, le=100),
-        db: Session = Depends(get_db_session),
-        _token_data = Depends(require_scope("admin"))
+        limit: int = Query(20, ge=1, le=100)
     ) -> Dict[str, Any]:
         """
         Search OAuth2 scopes.
@@ -316,8 +317,8 @@ class OAuth2ScopeController(BaseController):
     
     async def usage_stats(
         self,
-        db: Session = Depends(get_db_session),
-        _token_data = Depends(require_scope("admin"))
+        db: Annotated[Session, Depends(get_db_session)],
+        _token_data: Annotated[Any, Depends(require_scope("admin"))] = Depends(require_scope("admin"))
     ) -> Dict[str, Any]:
         """
         Get OAuth2 scope usage statistics.
@@ -345,8 +346,8 @@ class OAuth2ScopeController(BaseController):
     
     async def create_defaults(
         self,
-        db: Session = Depends(get_db_session),
-        _token_data = Depends(require_scope("admin"))
+        db: Annotated[Session, Depends(get_db_session)],
+        _token_data: Annotated[Any, Depends(require_scope("admin"))] = Depends(require_scope("admin"))
     ) -> Dict[str, Any]:
         """
         Create default OAuth2 scopes.

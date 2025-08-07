@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import pyotp
 import secrets
-from typing import Tuple, List, Dict, Any
+from datetime import datetime
+from typing import Tuple, List, Dict, Any, cast
 from sqlalchemy.orm import Session
 from app.Models import User, UserMFASettings
 from app.Services.BaseService import BaseService
@@ -15,15 +16,15 @@ class TOTPService(BaseService):
     
     def generate_secret(self) -> str:
         """Generate a new TOTP secret for the user"""
-        return pyotp.random_base32()
+        return cast(str, pyotp.random_base32())
     
     def get_provisioning_uri(self, user: User, secret: str, issuer: str = "FastAPI Laravel") -> str:
         """Generate provisioning URI for QR code"""
         totp = pyotp.TOTP(secret)
-        return totp.provisioning_uri(
+        return cast(str, totp.provisioning_uri(
             name=user.email,
             issuer_name=issuer
-        )
+        ))
     
     def generate_qr_code(self, provisioning_uri: str) -> str:
         """Generate QR code image as base64 string"""
@@ -41,7 +42,7 @@ class TOTPService(BaseService):
     def verify_token(self, secret: str, token: str, window: int = 1) -> bool:
         """Verify TOTP token"""
         totp = pyotp.TOTP(secret)
-        return totp.verify(token, window=window)
+        return cast(bool, totp.verify(token, window=window))
     
     def generate_backup_codes(self, count: int = 10) -> List[str]:
         """Generate backup codes for recovery"""
@@ -96,7 +97,7 @@ class TOTPService(BaseService):
                 return False, "TOTP setup not found. Please setup TOTP first."
             
             # Verify the token
-            if not self.verify_token(user.mfa_settings.totp_secret, token):
+            if not user.mfa_settings.totp_secret or not self.verify_token(user.mfa_settings.totp_secret, token):
                 return False, "Invalid TOTP token"
             
             # Enable TOTP
@@ -140,7 +141,7 @@ class TOTPService(BaseService):
                 return False, "TOTP is not enabled for this user"
             
             # Verify token before disabling
-            if not self.verify_token(user.mfa_settings.totp_secret, token):
+            if not user.mfa_settings.totp_secret or not self.verify_token(user.mfa_settings.totp_secret, token):
                 return False, "Invalid TOTP token"
             
             # Disable TOTP

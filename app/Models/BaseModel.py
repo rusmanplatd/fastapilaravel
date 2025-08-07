@@ -18,13 +18,13 @@ class Base(DeclarativeBase):
 class BaseModel(Base):
     __abstract__ = True
     
-    id: Mapped[ULID] = mapped_column(String(26), primary_key=True, index=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
+    id: Mapped[ULID] = mapped_column(primary_key=True, index=True)
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(server_default=func.now(), onupdate=func.now())
     
     # Audit columns for tracking who created/updated the record
-    created_by: Mapped[Optional[ULID]] = mapped_column(String(26), ForeignKey("users.id"), nullable=True)
-    updated_by: Mapped[Optional[ULID]] = mapped_column(String(26), ForeignKey("users.id"), nullable=True)
+    created_by: Mapped[Optional[ULID]] = mapped_column(String(26), ForeignKey("users.id"), nullable=True)  # type: ignore[arg-type]
+    updated_by: Mapped[Optional[ULID]] = mapped_column(String(26), ForeignKey("users.id"), nullable=True)  # type: ignore[arg-type]
     
     # Audit relationships
     created_by_user: Mapped[Optional[User]] = relationship(

@@ -14,41 +14,41 @@ class JobMetric(BaseModel):
     __tablename__ = "job_metrics"
     
     # Job identification
-    job_uuid: Mapped[str] = mapped_column(String(36), nullable=False, index=True)
-    job_class: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
-    queue: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    job_uuid: Mapped[str] = mapped_column(nullable=False, index=True)
+    job_class: Mapped[str] = mapped_column(nullable=False, index=True)
+    queue: Mapped[str] = mapped_column(nullable=False, index=True)
     
     # Execution metrics
-    started_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, index=True)
-    finished_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
-    duration_ms: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)  # Duration in milliseconds
+    started_at: Mapped[datetime] = mapped_column(nullable=False, index=True)
+    finished_at: Mapped[Optional[datetime]] = mapped_column(nullable=True)
+    duration_ms: Mapped[Optional[int]] = mapped_column(nullable=True)  # Duration in milliseconds
     
     # Resource usage
-    memory_peak_mb: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    memory_usage_mb: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    cpu_time_ms: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    memory_peak_mb: Mapped[Optional[float]] = mapped_column(nullable=True)
+    memory_usage_mb: Mapped[Optional[float]] = mapped_column(nullable=True)
+    cpu_time_ms: Mapped[Optional[int]] = mapped_column(nullable=True)
     
     # Status and attempts
-    status: Mapped[str] = mapped_column(String(50), nullable=False, index=True)  # running, completed, failed, cancelled
-    attempts: Mapped[int] = mapped_column(Integer, default=1)
+    status: Mapped[str] = mapped_column(nullable=False, index=True)  # running, completed, failed, cancelled
+    attempts: Mapped[int] = mapped_column(default=1)
     
     # Worker information
-    worker_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    worker_hostname: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    worker_pid: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    worker_id: Mapped[Optional[str]] = mapped_column(nullable=True)
+    worker_hostname: Mapped[Optional[str]] = mapped_column(nullable=True)
+    worker_pid: Mapped[Optional[int]] = mapped_column(nullable=True)
     
     # Error information
-    error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    error_type: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    stack_trace: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    error_message: Mapped[Optional[str]] = mapped_column(nullable=True)
+    error_type: Mapped[Optional[str]] = mapped_column(nullable=True)
+    stack_trace: Mapped[Optional[str]] = mapped_column(nullable=True)
     
     # Additional metadata
-    payload_size: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)  # Size in bytes
-    tags: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)  # JSON array
-    context: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # JSON object
+    payload_size: Mapped[Optional[int]] = mapped_column(nullable=True)  # Size in bytes
+    tags: Mapped[Optional[str]] = mapped_column(nullable=True)  # JSON array
+    context: Mapped[Optional[str]] = mapped_column(nullable=True)  # JSON object
     
     # Batch information
-    batch_id: Mapped[Optional[str]] = mapped_column(String(36), nullable=True, index=True)
+    batch_id: Mapped[Optional[str]] = mapped_column(nullable=True, index=True)
     
     def __repr__(self) -> str:
         return f"<JobMetric(job_uuid='{self.job_uuid}', status='{self.status}', duration={self.duration_ms}ms)>"

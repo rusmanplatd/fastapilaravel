@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
 from sqlalchemy.orm import Session
-from sqlalchemy import and_, or_
+from sqlalchemy import or_
 
 from database.migrations.create_notifications_table import DatabaseNotification
 from app.Notifications.Channels.DatabaseChannel import DatabaseChannel
@@ -60,10 +60,9 @@ class NotificationService:
     def get_notifications_for(self, notifiable: Any, limit: Optional[int] = None) -> List[DatabaseNotification]:
         """Get notifications for a notifiable entity."""
         query = self.db.query(DatabaseNotification).filter(
-            and_(
-                DatabaseNotification.notifiable_type == notifiable.__class__.__name__,
-                DatabaseNotification.notifiable_id == str(notifiable.id)
-            )
+            DatabaseNotification.notifiable_type == notifiable.__class__.__name__
+        ).filter(
+            DatabaseNotification.notifiable_id == str(notifiable.id)
         ).order_by(DatabaseNotification.created_at.desc())
         
         if limit:
@@ -74,11 +73,11 @@ class NotificationService:
     def get_unread_notifications_for(self, notifiable: Any, limit: Optional[int] = None) -> List[DatabaseNotification]:
         """Get unread notifications for a notifiable entity."""
         query = self.db.query(DatabaseNotification).filter(
-            and_(
-                DatabaseNotification.notifiable_type == notifiable.__class__.__name__,
-                DatabaseNotification.notifiable_id == str(notifiable.id),
-                DatabaseNotification.read_at.is_(None)
-            )
+            DatabaseNotification.notifiable_type == notifiable.__class__.__name__
+        ).filter(
+            DatabaseNotification.notifiable_id == str(notifiable.id)
+        ).filter(
+            DatabaseNotification.read_at.is_(None)
         ).order_by(DatabaseNotification.created_at.desc())
         
         if limit:
@@ -104,11 +103,11 @@ class NotificationService:
         from datetime import datetime, timezone
         
         count = self.db.query(DatabaseNotification).filter(
-            and_(
-                DatabaseNotification.notifiable_type == notifiable.__class__.__name__,
-                DatabaseNotification.notifiable_id == str(notifiable.id),
-                DatabaseNotification.read_at.is_(None)
-            )
+            DatabaseNotification.notifiable_type == notifiable.__class__.__name__
+        ).filter(
+            DatabaseNotification.notifiable_id == str(notifiable.id)
+        ).filter(
+            DatabaseNotification.read_at.is_(None)
         ).update(
             {'read_at': datetime.now(timezone.utc)},
             synchronize_session=False
@@ -133,17 +132,15 @@ class NotificationService:
     def delete_all_notifications_for(self, notifiable: Any) -> int:
         """Delete all notifications for a notifiable entity."""
         count = self.db.query(DatabaseNotification).filter(
-            and_(
-                DatabaseNotification.notifiable_type == notifiable.__class__.__name__,
-                DatabaseNotification.notifiable_id == str(notifiable.id)
-            )
+            DatabaseNotification.notifiable_type == notifiable.__class__.__name__
+        ).filter(
+            DatabaseNotification.notifiable_id == str(notifiable.id)
         ).count()
         
         self.db.query(DatabaseNotification).filter(
-            and_(
-                DatabaseNotification.notifiable_type == notifiable.__class__.__name__,
-                DatabaseNotification.notifiable_id == str(notifiable.id)
-            )
+            DatabaseNotification.notifiable_type == notifiable.__class__.__name__
+        ).filter(
+            DatabaseNotification.notifiable_id == str(notifiable.id)
         ).delete(synchronize_session=False)
         
         self.db.commit()
@@ -152,18 +149,17 @@ class NotificationService:
     def get_notification_counts_for(self, notifiable: Any) -> Dict[str, int]:
         """Get notification counts for a notifiable entity."""
         total_count = self.db.query(DatabaseNotification).filter(
-            and_(
-                DatabaseNotification.notifiable_type == notifiable.__class__.__name__,
-                DatabaseNotification.notifiable_id == str(notifiable.id)
-            )
+            DatabaseNotification.notifiable_type == notifiable.__class__.__name__
+        ).filter(
+            DatabaseNotification.notifiable_id == str(notifiable.id)
         ).count()
         
         unread_count = self.db.query(DatabaseNotification).filter(
-            and_(
-                DatabaseNotification.notifiable_type == notifiable.__class__.__name__,
-                DatabaseNotification.notifiable_id == str(notifiable.id),
-                DatabaseNotification.read_at.is_(None)
-            )
+            DatabaseNotification.notifiable_type == notifiable.__class__.__name__
+        ).filter(
+            DatabaseNotification.notifiable_id == str(notifiable.id)
+        ).filter(
+            DatabaseNotification.read_at.is_(None)
         ).count()
         
         return {

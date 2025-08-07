@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from typing import Dict, Any, Optional, List
 from fastapi import HTTPException, status, Form, Query, Depends
+from typing_extensions import Annotated
 from sqlalchemy.orm import Session
 
 from app.Http.Controllers.BaseController import BaseController
@@ -28,7 +29,7 @@ class OAuth2TokenController(BaseController):
     
     async def token(
         self,
-        db: Session = Depends(get_db_session),
+        db: Annotated[Session, Depends(get_db_session)],
         grant_type: str = Form(...),
         client_id: str = Form(...),
         client_secret: Optional[str] = Form(None),
@@ -144,7 +145,7 @@ class OAuth2TokenController(BaseController):
     
     async def introspect(
         self,
-        db: Session = Depends(get_db_session),
+        db: Annotated[Session, Depends(get_db_session)],
         token: str = Form(...),
         token_type_hint: Optional[str] = Form(None),
         client_id: Optional[str] = Form(None),
@@ -184,7 +185,7 @@ class OAuth2TokenController(BaseController):
     
     async def revoke(
         self,
-        db: Session = Depends(get_db_session),
+        db: Annotated[Session, Depends(get_db_session)],
         token: str = Form(...),
         token_type_hint: Optional[str] = Form(None),
         client_id: str = Form(...),

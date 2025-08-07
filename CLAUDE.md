@@ -259,10 +259,74 @@ define_queue("high-priority",
 - **Chaining**: Sequential job workflows
 - **Events**: Lifecycle hooks and event system
 
+## Additional Features
+
+### Activity Logging (Spatie-style)
+
+Laravel-style activity logging with the `LogsActivity` trait for automatic change tracking:
+
+```python
+from app.Traits.LogsActivity import LogsActivity, LogOptions
+
+class MyModel(BaseModel, LogsActivity):
+    __log_options__ = LogOptions(
+        log_name="my_model",
+        log_only_changed=True,
+        log_attributes=["name", "status"]
+    )
+```
+
+### Notifications System
+
+Multi-channel notification system supporting Database, Email, SMS, Discord, Slack, Push, and Webhook channels:
+
+```python
+from app.Notifications import Notification
+from app.Notifications.Channels import DatabaseChannel, MailChannel
+
+class WelcomeNotification(Notification):
+    def __init__(self, user_name: str):
+        self.user_name = user_name
+    
+    def via(self, notifiable) -> List[str]:
+        return ["database", "mail"]
+    
+    def to_database(self, notifiable) -> Dict[str, Any]:
+        return {"message": f"Welcome {self.user_name}!"}
+```
+
+### Multi-Factor Authentication (MFA) & WebAuthn
+
+Complete MFA implementation with TOTP, WebAuthn, SMS, and recovery codes:
+
+- **MFA Services**: `MFAService`, `TOTPService`, `WebAuthnService`, `SMSService`
+- **Analytics**: `MFAAnalyticsService` for usage tracking
+- **Policy Management**: `MFAPolicyService` for security policies
+- **Audit Logging**: `MFAAuditService` for security events
+
+### Query Builder (Spatie-style)
+
+Laravel Query Builder-inspired filtering and querying for FastAPI endpoints:
+
+```python
+from app.Utils.QueryBuilder import QueryBuilder, AllowedFilter, AllowedSort
+
+# URL: /users?filter[name]=john&sort=-created_at&include=roles
+QueryBuilder.for_model(User, db, request) \
+    .allowed_filters([AllowedFilter.partial('name')]) \
+    .allowed_sorts(['created_at', 'name']) \
+    .allowed_includes(['roles', 'rolesCount']) \
+    .get()
+```
+
 ## Testing
 
 Currently tests are not implemented (placeholders in Makefile). When adding tests:
+
 - Use pytest (already in type stub dependencies)
 - Test OAuth2 flows comprehensively
+- Test MFA flows and WebAuthn registration/authentication
+- Test queue job processing and batching
+- Test permission system with all grant types
 - Maintain type annotations in test files
 - Run `make ci` for full validation pipeline
