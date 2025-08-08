@@ -53,16 +53,33 @@ This is a **FastAPI application with Laravel-style architecture** and **complete
 
 ### Directory Layout
 ```
+app/Broadcasting/         # Real-time event broadcasting (Pusher, WebSocket)
+app/Cache/                # Multi-driver caching system (Array, File, Redis)
+app/Console/              # Artisan-style commands and code generation
+app/Events/               # Event classes and dispatcher
 app/Http/Controllers/     # Request handlers (AuthController, OAuth2*Controller)
-app/Http/Middleware/      # Auth, CORS, OAuth2, Permission middleware  
+app/Http/Middleware/      # Auth, CORS, OAuth2, Permission middleware
+app/Http/Requests/        # Laravel-style Form Request validation
+app/Http/Resources/       # API resource transformers
 app/Http/Schemas/         # Pydantic request/response models
-app/Models/               # SQLAlchemy models with relationships
+app/Listeners/            # Event listeners
+app/Mail/                 # Mailable classes for emails
+app/Models/               # SQLAlchemy models with observers and scopes
+app/Observers/            # Model observers for lifecycle events
+app/Policies/             # Authorization policies and gates
+app/RateLimiting/         # Rate limiting with multiple stores
+app/Routing/              # Advanced routing and middleware groups
 app/Services/             # Business logic (AuthService, OAuth2*Service)
+app/Storage/              # File storage abstraction (Local, S3)
+app/Support/              # Core support classes (Container, Facades, Collections)
+app/Testing/              # Laravel-style testing utilities
 app/Utils/                # JWT, OAuth2, Password utilities
-routes/                   # Router definitions (api.py, oauth2.py, etc)
-config/                   # Settings, database config, oauth2 config
+app/Validation/           # Custom validation rules
+database/factories/       # Model factories with Faker integration
 database/migrations/      # Table creation scripts
+database/Schema/          # Schema builder for migrations
 database/seeders/         # Data seeding scripts
+resources/views/emails/   # Email templates (HTML)
 ```
 
 ### Key Components
@@ -258,6 +275,72 @@ define_queue("high-priority",
 - **Batching**: Bulk job processing with progress tracking
 - **Chaining**: Sequential job workflows
 - **Events**: Lifecycle hooks and event system
+
+## Laravel-Style Features
+
+This codebase now includes **ALL major Laravel features** implemented in FastAPI:
+
+### 🏗️ **Enhanced Eloquent ORM**
+- **Model Scopes**: `scope_latest()`, `scope_where_not_null()`, `scope_where_in()`, etc.
+- **Model Observers**: Lifecycle event handling (creating, created, updating, updated, etc.)
+- **Mass Assignment**: Fillable/guarded protection with `fill()` method
+- **Attribute Casting**: Hidden/visible attributes for serialization
+- **Query Builder**: Advanced filtering with relationships and includes
+
+### 📝 **Form Requests & Validation**
+- **Form Request Classes**: Laravel-style validation with authorization
+- **Custom Validation Rules**: Extensible rule system (required, email, min, max, unique)
+- **Error Formatting**: Laravel-style validation error responses
+- **Request Decorators**: Easy controller integration
+
+### 🎯 **Events & Broadcasting**
+- **Event Dispatcher**: Async event handling with listeners
+- **Real-time Broadcasting**: WebSocket, Pusher integration
+- **Event Queuing**: Background event processing
+- **Private/Presence Channels**: Authorized real-time channels
+
+### 📧 **Mail System**
+- **Mailable Classes**: Fluent email composition
+- **Template System**: Jinja2 templates with layouts
+- **Queue Integration**: Background email sending
+- **Attachments**: File and data attachment support
+
+### 🏗️ **Service Container & Facades**
+- **Dependency Injection**: Auto-resolution with constructor injection
+- **Service Binding**: Singleton and instance binding
+- **Facades**: Static-like access (Auth, Queue, Event, Cache, Storage)
+- **Service Providers**: Modular service registration
+
+### 📊 **API Resources**
+- **Resource Transformers**: Laravel-style data transformation
+- **Resource Collections**: Pagination and meta data support
+- **Conditional Loading**: `when()`, `when_loaded()` methods
+- **Custom Serialization**: Hidden/visible attribute control
+
+### 💾 **Storage & Caching**
+- **Storage Abstraction**: Multi-driver filesystem (Local, S3)
+- **Cache System**: Multiple drivers (Array, File, Redis) with tagging
+- **File Operations**: Full CRUD with copy, move, metadata
+- **Cache Utilities**: `remember()`, `forever()`, tagged caching
+
+### 🛡️ **Authorization & Security**
+- **Policy Classes**: Model-specific authorization logic
+- **Gate System**: Global authorization with before/after hooks
+- **Rate Limiting**: Multi-store rate limiting with decorators
+- **Throttle Middleware**: Request-level rate limiting
+
+### 🧪 **Testing & Development**
+- **Database Factories**: Faker-based test data generation
+- **Test Utilities**: Laravel-style assertions and helpers
+- **Artisan Commands**: Code generation and management commands
+- **Collections**: 50+ methods for data manipulation
+
+### 📈 **Advanced Features**
+- **Pipeline Processing**: Multi-stage data transformation
+- **Configuration Management**: Dot notation config access
+- **Middleware Groups**: Organized middleware application
+- **Route Caching**: Performance optimization
+- **Error Handling**: Comprehensive exception management
 
 ## Additional Features
 
