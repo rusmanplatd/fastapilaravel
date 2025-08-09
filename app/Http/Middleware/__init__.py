@@ -18,6 +18,12 @@ from .PermissionMiddleware import (
     has_all_roles
 )
 from .MFAMiddleware import MFAMiddleware, require_mfa, verify_mfa_session
+from .CacheMiddleware import (
+    CacheMiddleware,
+    ResponseCacheMiddleware,
+    CacheTagMiddleware,
+    DEFAULT_CACHE_RULES
+)
 
 __all__ = [
     "add_cors_middleware", 
@@ -40,5 +46,10 @@ __all__ = [
     "has_all_roles",
     "MFAMiddleware",
     "require_mfa",
-    "verify_mfa_session"
+    "verify_mfa_session",
+    # Cache middleware
+    "CacheMiddleware",
+    "ResponseCacheMiddleware", 
+    "CacheTagMiddleware",
+    "DEFAULT_CACHE_RULES"
 ]

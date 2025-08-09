@@ -69,19 +69,7 @@ class WebAuthnService(BaseService):
         require_resident_key: bool = False,
         user_verification: str = "preferred"
     ) -> Tuple[bool, str, Dict[str, Any]]:
-        """Generate registration options for WebAuthn credential registration (legacy method)"""
-        return self.generate_registration_options_enhanced(
-            user, authenticator_attachment, require_resident_key, user_verification
-        )
-    
-    def generate_registration_options_enhanced(
-        self, 
-        user: User,
-        authenticator_attachment: Optional[str] = None,
-        require_resident_key: bool = False,
-        user_verification: str = "preferred"
-    ) -> Tuple[bool, str, Dict[str, Any]]:
-        """Generate enhanced registration options with security preferences"""
+        """Generate registration options with security preferences"""
         try:
             # Check rate limiting
             rate_check = self.rate_limit_service.check_rate_limit(
@@ -194,12 +182,7 @@ class WebAuthnService(BaseService):
         except Exception as e:
             return False, f"Failed to generate registration options: {str(e)}", {}
     
-    def verify_registration(self, user: User, credential: Dict[str, Any], challenge: str, credential_name: str) -> Tuple[bool, str]:
-        """Verify WebAuthn registration response (legacy method)"""
-        success, message, _ = self.verify_registration_enhanced(user, credential, challenge, credential_name)
-        return success, message
-    
-    def verify_registration_enhanced(
+    def verify_registration(
         self, 
         user: User, 
         credential: Dict[str, Any], 
@@ -209,7 +192,7 @@ class WebAuthnService(BaseService):
         user_agent: Optional[str] = None,
         device_fingerprint: Optional[str] = None
     ) -> Tuple[bool, str, Optional[Dict[str, Any]]]:
-        """Verify WebAuthn registration with attestation and enhanced security"""
+        """Verify WebAuthn registration with attestation and security"""
         try:
             challenge_bytes = base64.urlsafe_b64decode(challenge.encode('utf-8'))
             
@@ -307,16 +290,12 @@ class WebAuthnService(BaseService):
             self.db.rollback()
             return False, f"Failed to verify registration: {str(e)}", None
     
-    def generate_authentication_options(self, user: Optional[User] = None) -> Tuple[bool, str, Dict[str, Any]]:
-        """Generate authentication options for WebAuthn authentication (legacy method)"""
-        return self.generate_authentication_options_enhanced(user)
-    
-    def generate_authentication_options_enhanced(
+    def generate_authentication_options(
         self, 
         user: Optional[User] = None,
         user_verification: str = "preferred"
     ) -> Tuple[bool, str, Dict[str, Any]]:
-        """Generate enhanced authentication options"""
+        """Generate authentication options"""
         try:
             # Get user's credentials if user is specified
             allowed_credentials = []
@@ -363,12 +342,7 @@ class WebAuthnService(BaseService):
         except Exception as e:
             return False, f"Failed to generate authentication options: {str(e)}", {}
     
-    def verify_authentication(self, user: User, credential: Dict[str, Any], challenge: str) -> Tuple[bool, str]:
-        """Verify WebAuthn authentication response (legacy method)"""
-        success, message, _ = self.verify_authentication_enhanced(user, credential, challenge)
-        return success, message
-    
-    def verify_authentication_enhanced(
+    def verify_authentication(
         self, 
         user: User, 
         credential: Dict[str, Any], 
@@ -377,7 +351,7 @@ class WebAuthnService(BaseService):
         user_agent: Optional[str] = None,
         device_fingerprint: Optional[str] = None
     ) -> Tuple[bool, str, Optional[Dict[str, Any]]]:
-        """Verify WebAuthn authentication with enhanced security checks"""
+        """Verify WebAuthn authentication with security checks"""
         try:
             # Check rate limiting first
             rate_check = self.rate_limit_service.check_rate_limit(
@@ -494,11 +468,7 @@ class WebAuthnService(BaseService):
             return False, f"Failed to verify authentication: {str(e)}", None
     
     def get_user_credentials(self, user: User) -> List[Dict[str, Any]]:
-        """Get all WebAuthn credentials for a user (legacy method)"""
-        return self.get_user_credentials_enhanced(user)
-    
-    def get_user_credentials_enhanced(self, user: User) -> List[Dict[str, Any]]:
-        """Get enhanced credential information with metadata"""
+        """Get credential information with metadata"""
         credentials = []
         for cred in user.webauthn_credentials:
             device_metadata = self._get_device_metadata(cred)

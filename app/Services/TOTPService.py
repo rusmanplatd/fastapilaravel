@@ -233,12 +233,8 @@ class TOTPService(BaseService):
         
         return False, 0
     
-    def generate_backup_codes(self, count: int = 10) -> List[str]:
-        """Generate backup codes for recovery (legacy method)"""
-        return self.generate_backup_codes_enhanced(count)
-    
-    def generate_backup_codes_enhanced(self, count: Optional[int] = None) -> List[str]:
-        """Generate enhanced backup codes with better entropy"""
+    def generate_backup_codes(self, count: Optional[int] = None) -> List[str]:
+        """Generate backup codes with better entropy"""
         if count is None:
             count = self.backup_code_count
         
