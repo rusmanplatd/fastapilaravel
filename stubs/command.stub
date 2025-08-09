@@ -1,0 +1,30 @@
+from __future__ import annotations
+
+from ..Command import Command
+
+
+class {{ class }}(Command):
+    """{{ description }}"""
+    
+    signature = "{{ command }}"
+    description = "{{ description }}"
+    help = "{{ description }}"
+    
+    async def handle(self) -> None:
+        """Execute the command."""
+        try:
+            self.info("Starting {{ class }} execution...")
+            
+            # Implement your command logic here
+            # Example:
+            # await self.process_data()
+            # self.info("Processing completed")
+            
+            # Add your business logic here
+            self.line("Command logic goes here")
+            
+            self.info("{{ class }} executed successfully!")
+            
+        except Exception as e:
+            self.error(f"An error occurred: {str(e)}")
+            raise

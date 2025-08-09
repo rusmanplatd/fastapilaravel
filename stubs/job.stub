@@ -1,0 +1,50 @@
+from __future__ import annotations
+
+from typing import Any, Dict
+from app.Jobs.Job import Job
+
+
+class {{ class }}(Job):
+    """{{ class }} job."""
+    
+    def __init__(self, *args, **kwargs) -> None:
+        """Initialize the job."""
+        super().__init__()
+        # Set job properties
+        # self.options.queue = "default"
+        # self.options.delay = 0
+        # self.options.max_attempts = 3
+    
+    def handle(self) -> None:
+        """Execute the job."""
+        try:
+            # Implement your job logic here
+            # Example:
+            # self.process_data()
+            # self.send_notifications()
+            # self.update_records()
+            
+            # Log job execution
+            self.log_info(f"Starting execution of {self.__class__.__name__}")
+            
+            # Add your business logic here
+            # Example implementation:
+            # result = self.perform_task()
+            # if result:
+            #     self.log_info("Job completed successfully")
+            # else:
+            #     self.fail("Job execution failed")
+            
+            self.log_info(f"{self.__class__.__name__} completed successfully")
+            
+        except Exception as e:
+            self.log_error(f"Job failed with error: {str(e)}")
+            self.fail(str(e))
+    
+    def serialize(self) -> Dict[str, Any]:
+        """Serialize the job data."""
+        data = super().serialize()
+        data["data"] = {
+            # Add your serializable data here
+        }
+        return data

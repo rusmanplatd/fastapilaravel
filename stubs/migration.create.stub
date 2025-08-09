@@ -1,0 +1,32 @@
+"""
+{{ description }}
+
+Revision ID: {{ revision }}
+Create Date: {{ timestamp }}
+"""
+
+from alembic import op
+import sqlalchemy as sa
+
+
+# revision identifiers
+revision = '{{ revision }}'
+down_revision = {{ down_revision }}
+branch_labels = None
+depends_on = None
+
+
+def upgrade() -> None:
+    """Create {{ table }} table."""
+    op.create_table(
+        '{{ table }}',
+        sa.Column('id', sa.Integer(), nullable=False, primary_key=True),
+        sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
+        sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
+        # Add your columns here
+    )
+
+
+def downgrade() -> None:
+    """Drop {{ table }} table."""
+    op.drop_table('{{ table }}')

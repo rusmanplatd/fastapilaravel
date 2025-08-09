@@ -1,0 +1,161 @@
+{% extends "layouts/app.html" %}
+
+{% block title %}Welcome - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="hero-section">
+        <h1 class="display-1">Welcome to FastAPI Laravel</h1>
+        <p class="lead">
+            A Laravel-style framework built on FastAPI with complete OAuth2 implementation,
+            role-based access control, and all the Laravel features you love.
+        </p>
+        
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h3>🔐 OAuth2 Server</h3>
+                <p>Complete RFC-compliant OAuth2 implementation with all grant types, PKCE support, and token introspection.</p>
+                <a href="{{ route('oauth.docs') }}" class="btn btn-primary">Explore OAuth2</a>
+            </div>
+            
+            <div class="feature-card">
+                <h3>🛡️ Permission System</h3>
+                <p>Spatie Laravel Permission-style roles and permissions with methods like user.can() and user.has_role().</p>
+                <a href="{{ route('permissions.docs') }}" class="btn btn-primary">Learn Permissions</a>
+            </div>
+            
+            <div class="feature-card">
+                <h3>🔧 Artisan Commands</h3>
+                <p>Laravel-style command line interface with code generation, migrations, and custom commands.</p>
+                <code>python artisan make:controller UserController</code>
+            </div>
+            
+            <div class="feature-card">
+                <h3>📊 Queue System</h3>
+                <p>Complete background job processing with batching, chaining, rate limiting, and real-time monitoring.</p>
+                <a href="{{ route('queue.dashboard') }}" class="btn btn-primary">Queue Dashboard</a>
+            </div>
+            
+            <div class="feature-card">
+                <h3>🗄️ Eloquent ORM</h3>
+                <p>Enhanced SQLAlchemy models with scopes, observers, mass assignment protection, and relationship loading.</p>
+                <code>User.with_(['roles', 'permissions']).get()</code>
+            </div>
+            
+            <div class="feature-card">
+                <h3>🎨 Blade Templates</h3>
+                <p>Laravel-style templating with components, directives, view composers, and hot reloading.</p>
+                <code>{% raw %}@component('alert', {'type': 'success'}){% endraw %}</code>
+            </div>
+        </div>
+    </div>
+
+    <div class="stats-section">
+        <h2>System Statistics</h2>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h4>{{ user_count | default(0) }}</h4>
+                <p>Registered Users</p>
+            </div>
+            <div class="stat-card">
+                <h4>{{ oauth_client_count | default(0) }}</h4>
+                <p>OAuth2 Clients</p>
+            </div>
+            <div class="stat-card">
+                <h4>{{ permission_count | default(0) }}</h4>
+                <p>Permissions</p>
+            </div>
+            <div class="stat-card">
+                <h4>{{ role_count | default(0) }}</h4>
+                <p>Roles</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="api-section">
+        <h2>API Documentation</h2>
+        <p>Explore the interactive API documentation and test all available endpoints.</p>
+        <div class="api-links">
+            <a href="/docs" class="btn btn-outline-primary">Swagger UI</a>
+            <a href="/redoc" class="btn btn-outline-primary">ReDoc</a>
+            <a href="/.well-known/oauth-authorization-server" class="btn btn-outline-primary">OAuth2 Metadata</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+.hero-section {
+    text-align: center;
+    padding: 4rem 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    margin: -2rem -15px 3rem -15px;
+}
+
+.feature-grid, .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin: 2rem 0;
+}
+
+.feature-card, .stat-card {
+    background: #f8f9fa;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.stat-card {
+    text-align: center;
+}
+
+.stat-card h4 {
+    font-size: 2.5rem;
+    color: #667eea;
+    margin-bottom: 0.5rem;
+}
+
+.api-links {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 1rem;
+}
+
+.btn {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    background: #667eea;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: background 0.3s;
+}
+
+.btn:hover {
+    background: #5a6fd8;
+}
+
+.btn-outline-primary {
+    background: transparent;
+    border: 2px solid #667eea;
+    color: #667eea;
+}
+
+.btn-outline-primary:hover {
+    background: #667eea;
+    color: white;
+}
+
+code {
+    background: #e9ecef;
+    padding: 0.25rem 0.5rem;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+    color: #495057;
+}
+</style>
+{% endblock %}

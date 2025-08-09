@@ -1,0 +1,858 @@
+python3 scripts/type_check.py
+🎯 Starting strict type checking for FastAPI Laravel project...
+============================================================
+❌ Type checking failed!
+
+STDOUT:
+/home/r2k/fastapilaravel/app/Services/RoleService.py:257:13: error: Argument 1
+to "filter" of "Query" has incompatible type "or_"; expected
+"ColumnElement[bool] | _HasClauseElement[bool] | SQLCoreOperations[bool] | ExpressionElementRole[bool] | TypedColumnsClauseRole[bool] | Callable[[], ColumnElement[bool]] | LambdaElement"
+ [arg-type]
+                or_(
+                ^
+/home/r2k/fastapilaravel/app/Services/PermissionService.py:207:13: error:
+Argument 1 to "filter" of "Query" has incompatible type "or_"; expected
+"ColumnElement[bool] | _HasClauseElement[bool] | SQLCoreOperations[bool] | ExpressionElementRole[bool] | TypedColumnsClauseRole[bool] | Callable[[], ColumnElement[bool]] | LambdaElement"
+ [arg-type]
+                or_(
+                ^
+/home/r2k/fastapilaravel/app/Services/MFARateLimitService.py:29:5: error:
+Argument 3 to "check_rate_limit" becomes "Any" due to an unfollowed import 
+[no-any-unimported]
+        def check_rate_limit(
+        ^
+/home/r2k/fastapilaravel/app/Services/MFARateLimitService.py:106:5: error:
+Argument 3 to "record_attempt" becomes "Any" due to an unfollowed import 
+[no-any-unimported]
+        def record_attempt(
+        ^
+/home/r2k/fastapilaravel/app/Services/MFARateLimitService.py:106:5: error:
+Argument 4 to "record_attempt" becomes "Any" due to an unfollowed import 
+[no-any-unimported]
+        def record_attempt(
+        ^
+/home/r2k/fastapilaravel/app/Services/MFARateLimitService.py:149:9: error:
+Returning Any from function declared to return "int"  [no-any-return]
+            return self.db.query(MFAAttempt).filter(
+            ^
+/home/r2k/fastapilaravel/app/Services/MFARateLimitService.py:157:9: error:
+Returning Any from function declared to return "int"  [no-any-return]
+            return self.db.query(MFAAttempt).filter(
+            ^
+/home/r2k/fastapilaravel/app/Services/MFARateLimitService.py:165:9: error:
+Returning Any from function declared to return "int"  [no-any-return]
+            return self.db.query(MFAAttempt).filter(
+            ^
+/home/r2k/fastapilaravel/app/Services/MFARateLimitService.py:277:13: error:
+Returning Any from function declared to return "int"  [no-any-return]
+                return deleted_count
+                ^~~~~~~~~~~~~~~~~~~~
+/home/r2k/fastapilaravel/app/Services/MFAAuditService.py:22:5: error: Argument
+2 to "log_event" becomes "Any" due to an unfollowed import  [no-any-unimported]
+        def log_event(
+        ^
+/home/r2k/fastapilaravel/app/Services/MFAAuditService.py:234:5: error: Argument
+4 to "get_user_audit_history" becomes "list[Any] | None" due to an unfollowed
+import  [no-any-unimported]
+        def get_user_audit_history(
+        ^
+/home/r2k/fastapilaravel/app/Services/MFAAuditService.py:314:5: error: Argument
+2 to "_calculate_risk_score" becomes "Any" due to an unfollowed import 
+[no-any-unimported]
+        def _calculate_risk_score(
+        ^
+/home/r2k/fastapilaravel/app/Services/MFAAuditService.py:397:9: error:
+Returning Any from function declared to return "int"  [no-any-return]
+            return self.db.query(MFAAuditLog).filter(
+            ^
+/home/r2k/fastapilaravel/app/Services/MFAAuditService.py:419:5: error: Argument
+2 to "_handle_high_risk_event" becomes "Any" due to an unfollowed import 
+[no-any-unimported]
+        def _handle_high_risk_event(self, audit_log: MFAAuditLog) -> None:
+        ^
+/home/r2k/fastapilaravel/app/Services/MFAAuditService.py:438:13: error:
+Returning Any from function declared to return "int"  [no-any-return]
+                return deleted_count
+                ^~~~~~~~~~~~~~~~~~~~
+/home/r2k/fastapilaravel/app/Services/WebAuthnService.py:17:5: error: Module
+"webauthn.helpers.structs" has no attribute "RegistrationCredential" 
+[attr-defined]
+        from webauthn.helpers.structs import RegistrationCredential, Authe...
+        ^
+/home/r2k/fastapilaravel/app/Services/WebAuthnService.py:17:5: error: Module
+"webauthn.helpers.structs" has no attribute "AuthenticationCredential" 
+[attr-defined]
+        from webauthn.helpers.structs import RegistrationCredential, Authe...
+        ^
+/home/r2k/fastapilaravel/app/Services/WebAuthnService.py:17:5: error: Module
+"webauthn.helpers.structs" has no attribute "ResidentKeyRequirement" 
+[attr-defined]
+        from webauthn.helpers.structs import RegistrationCredential, Authe...
+        ^
+/home/r2k/fastapilaravel/app/Services/WebAuthnService.py:24:5: error: Module
+"webauthn.helpers.cose" has no attribute "COSEAlgorithmIdentifier" 
+[attr-defined]
+        from webauthn.helpers.cose import COSEAlgorithmIdentifier
+        ^
+/home/r2k/fastapilaravel/app/Services/WebAuthnService.py:93:31: error: "User"
+has no attribute "webauthn_credentials"  [attr-defined]
+                for credential in user.webauthn_credentials:
+                                  ^~~~~~~~~~~~~~~~~~~~~~~~~
+/home/r2k/fastapilaravel/app/Services/WebAuthnService.py:332:35: error: "User"
+has no attribute "webauthn_credentials"  [attr-defined]
+                    for credential in user.webauthn_credentials:
+                                      ^~~~~~~~~~~~~~~~~~~~~~~~~
+/home/r2k/fastapilaravel/app/Services/WebAuthnService.py:501:21: error: "User"
+has no attribute "webauthn_credentials"  [attr-defined]
+            for cred in user.webauthn_credentials:
+                        ^~~~~~~~~~~~~~~~~~~~~~~~~
+/home/r2k/fastapilaravel/app/Services/WebAuthnService.py:603:5: error: Argument
+2 to "_get_device_metadata" becomes "Any" due to an unfollowed import 
+[no-any-unimported]
+        def _get_device_metadata(self, credential: WebAuthnCredential) -> ...
+        ^
+/home/r2k/fastapilaravel/app/Services/WebAuthnService.py:617:5: error: Argument
+2 to "_get_credential_usage_stats" becomes "Any" due to an unfollowed import 
+[no-any-unimported]
+        def _get_credential_usage_stats(self, credential: WebAuthnCredenti...
+        ^
+/home/r2k/fastapilaravel/app/Services/WebAuthnService.py:629:5: error: Argument
+2 to "_calculate_credential_risk_score" becomes "Any" due to an unfollowed
+import  [no-any-unimported]
+        def _calculate_credential_risk_score(self, credential: WebAuthnCre...
+        ^
+/home/r2k/fastapilaravel/app/Services/TOTPService.py:46:33: error: Module has
+no attribute "constants"  [attr-defined]
+            self.qr_error_correct = qrcode.constants.ERROR_CORRECT_M
+                                    ^~~~~~~~~~~~~~~~
+/home/r2k/fastapilaravel/app/Services/TOTPService.py:111:19: error: Unexpected
+keyword argument "image_factory" for "make_image" of "QRCode"  [call-arg]
+                img = qr.make_image(
+                      ^
+/home/r2k/fastapilaravel/app/Services/TOTPService.py:111:19: error: Unexpected
+keyword argument "module_drawer" for "make_image" of "QRCode"  [call-arg]
+                img = qr.make_image(
+                      ^
+/home/r2k/fastapilaravel/app/Services/TOTPService.py:111:19: error: Unexpected
+keyword argument "color_mask" for "make_image" of "QRCode"  [call-arg]
+                img = qr.make_image(
+                      ^
+/home/r2k/fastapilaravel/app/Services/TOTPService.py:114:28: error: Unexpected
+keyword argument "back_color" for "SquareGradiantColorMask"  [call-arg]
+                    color_mask=SquareGradiantColorMask(
+                               ^
+/home/r2k/fastapilaravel/app/Services/TOTPService.py:114:28: error: Unexpected
+keyword argument "center_color" for "SquareGradiantColorMask"  [call-arg]
+                    color_mask=SquareGradiantColorMask(
+                               ^
+/home/r2k/fastapilaravel/app/Services/TOTPService.py:114:28: error: Unexpected
+keyword argument "edge_color" for "SquareGradiantColorMask"  [call-arg]
+                    color_mask=SquareGradiantColorMask(
+                               ^
+/home/r2k/fastapilaravel/app/Services/TOTPService.py:122:19: error: Unexpected
+keyword argument "image_factory" for "make_image" of "QRCode"  [call-arg]
+                img = qr.make_image(image_factory=qrcode.image.svg.SvgPath...
+                      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/TOTPService.py:131:23: error: "Image" has
+no attribute "to_string"  [attr-defined]
+                img_str = img.to_string(encoding='unicode')
+                          ^~~~~~~~~~~~~
+/home/r2k/fastapilaravel/app/Services/TOTPService.py:134:13: error: "Image" has
+no attribute "save"  [attr-defined]
+                img.save(img_buffer, format='PNG')
+                ^~~~~~~~
+/home/r2k/fastapilaravel/app/Services/TOTPService.py:149:30: error: Module has
+no attribute "constants"  [attr-defined]
+                error_correction=qrcode.constants.ERROR_CORRECT_H,
+                                 ^~~~~~~~~~~~~~~~
+/home/r2k/fastapilaravel/app/Services/TOTPService.py:158:18: error: "Image" has
+no attribute "convert"  [attr-defined]
+            qr_img = qr.make_image(fill_color="black", back_color="white")...
+                     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/TOTPService.py:211:12: error: Unexpected
+keyword argument "window" for "verify" of "TOTP"  [call-arg]
+            if totp.verify(token, window=0):
+               ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/r2k/fastapilaravel/app/Services/TOTPService.py:217:16: error: Unexpected
+keyword argument "window" for "verify" of "TOTP"  [call-arg]
+                if totp.verify(token, window=0, for_time=datetime.utcnow()...
+                   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/TOTPService.py:217:16: error: Unexpected
+keyword argument "for_time" for "verify" of "TOTP"  [call-arg]
+                if totp.verify(token, window=0, for_time=datetime.utcnow()...
+                   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/TOTPService.py:221:16: error: Unexpected
+keyword argument "window" for "verify" of "TOTP"  [call-arg]
+                if totp.verify(token, window=0, for_time=datetime.utcnow()...
+                   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/TOTPService.py:221:16: error: Unexpected
+keyword argument "for_time" for "verify" of "TOTP"  [call-arg]
+                if totp.verify(token, window=0, for_time=datetime.utcnow()...
+                   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/TOTPService.py:262: error: Unused
+"type: ignore" comment  [unused-ignore]
+                if user.mfa_settings and user.mfa_settings.totp_enabled:  ...
+                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/TOTPService.py:274: error: Unused
+"type: ignore" comment  [unused-ignore]
+                if not user.mfa_settings:  # type: ignore[attr-defined]
+                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/r2k/fastapilaravel/app/Services/TOTPService.py:282: error: Unused
+"type: ignore" comment  [unused-ignore]
+                    user.mfa_settings.totp_secret = secret  # type: ignore...
+                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/TOTPService.py:283: error: Unused
+"type: ignore" comment  [unused-ignore]
+                    user.mfa_settings.totp_backup_tokens = ",".join(backup...
+                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/TOTPService.py:329: error: Unused
+"type: ignore" comment  [unused-ignore]
+                if not user.mfa_settings or not user.mfa_settings.totp_sec...
+                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/TOTPService.py:334: error: Unused
+"type: ignore" comment  [unused-ignore]
+                    user.mfa_settings.totp_secret, token  # type: ignore[a...
+                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/TOTPService.py:355: error: Unused
+"type: ignore" comment  [unused-ignore]
+                user.mfa_settings.totp_enabled = True  # type: ignore[attr...
+                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/TOTPService.py:378: error: Unused
+"type: ignore" comment  [unused-ignore]
+                    "backup_codes_count": len(user.mfa_settings.totp_backu...
+                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/TOTPService.py:406: error: Unused
+"type: ignore" comment  [unused-ignore]
+                if not user.mfa_settings or not user.mfa_settings.totp_ena...
+                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/TOTPService.py:409: error: Unused
+"type: ignore" comment  [unused-ignore]
+                if not user.mfa_settings.totp_secret:  # type: ignore[attr...
+                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/TOTPService.py:426: error: Unused
+"type: ignore" comment  [unused-ignore]
+                    user.mfa_settings.last_used_at = datetime.utcnow()  # ...
+                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/TOTPService.py:433: error: Unused
+"type: ignore" comment  [unused-ignore]
+                    user.mfa_settings.totp_secret, token  # type: ignore[a...
+                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/TOTPService.py:450: error: Unused
+"type: ignore" comment  [unused-ignore]
+                    user.mfa_settings.last_used_at = datetime.utcnow()  # ...
+                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/TOTPService.py:484: error: Unused
+"type: ignore" comment  [unused-ignore]
+                if not user.mfa_settings or not user.mfa_settings.totp_ena...
+                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/TOTPService.py:488: error: Unused
+"type: ignore" comment  [unused-ignore]
+                verified, _ = self.verify_token(user.mfa_settings.totp_sec...
+                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/TOTPService.py:489: error: Unused
+"type: ignore" comment  [unused-ignore]
+                if not user.mfa_settings.totp_secret or not verified:  # t...
+                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/TOTPService.py:493: error: Unused
+"type: ignore" comment  [unused-ignore]
+                user.mfa_settings.totp_enabled = False  # type: ignore[att...
+                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/TOTPService.py:494: error: Unused
+"type: ignore" comment  [unused-ignore]
+                user.mfa_settings.totp_secret = None  # type: ignore[attr-...
+                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/TOTPService.py:495: error: Unused
+"type: ignore" comment  [unused-ignore]
+                user.mfa_settings.totp_backup_tokens = None  # type: ignor...
+                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/TOTPService.py:508: error: Unused
+"type: ignore" comment  [unused-ignore]
+                if not user.mfa_settings or not user.mfa_settings.totp_ena...
+                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/TOTPService.py:512: error: Unused
+"type: ignore" comment  [unused-ignore]
+                verified, _ = self.verify_token(user.mfa_settings.totp_sec...
+                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/TOTPService.py:513: error: Unused
+"type: ignore" comment  [unused-ignore]
+                if not user.mfa_settings.totp_secret or not verified:  # t...
+                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/TOTPService.py:518: error: Unused
+"type: ignore" comment  [unused-ignore]
+                user.mfa_settings.totp_backup_tokens = ",".join(backup_cod...
+                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/TOTPService.py:531: error: Unused
+"type: ignore" comment  [unused-ignore]
+            if not user.mfa_settings or not user.mfa_settings.totp_backup_...
+            ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/TOTPService.py:534: error: Unused
+"type: ignore" comment  [unused-ignore]
+            backup_codes = user.mfa_settings.totp_backup_tokens.split(",")...
+            ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/TOTPService.py:543: error: Unused
+"type: ignore" comment  [unused-ignore]
+                    user.mfa_settings.totp_backup_tokens = ",".join(backup...
+                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/TOTPService.py:558: error: Unused
+"type: ignore" comment  [unused-ignore]
+            if not user.mfa_settings:  # type: ignore[attr-defined]
+            ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/r2k/fastapilaravel/app/Services/TOTPService.py:567: error: Unused
+"type: ignore" comment  [unused-ignore]
+            if user.mfa_settings.totp_backup_tokens:  # type: ignore[attr-...
+            ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/TOTPService.py:568: error: Unused
+"type: ignore" comment  [unused-ignore]
+                backup_codes_count = len(user.mfa_settings.totp_backup_tok...
+                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/TOTPService.py:571: error: Unused
+"type: ignore" comment  [unused-ignore]
+                "enabled": user.mfa_settings.totp_enabled,  # type: ignore...
+                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/TOTPService.py:572: error: Unused
+"type: ignore" comment  [unused-ignore]
+                "setup_required": not user.mfa_settings.totp_enabled,  # t...
+                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/TOTPService.py:575: error: Unused
+"type: ignore" comment  [unused-ignore]
+                "last_used": user.mfa_settings.last_used_at,  # type: igno...
+                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/SMSService.py:30:5: error: Cannot assign
+to a type  [misc]
+        TwilioClient = None
+        ^
+/home/r2k/fastapilaravel/app/Services/SMSService.py:30:20: error: Incompatible
+types in assignment (expression has type "None", variable has type
+"type[Client]")  [assignment]
+        TwilioClient = None
+                       ^~~~
+/home/r2k/fastapilaravel/app/Services/SMSService.py:31:5: error: Cannot assign
+to a type  [misc]
+        TwilioRestException = Exception
+        ^
+/home/r2k/fastapilaravel/app/Services/SMSService.py:31:27: error: Incompatible
+types in assignment (expression has type "type[Exception]", variable has type
+"type[TwilioRestException]")  [assignment]
+        TwilioRestException = Exception
+                              ^~~~~~~~~
+/home/r2k/fastapilaravel/app/Services/SMSService.py:154: error: Unused
+"type: ignore" comment  [unused-ignore]
+                if not user.mfa_settings:  # type: ignore[attr-defined]
+                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/r2k/fastapilaravel/app/Services/SMSService.py:162: error: Unused
+"type: ignore" comment  [unused-ignore]
+                    user.mfa_settings.sms_enabled = True  # type: ignore[a...
+                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/SMSService.py:163: error: Unused
+"type: ignore" comment  [unused-ignore]
+                    user.mfa_settings.sms_phone_number = normalized_phone ...
+                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/SMSService.py:193: error: Unused
+"type: ignore" comment  [unused-ignore]
+                if not user.mfa_settings or not user.mfa_settings.sms_enab...
+                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/SMSService.py:196: error: Unused
+"type: ignore" comment  [unused-ignore]
+                if not user.mfa_settings.sms_phone_number:  # type: ignore...
+                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/SMSService.py:208: error: Unused
+"type: ignore" comment  [unused-ignore]
+                    user, user.mfa_settings.sms_phone_number, ip_address, ...
+                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/SMSService.py:215: error: Unused
+"type: ignore" comment  [unused-ignore]
+                    user.mfa_settings.sms_phone_number, code, "MFA Verific...
+                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/SMSService.py:221: error: Unused
+"type: ignore" comment  [unused-ignore]
+                masked_phone = self._mask_phone_number(user.mfa_settings.s...
+                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/SMSService.py:254: error: Unused
+"type: ignore" comment  [unused-ignore]
+                    if user.mfa_settings:  # type: ignore[attr-defined]
+                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/r2k/fastapilaravel/app/Services/SMSService.py:255: error: Unused
+"type: ignore" comment  [unused-ignore]
+                        user.mfa_settings.last_used_at = datetime.utcnow()...
+                        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/SMSService.py:291: error: Unused
+"type: ignore" comment  [unused-ignore]
+                if not user.mfa_settings:  # type: ignore[attr-defined]
+                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/r2k/fastapilaravel/app/Services/SMSService.py:301: error: Unused
+"type: ignore" comment  [unused-ignore]
+                old_phone = user.mfa_settings.sms_phone_number  # type: ig...
+                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/SMSService.py:304: error: Unused
+"type: ignore" comment  [unused-ignore]
+                user.mfa_settings.sms_enabled = False  # type: ignore[attr...
+                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/SMSService.py:305: error: Unused
+"type: ignore" comment  [unused-ignore]
+                user.mfa_settings.sms_phone_number = None  # type: ignore[...
+                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/SMSService.py:461: error: Unused
+"type: ignore" comment  [unused-ignore]
+            if not user.mfa_settings:  # type: ignore[attr-defined]
+            ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/r2k/fastapilaravel/app/Services/SMSService.py:477: error: Unused
+"type: ignore" comment  [unused-ignore]
+                "enabled": user.mfa_settings.sms_enabled,  # type: ignore[...
+                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/SMSService.py:478: error: Unused
+"type: ignore" comment  [unused-ignore]
+                "phone_number": self._mask_phone_number(user.mfa_settings....
+                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/SMSService.py:479: error: Unused
+"type: ignore" comment  [unused-ignore]
+                "setup_required": not user.mfa_settings.sms_enabled,  # ty...
+                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/SMSService.py:482: error: Unused
+"type: ignore" comment  [unused-ignore]
+                "last_used": user.mfa_settings.last_used_at  # type: ignor...
+                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/OrganizationalDirectoryService.py:72:17: error:
+Argument 1 to "filter" of "Query" has incompatible type "or_"; expected
+"ColumnElement[bool] | _HasClauseElement[bool] | SQLCoreOperations[bool] | ExpressionElementRole[bool] | TypedColumnsClauseRole[bool] | Callable[[], ColumnElement[bool]] | LambdaElement"
+ [arg-type]
+                    or_(
+                    ^
+/home/r2k/fastapilaravel/app/Services/OrganizationalDirectoryService.py:112: error:
+Unused "type: ignore" comment  [unused-ignore]
+                            (ujp.employment_type for ujp in employee.user_...
+                            ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/OrganizationalDirectoryService.py:116: error:
+Unused "type: ignore" comment  [unused-ignore]
+                            (ujp.work_arrangement for ujp in employee.user...
+                            ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/OrganizationalDirectoryService.py:167: error:
+Unused "type: ignore" comment  [unused-ignore]
+                     if ujp.job_position_id == primary_position.id and ujp...
+                     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/OrganizationalDirectoryService.py:173: error:
+Unused "type: ignore" comment  [unused-ignore]
+                        "position": primary_position.to_dict_detailed(),  ...
+                        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/OrganizationalDirectoryService.py:174: error:
+Unused "type: ignore" comment  [unused-ignore]
+                        "assignment": current_assignment.to_dict_detailed(...
+                        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/OrganizationalDirectoryService.py:176: error:
+Unused "type: ignore" comment  [unused-ignore]
+                            "days": current_assignment.get_tenure_days(), ...
+                            ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/OrganizationalDirectoryService.py:177: error:
+Unused "type: ignore" comment  [unused-ignore]
+                            "months": current_assignment.get_tenure_months...
+                            ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/OrganizationalDirectoryService.py:178: error:
+Unused "type: ignore" comment  [unused-ignore]
+                            "years": current_assignment.get_tenure_years()...
+                            ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/OrganizationalDirectoryService.py:233: error:
+Unused "type: ignore" comment  [unused-ignore]
+                "organization": organization.to_dict_with_hierarchy(),  # ...
+                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/OrganizationalDirectoryService.py:252: error:
+Unused "type: ignore" comment  [unused-ignore]
+                            "department": primary_dept.to_dict_with_hierar...
+                            ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/OrganizationalDirectoryService.py:260: error:
+Unused "type: ignore" comment  [unused-ignore]
+                                "position": primary_position.to_dict_detai...
+                                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/OrganizationalDirectoryService.py:313: error:
+Unused "type: ignore" comment  [unused-ignore]
+                "department": department.to_dict_with_hierarchy(),  # type...
+                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/OrganizationalDirectoryService.py:330: error:
+Unused "type: ignore" comment  [unused-ignore]
+                            "position": primary_position.to_dict_detailed(...
+                            ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/OrganizationalDirectoryService.py:341: error:
+Unused "type: ignore" comment  [unused-ignore]
+                                 if ujp.job_position_id == primary_positio...
+                                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/OrganizationalDirectoryService.py:359: error:
+Unused "type: ignore" comment  [unused-ignore]
+                        "employee_count": len(subdept.get_all_users())  # ...
+                        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/OrganizationalDirectoryService.py:400: error:
+Unused "type: ignore" comment  [unused-ignore]
+                    "position": report_position.to_dict_detailed(),  # typ...
+                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/OrganizationalDirectoryService.py:412: error:
+Unused "type: ignore" comment  [unused-ignore]
+                "position": position.to_dict_detailed(),  # type: ignore
+                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/r2k/fastapilaravel/app/Services/OrganizationalDirectoryService.py:420: error:
+Unused "type: ignore" comment  [unused-ignore]
+                             if ujp.job_position_id == position_id and ujp...
+                             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/OrganizationalDirectoryService.py:441:9: error:
+Need type annotation for "reporting_tree" (hint:
+"reporting_tree: Dict[<type>, <type>] = ...")  [var-annotated]
+            reporting_tree = {}
+            ^~~~~~~~~~~~~~
+/home/r2k/fastapilaravel/app/Services/OrganizationalDirectoryService.py:457: error:
+Unused "type: ignore" comment  [unused-ignore]
+                        "position": child.to_dict_detailed(),  # type: ign...
+                        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/r2k/fastapilaravel/app/Services/OrganizationalDirectoryService.py:462:50: error:
+Argument 1 to "build_tree" has incompatible type "str"; expected "int | None" 
+[arg-type]
+                        "direct_reports": build_tree(child.id)
+                                                     ^~~~~~~~
+/home/r2k/fastapilaravel/app/Services/OrganizationalDirectoryService.py:500: error:
+Unused "type: ignore" comment  [unused-ignore]
+                        "position": manager_position.to_dict_detailed(),  ...
+                        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/OrganizationalDirectoryService.py:523: error:
+Unused "type: ignore" comment  [unused-ignore]
+                        "position": report_pos.to_dict_detailed(),  # type...
+                        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/OrganizationalDirectoryService.py:553: error:
+Unused "type: ignore" comment  [unused-ignore]
+                "position_history": [jh.to_dict_detailed() for jh in job_h...
+                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/OrganizationalDirectoryService.py:554: error:
+Unused "type: ignore" comment  [unused-ignore]
+                "department_history": [dh.to_dict_detailed() for dh in dep...
+                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/OrganizationalChartService.py:53:17: error:
+List comprehension has incompatible type List[dict[str, Any]]; expected
+List[str]  [misc]
+                    self._build_department_node(dept) for dept in departme...
+                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/r2k/fastapilaravel/app/Services/OrganizationalChartService.py:55:13: error:
+Unsupported target for indexed assignment ("Collection[str]")  [index]
+                chart_data["metadata"]["total_departments"] = len(departme...
+                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/r2k/fastapilaravel/app/Services/OrganizationalChartService.py:56:13: error:
+Unsupported target for indexed assignment ("Collection[str]")  [index]
+                chart_data["metadata"]["department_levels"] = max(
+                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/r2k/fastapilaravel/app/Services/OrganizationalChartService.py:63:17: error:
+List comprehension has incompatible type List[dict[str, Any]]; expected
+List[str]  [misc]
+                    self._build_position_node(pos) for pos in positions
+                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/r2k/fastapilaravel/app/Services/OrganizationalChartService.py:65:13: error:
+Unsupported target for indexed assignment ("Collection[str]")  [index]
+                chart_data["metadata"]["total_positions"] = len(positions)
+                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/r2k/fastapilaravel/app/Services/OrganizationalChartService.py:70:17: error:
+List comprehension has incompatible type List[dict[str, Any]]; expected
+List[str]  [misc]
+                    self._build_user_node(user) for user in users
+                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/r2k/fastapilaravel/app/Services/OrganizationalChartService.py:72:13: error:
+Unsupported target for indexed assignment ("Collection[str]")  [index]
+                chart_data["metadata"]["total_employees"] = len(users)
+                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/r2k/fastapilaravel/app/Services/OrganizationalChartService.py:75:39: error:
+Incompatible types in assignment (expression has type "list[dict[str, Any]]",
+target has type "Collection[str]")  [assignment]
+            chart_data["relationships"] = self._build_relationships(
+                                          ^
+/home/r2k/fastapilaravel/app/Services/OrganizationalChartService.py:118:28: error:
+"User" has no attribute "get_primary_job_position"  [attr-defined]
+            primary_position = user.get_primary_job_position()
+                               ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/r2k/fastapilaravel/app/Services/OrganizationalChartService.py:190:9: error:
+Need type annotation for "levels" (hint: "levels: Dict[<type>, <type>] = ...") 
+[var-annotated]
+            levels = {}
+            ^~~~~~
+/home/r2k/fastapilaravel/app/Services/OrganizationalChartService.py:194:13: error:
+Argument 1 to "filter" of "Query" has incompatible type "or_"; expected
+"ColumnElement[bool] | _HasClauseElement[bool] | SQLCoreOperations[bool] | ExpressionElementRole[bool] | TypedColumnsClauseRole[bool] | Callable[[], ColumnElement[bool]] | LambdaElement"
+ [arg-type]
+                or_(
+                ^
+/home/r2k/fastapilaravel/app/Services/OrganizationalChartService.py:252:28: error:
+"User" has no attribute "get_primary_job_position"  [attr-defined]
+            primary_position = user.get_primary_job_position()
+                               ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/r2k/fastapilaravel/app/Services/OrganizationalChartService.py:261:38: error:
+"User" has no attribute "get_current_job_title"  [attr-defined]
+                    "current_job_title": user.get_current_job_title(),
+                                         ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/r2k/fastapilaravel/app/Services/OrganizationalChartService.py:304:21: error:
+Argument 1 to "_get_department_children_recursive" of
+"OrganizationalChartService" has incompatible type "str"; expected "int" 
+[arg-type]
+                        child.id, include_positions, include_users
+                        ^~~~~~~~
+/home/r2k/fastapilaravel/app/Services/OrganizationalChartService.py:329:18: error:
+Missing type parameters for generic type "set"  [type-arg]
+            visited: set
+                     ^
+/home/r2k/fastapilaravel/app/Services/OrganizationalChartService.py:421:36: error:
+"User" has no attribute "get_primary_job_position"  [attr-defined]
+                    primary_position = user.get_primary_job_position()
+                                       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/r2k/fastapilaravel/app/Services/OAuth2ScopesService.py:264:13: error:
+Argument 1 to "filter" of "Query" has incompatible type "or_"; expected
+"ColumnElement[bool] | _HasClauseElement[bool] | SQLCoreOperations[bool] | ExpressionElementRole[bool] | TypedColumnsClauseRole[bool] | Callable[[], ColumnElement[bool]] | LambdaElement"
+ [arg-type]
+                or_(
+                ^
+/home/r2k/fastapilaravel/app/Services/MFAPolicyService.py:123: error: Unused
+"type: ignore" comment  [unused-ignore]
+                user_permissions = user.get_permission_names()  # type: ig...
+                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/MFAAnalyticsService.py:61:17: error:
+Argument 1 to "filter" of "Query" has incompatible type "or_"; expected
+"ColumnElement[bool] | _HasClauseElement[bool] | SQLCoreOperations[bool] | ExpressionElementRole[bool] | TypedColumnsClauseRole[bool] | Callable[[], ColumnElement[bool]] | LambdaElement"
+ [arg-type]
+                    or_(
+                    ^
+/home/r2k/fastapilaravel/app/Services/MFAAnalyticsService.py:76:55: error:
+"type[User]" has no attribute "webauthn_credentials"  [attr-defined]
+    ...       webauthn_creds = self.db.query(User).join(User.webauthn_credent...
+                                                        ^~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Services/MFAAnalyticsService.py:148:17: error:
+Argument 1 to "filter" of "Query" has incompatible type "or_"; expected
+"ColumnElement[bool] | _HasClauseElement[bool] | SQLCoreOperations[bool] | ExpressionElementRole[bool] | TypedColumnsClauseRole[bool] | Callable[[], ColumnElement[bool]] | LambdaElement"
+ [arg-type]
+                    or_(
+                    ^
+/home/r2k/fastapilaravel/app/Policies/Policy.py:203:43: error: Missing type
+parameters for generic type "Callable"  [type-arg]
+        def _call_policy_method(self, method: Callable, user: Any, *args: ...
+                                              ^
+/home/r2k/fastapilaravel/app/Policies/Policy.py:222:61: error: Missing type
+parameters for generic type "tuple"  [type-arg]
+    ...def _get_cache_key(self, user: Any, ability: str, args: tuple) -> str:
+                                                               ^
+/home/r2k/fastapilaravel/app/Policies/Policy.py:248:9: error: Returning Any
+from function declared to return "bool | None"  [no-any-return]
+            return cached['result']
+            ^~~~~~~~~~~~~~~~~~~~~~~
+/home/r2k/fastapilaravel/app/Policies/Policy.py:289:13: error: Dict entry 1 has
+incompatible type "str": "list[dict[str, object]]"; expected "str":
+"dict[str, Any]"  [dict-item]
+                'rules': [
+                ^
+/home/r2k/fastapilaravel/app/Policies/Policy.py:297:13: error: Dict entry 2 has
+incompatible type "str": "int"; expected "str": "dict[str, Any]"  [dict-item]
+                'cache_size': len(self._cached_results)
+                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/r2k/fastapilaravel/app/Policies/Policy.py:326:13: error:
+"Callable[..., bool]" has no attribute "_policy_rules"  [attr-defined]
+                func._policy_rules = []
+                ^~~~~~~~~~~~~~~~~~
+/home/r2k/fastapilaravel/app/Policies/Policy.py:327:9: error:
+"Callable[..., bool]" has no attribute "_policy_rules"  [attr-defined]
+            func._policy_rules.append(rule)
+            ^~~~~~~~~~~~~~~~~~
+/home/r2k/fastapilaravel/app/Models/EmployeeTransfer.py:25:46: error: Argument
+1 to "mapped_column" has incompatible type "ForeignKey"; expected
+"str | type[TypeEngine[Any]] | TypeEngine[Any] | SchemaEventTarget | None" 
+[arg-type]
+        employee_id: Mapped[int] = mapped_column(ForeignKey("users.id"), n...
+                                                 ^~~~~~~~~~~~~~~~~~~~~~
+/home/r2k/fastapilaravel/app/Models/EmployeeTransfer.py:32:67: error: Argument
+1 to "mapped_column" has incompatible type "ForeignKey"; expected
+"str | type[TypeEngine[Any]] | TypeEngine[Any] | SchemaEventTarget | None" 
+[arg-type]
+    ...zation_id: Mapped[Optional[int]] = mapped_column(ForeignKey("organizat...
+                                                        ^~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Models/EmployeeTransfer.py:33:65: error: Argument
+1 to "mapped_column" has incompatible type "ForeignKey"; expected
+"str | type[TypeEngine[Any]] | TypeEngine[Any] | SchemaEventTarget | None" 
+[arg-type]
+    ...rtment_id: Mapped[Optional[int]] = mapped_column(ForeignKey("departmen...
+                                                        ^~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Models/EmployeeTransfer.py:34:63: error: Argument
+1 to "mapped_column" has incompatible type "ForeignKey"; expected
+"str | type[TypeEngine[Any]] | TypeEngine[Any] | SchemaEventTarget | None" 
+[arg-type]
+    ...sition_id: Mapped[Optional[int]] = mapped_column(ForeignKey("job_posit...
+                                                        ^~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Models/EmployeeTransfer.py:36:64: error: Argument
+1 to "mapped_column" has incompatible type "ForeignKey"; expected
+"str | type[TypeEngine[Any]] | TypeEngine[Any] | SchemaEventTarget | None" 
+[arg-type]
+    ..._level_id: Mapped[Optional[int]] = mapped_column(ForeignKey("job_level...
+                                                        ^~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Models/EmployeeTransfer.py:39:67: error: Argument
+1 to "mapped_column" has incompatible type "ForeignKey"; expected
+"str | type[TypeEngine[Any]] | TypeEngine[Any] | SchemaEventTarget | None" 
+[arg-type]
+    ...zation_id: Mapped[Optional[int]] = mapped_column(ForeignKey("organizat...
+                                                        ^~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Models/EmployeeTransfer.py:40:65: error: Argument
+1 to "mapped_column" has incompatible type "ForeignKey"; expected
+"str | type[TypeEngine[Any]] | TypeEngine[Any] | SchemaEventTarget | None" 
+[arg-type]
+    ...rtment_id: Mapped[Optional[int]] = mapped_column(ForeignKey("departmen...
+                                                        ^~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Models/EmployeeTransfer.py:41:53: error: Argument
+1 to "mapped_column" has incompatible type "ForeignKey"; expected
+"str | type[TypeEngine[Any]] | TypeEngine[Any] | SchemaEventTarget | None" 
+[arg-type]
+    ... target_position_id: Mapped[int] = mapped_column(ForeignKey("job_posit...
+                                                        ^~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Models/EmployeeTransfer.py:43:64: error: Argument
+1 to "mapped_column" has incompatible type "ForeignKey"; expected
+"str | type[TypeEngine[Any]] | TypeEngine[Any] | SchemaEventTarget | None" 
+[arg-type]
+    ..._level_id: Mapped[Optional[int]] = mapped_column(ForeignKey("job_level...
+                                                        ^~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Models/EmployeeTransfer.py:48:50: error: Argument
+1 to "mapped_column" has incompatible type "ForeignKey"; expected
+"str | type[TypeEngine[Any]] | TypeEngine[Any] | SchemaEventTarget | None" 
+[arg-type]
+        requested_by_id: Mapped[int] = mapped_column(ForeignKey("users.id"...
+                                                     ^~~~~~~~~~~~~~~~~~~~~~
+/home/r2k/fastapilaravel/app/Models/EmployeeTransfer.py:52:59: error: Argument
+1 to "mapped_column" has incompatible type "ForeignKey"; expected
+"str | type[TypeEngine[Any]] | TypeEngine[Any] | SchemaEventTarget | None" 
+[arg-type]
+    ...ved_by_id: Mapped[Optional[int]] = mapped_column(ForeignKey("users.id"...
+                                                        ^~~~~~~~~~~~~~~~~~~~~~
+/home/r2k/fastapilaravel/app/Models/EmployeeTransfer.py:72:60: error: Argument
+1 to "mapped_column" has incompatible type "ForeignKey"; expected
+"str | type[TypeEngine[Any]] | TypeEngine[Any] | SchemaEventTarget | None" 
+[arg-type]
+    ...sed_by_id: Mapped[Optional[int]] = mapped_column(ForeignKey("users.id"...
+                                                        ^~~~~~~~~~~~~~~~~~~~~~
+/home/r2k/fastapilaravel/app/Console/Commands/SessionCommands.py:351:9: error:
+Unsupported target for indexed assignment ("object")  [index]
+            stats['by_storage']['file'] = file_stats['count']
+            ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/r2k/fastapilaravel/app/Console/Commands/NotificationCommands.py:243:51: error:
+Incompatible types in assignment (expression has type "str", target has type
+"datetime")  [assignment]
+                        params["notification_type"] = notification_type
+                                                      ^~~~~~~~~~~~~~~~~
+/home/r2k/fastapilaravel/app/Console/Commands/DatabaseCommands.py:65:18: error:
+"ProgressBar" has no attribute "__enter__"  [attr-defined]
+                with self.progress_bar("Creating database", 100) as progre...
+                     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/r2k/fastapilaravel/app/Console/Commands/DatabaseCommands.py:65:18: error:
+"ProgressBar" has no attribute "__exit__"  [attr-defined]
+                with self.progress_bar("Creating database", 100) as progre...
+                     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/r2k/fastapilaravel/app/Console/Commands/DatabaseCommands.py:65:36: error:
+Argument 1 to "progress_bar" of "Command" has incompatible type "str"; expected
+"int"  [arg-type]
+                with self.progress_bar("Creating database", 100) as progre...
+                                       ^~~~~~~~~~~~~~~~~~~
+/home/r2k/fastapilaravel/app/Console/Commands/DatabaseCommands.py:65:57: error:
+Argument 2 to "progress_bar" of "Command" has incompatible type "int"; expected
+"str"  [arg-type]
+    ...         with self.progress_bar("Creating database", 100) as progress:
+                                                            ^~~
+/home/r2k/fastapilaravel/app/Console/Commands/DatabaseCommands.py:145:13: error:
+Returning Any from function declared to return "list[str]"  [no-any-return]
+                return engine.table_names()
+                ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/r2k/fastapilaravel/app/Console/Commands/DatabaseCommands.py:358:18: error:
+"ProgressBar" has no attribute "__enter__"  [attr-defined]
+                with self.progress_bar("Creating backup", 100) as progress...
+                     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/r2k/fastapilaravel/app/Console/Commands/DatabaseCommands.py:358:18: error:
+"ProgressBar" has no attribute "__exit__"  [attr-defined]
+                with self.progress_bar("Creating backup", 100) as progress...
+                     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/r2k/fastapilaravel/app/Console/Commands/DatabaseCommands.py:358:36: error:
+Argument 1 to "progress_bar" of "Command" has incompatible type "str"; expected
+"int"  [arg-type]
+                with self.progress_bar("Creating backup", 100) as progress...
+                                       ^~~~~~~~~~~~~~~~~
+/home/r2k/fastapilaravel/app/Console/Commands/DatabaseCommands.py:358:55: error:
+Argument 2 to "progress_bar" of "Command" has incompatible type "int"; expected
+"str"  [arg-type]
+    ...           with self.progress_bar("Creating backup", 100) as progress:
+                                                            ^~~
+/home/r2k/fastapilaravel/app/Console/Commands/DatabaseCommands.py:452:22: error:
+"Engine" has no attribute "table_names"  [attr-defined]
+                tables = engine.table_names()
+                         ^~~~~~~~~~~~~~~~~~
+/home/r2k/fastapilaravel/app/Console/Commands/DatabaseCommands.py:457:26: error:
+No overload variant of "execute" of "Connection" matches argument type "str" 
+[call-overload]
+                    result = connection.execute("SELECT version()")
+                             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/r2k/fastapilaravel/app/Console/Commands/DatabaseCommands.py:457:26: note: Possible overload variants:
+/home/r2k/fastapilaravel/app/Console/Commands/DatabaseCommands.py:457:26: note:     def [_T] execute(self, statement: TypedReturnsRows[_T], parameters: Sequence[Mapping[str, Any]] | Mapping[str, Any] | None = ..., *, execution_options: _CoreKnownExecutionOptions | Mapping[str, Any] | None = ...) -> CursorResult[_T]
+/home/r2k/fastapilaravel/app/Console/Commands/DatabaseCommands.py:457:26: note:     def execute(self, statement: Executable, parameters: Sequence[Mapping[str, Any]] | Mapping[str, Any] | None = ..., *, execution_options: _CoreKnownExecutionOptions | Mapping[str, Any] | None = ...) -> CursorResult[Any]
+/home/r2k/fastapilaravel/app/Console/Commands/DatabaseCommands.py:499:26: error:
+"Engine" has no attribute "table_names"  [attr-defined]
+                    tables = engine.table_names()
+                             ^~~~~~~~~~~~~~~~~~
+/home/r2k/fastapilaravel/app/Console/Commands/DatabaseCommands.py:507:30: error:
+No overload variant of "execute" of "Connection" matches argument type "str" 
+[call-overload]
+                        result = connection.execute(f"SELECT sql FROM sqli...
+                                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Console/Commands/DatabaseCommands.py:507:30: note: Possible overload variants:
+/home/r2k/fastapilaravel/app/Console/Commands/DatabaseCommands.py:507:30: note:     def [_T] execute(self, statement: TypedReturnsRows[_T], parameters: Sequence[Mapping[str, Any]] | Mapping[str, Any] | None = ..., *, execution_options: _CoreKnownExecutionOptions | Mapping[str, Any] | None = ...) -> CursorResult[_T]
+/home/r2k/fastapilaravel/app/Console/Commands/DatabaseCommands.py:507:30: note:     def execute(self, statement: Executable, parameters: Sequence[Mapping[str, Any]] | Mapping[str, Any] | None = ..., *, execution_options: _CoreKnownExecutionOptions | Mapping[str, Any] | None = ...) -> CursorResult[Any]
+/home/r2k/fastapilaravel/app/Console/Commands/DatabaseCommands.py:514:34: error:
+No overload variant of "execute" of "Connection" matches argument type "str" 
+[call-overload]
+                            result = connection.execute(f"SELECT * FROM {t...
+                                     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+/home/r2k/fastapilaravel/app/Console/Commands/DatabaseCommands.py:514:34: note: Possible overload variants:
+/home/r2k/fastapilaravel/app/Console/Commands/DatabaseCommands.py:514:34: note:     def [_T] execute(self, statement: TypedReturnsRows[_T], parameters: Sequence[Mapping[str, Any]] | Mapping[str, Any] | None = ..., *, execution_options: _CoreKnownExecutionOptions | Mapping[str, Any] | None = ...) -> CursorResult[_T]
+/home/r2k/fastapilaravel/app/Console/Commands/DatabaseCommands.py:514:34: note:     def execute(self, statement: Executable, parameters: Sequence[Mapping[str, Any]] | Mapping[str, Any] | None = ..., *, execution_options: _CoreKnownExecutionOptions | Mapping[str, Any] | None = ...) -> CursorResult[Any]
+/home/r2k/fastapilaravel/app/Console/Commands/DatabaseCommands.py:1146:22: error:
+"Engine" has no attribute "table_names"  [attr-defined]
+                tables = engine.table_names()
+                         ^~~~~~~~~~~~~~~~~~
+/home/r2k/fastapilaravel/app/Console/Commands/DatabaseCommands.py:1221:13: error:
+Module "sqlalchemy" has no attribute "inspect"  [attr-defined]
+                from sqlalchemy import inspect
+                ^
+/home/r2k/fastapilaravel/migrate.py:23:1: error: Cannot find implementation or
+library stub for module named "database.migrations.MigrationFileManager" 
+[import-not-found]
+    from database.migrations.MigrationFileManager import MigrationFileMana...
+    ^
+/home/r2k/fastapilaravel/migrate.py:23:1: note: See https://mypy.readthedocs.io/en/stable/running_mypy.html#missing-imports
+/home/r2k/fastapilaravel/migrate.py:37:26: error: Call to untyped function
+"_create_database_engine" in typed context  [no-untyped-call]
+            self.db_engine = self._create_database_engine()
+                             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/r2k/fastapilaravel/migrate.py:56:5: error: Function is missing a return
+type annotation  [no-untyped-def]
+        def _create_database_engine(self):
+        ^
+/home/r2k/fastapilaravel/migrate.py:744:26: error: Name "MigrationTimestamp" is
+not defined  [name-defined]
+                migrations = MigrationTimestamp.get_migration_order()
+                             ^
+/home/r2k/fastapilaravel/migrate.py:747:24: error: Name "MigrationTimestamp" is
+not defined  [name-defined]
+                    if not MigrationTimestamp.has_timestamp(filename):
+                           ^
+/home/r2k/fastapilaravel/migrate.py:748:43: error: Name "MigrationTimestamp" is
+not defined  [name-defined]
+                        suggested_timestamp = MigrationTimestamp.get_next_...
+                                              ^
+/home/r2k/fastapilaravel/migrate.py:775:22: error: Name "MigrationTimestamp" is
+not defined  [name-defined]
+            migrations = MigrationTimestamp.get_migration_order()
+                         ^
+/home/r2k/fastapilaravel/migrate.py:777:29: error: Name "MigrationTimestamp" is
+not defined  [name-defined]
+                timestamp_str = MigrationTimestamp.extract_timestamp_from_...
+                                ^
+/home/r2k/fastapilaravel/migrate.py:779:54: error: Name "MigrationTimestamp" is
+not defined  [name-defined]
+    ...            print(f"  {i:2d}. [{timestamp_str}] {MigrationTimestamp.ex...
+                                                        ^
+/home/r2k/fastapilaravel/migrate.py:800:14: error: Name "asyncio" is not
+defined  [name-defined]
+        sys.exit(asyncio.run(main()))
+                 ^
+Found 191 errors in 18 files (checked 482 source files)
+
+
+💡 Fix the type issues above and run again.
+   For help with mypy errors, see: https://mypy.readthedocs.io/
+make: *** [Makefile:43: type-check] Error 1

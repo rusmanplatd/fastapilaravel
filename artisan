@@ -1,0 +1,411 @@
+#!/usr/bin/env python3
+"""
+Laravel-style Artisan CLI.
+
+This is the command line interface for the FastAPI Laravel application,
+similar to Laravel's artisan command.
+"""
+
+import sys
+import os
+import click
+from pathlib import Path
+
+# Add the project root to the Python path
+PROJECT_ROOT = Path(__file__).parent.absolute()
+sys.path.insert(0, str(PROJECT_ROOT))
+
+from app.Foundation.Application import create_application
+
+# Import make command group
+try:
+    from app.Console.Commands.make import make
+except ImportError:
+    make = None
+
+
+@click.group(invoke_without_command=True)
+@click.pass_context
+def cli(ctx):
+    """
+    FastAPI Laravel Artisan Console.
+    
+    Welcome to the FastAPI Laravel application console! This tool provides
+    a powerful set of commands to help you manage your application.
+    """
+    if ctx.invoked_subcommand is None:
+        click.echo("🚀 FastAPI Laravel Artisan Console")
+        click.echo("")
+        click.echo("Available commands:")
+        click.echo("  inspire        Display an inspiring quote")
+        click.echo("  make           Generate code (controllers, models, etc.)")
+        click.echo("  serve          Start the development server")
+        click.echo("  migrate        Run database migrations")
+        click.echo("  seed           Seed the database with sample data")
+        click.echo("  queue:work     Start processing queue jobs")
+        click.echo("  route:list     List all registered routes")
+        click.echo("  config:cache   Cache the configuration files")
+        click.echo("  config:clear   Clear the configuration cache")
+        click.echo("  key:generate   Generate a new application key")
+        click.echo("")
+        click.echo("Use 'artisan <command> --help' for more information about a command.")
+
+
+@cli.command()
+def inspire():
+    """Display an inspiring quote."""
+    import random
+    
+    quotes = [
+        "The way to get started is to quit talking and begin doing. - Walt Disney",
+        "The pessimist sees difficulty in every opportunity. The optimist sees opportunity in every difficulty. - Winston Churchill",
+        "Don't let yesterday take up too much of today. - Will Rogers",
+        "You learn more from failure than from success. Don't let it stop you. Failure builds character. - Unknown",
+        "It's not whether you get knocked down, it's whether you get up. - Vince Lombardi",
+        "Code is like humor. When you have to explain it, it's bad. - Cory House",
+        "First, solve the problem. Then, write the code. - John Johnson",
+        "Experience is the name everyone gives to their mistakes. - Oscar Wilde",
+    ]
+    
+    quote = random.choice(quotes)
+    click.echo("")
+    click.echo("💡 " + quote)
+    click.echo("")
+
+
+# Add make command group if available
+if make is not None:
+    cli.add_command(make)
+
+
+@cli.command()
+@click.option('--host', default='0.0.0.0', help='Host to bind to')
+@click.option('--port', default=8000, help='Port to bind to')
+@click.option('--reload', is_flag=True, help='Enable auto-reload')
+@click.option('--debug', is_flag=True, help='Enable debug mode')
+def serve(host, port, reload, debug):
+    """Start the development server."""
+    click.echo(f"🚀 Starting FastAPI Laravel development server...")
+    click.echo(f"📍 Server will be available at: http://{host}:{port}")
+    click.echo(f"📖 API documentation at: http://{host}:{port}/docs")
+    click.echo("")
+    
+    import uvicorn
+    
+    # Set environment variables if debug is enabled
+    if debug:
+        os.environ['APP_DEBUG'] = 'true'
+        os.environ['APP_ENV'] = 'local'
+    
+    try:
+        uvicorn.run(
+            "main:app",
+            host=host,
+            port=port,
+            reload=reload or debug,
+            log_level="debug" if debug else "info"
+        )
+    except KeyboardInterrupt:
+        click.echo("\n🛑 Server stopped.")
+
+
+@cli.command()
+@click.option('--fresh', is_flag=True, help='Drop all tables and re-run all migrations')
+@click.option('--seed', is_flag=True, help='Seed the database after running migrations')
+def migrate(fresh, seed):
+    """Run database migrations."""
+    click.echo("🗄️  Running database migrations...")
+    
+    if fresh:
+        click.echo("⚠️  Dropping all tables...")
+        try:
+            from database.migrations.MigrationRunner import MigrationRunner
+            runner = MigrationRunner()
+            runner.drop_all_tables()
+            click.echo("✅ All tables dropped.")
+        except Exception as e:
+            click.echo(f"❌ Error dropping tables: {str(e)}")
+    
+    try:
+        from database.migrations.MigrationRunner import MigrationRunner
+        runner = MigrationRunner()
+        runner.run_migrations()
+        click.echo("✅ Migrations completed successfully.")
+    except Exception as e:
+        click.echo(f"❌ Migration error: {str(e)}")
+    
+    if seed:
+        click.echo("🌱 Seeding database...")
+        try:
+            from database.seeders.DatabaseSeeder import DatabaseSeeder
+            seeder = DatabaseSeeder()
+            seeder.run()
+            click.echo("✅ Database seeding completed.")
+        except Exception as e:
+            click.echo(f"❌ Seeding error: {str(e)}")
+
+
+@cli.command()
+@click.option('--class', 'seeder_class', help='Specific seeder class to run')
+def seed(seeder_class):
+    """Seed the database with sample data."""
+    try:
+        if seeder_class:
+            click.echo(f"🌱 Running seeder: {seeder_class}")
+            # Import and run specific seeder
+            from importlib import import_module
+            seeder_module = import_module(f"database.seeders.{seeder_class}")
+            seeder = getattr(seeder_module, seeder_class)()
+            seeder.run()
+        else:
+            click.echo("🌱 Seeding database with sample data...")
+            from database.seeders.DatabaseSeeder import DatabaseSeeder
+            seeder = DatabaseSeeder()
+            seeder.run()
+        
+        click.echo("✅ Database seeding completed.")
+    except Exception as e:
+        click.echo(f"❌ Seeding error: {str(e)}")
+
+
+@cli.group(name='queue')
+def queue():
+    """Queue management commands."""
+    pass
+
+
+@queue.command()
+@click.option('--queue', default='default', help='Queue name to process')
+@click.option('--timeout', default=60, help='Worker timeout in seconds')
+@click.option('--sleep', default=3, help='Sleep time between jobs in seconds')
+@click.option('--tries', default=3, help='Number of attempts for failed jobs')
+def work(queue, timeout, sleep, tries):
+    """Start processing queue jobs."""
+    click.echo(f"🔄 Starting queue worker for '{queue}' queue...")
+    click.echo(f"⏱️  Timeout: {timeout}s, Sleep: {sleep}s, Max tries: {tries}")
+    click.echo("Press Ctrl+C to stop the worker.")
+    
+    try:
+        from app.Queue.Worker.QueueWorker import QueueWorker
+        worker = QueueWorker(
+            queue_name=queue,
+            timeout=timeout,
+            sleep_duration=sleep,
+            max_tries=tries
+        )
+        worker.start()
+    except KeyboardInterrupt:
+        click.echo("\n👋 Queue worker stopped.")
+    except Exception as e:
+        click.echo(f"❌ Queue worker error: {str(e)}")
+    try:
+        import time
+        while True:
+            click.echo("Processing jobs...")
+            time.sleep(sleep)
+    except KeyboardInterrupt:
+        click.echo("\n🛑 Queue worker stopped.")
+
+
+@queue.command()
+def stats():
+    """Display queue statistics."""
+    click.echo("📊 Queue Statistics:")
+    click.echo("   Pending jobs: 0")
+    click.echo("   Failed jobs: 0")
+    click.echo("   Processed jobs: 0")
+
+
+@cli.group(name='route')
+def route():
+    """Route management commands."""
+    pass
+
+
+@route.command(name='list')
+@click.option('--method', help='Filter by HTTP method')
+@click.option('--name', help='Filter by route name')
+def list_routes(method, name):
+    """List all registered routes."""
+    click.echo("📋 Registered Routes:")
+    click.echo("")
+    click.echo("Method | URI | Name | Action")
+    click.echo("-------|-----|------|--------")
+    
+    try:
+        from app.Foundation.Application import app
+        routes = app.resolve('router').get_routes()
+        
+        for route in routes:
+            http_method = getattr(route, 'method', 'GET')
+            uri = getattr(route, 'path', '/')
+            route_name = getattr(route, 'name', 'unnamed')
+            action = getattr(route, 'endpoint', 'unknown')
+            
+            # Apply filters
+            if method and http_method.upper() != method.upper():
+                continue
+            if name and route_name != name:
+                continue
+                
+            click.echo(f"{http_method:<6} | {uri:<20} | {route_name:<20} | {action}")
+    except Exception as e:
+        click.echo(f"❌ Error listing routes: {str(e)}")
+        # Fallback to sample routes
+        sample_routes = [
+            ("GET", "/", "home", "HomeController@index"),
+            ("GET", "/about", "about", "HomeController@about"),
+            ("GET", "/api/v1/users", "api.users.index", "UserController@index"),
+            ("POST", "/api/v1/users", "api.users.store", "UserController@store"),
+        ]
+        
+        for http_method, uri, route_name, action in sample_routes:
+        if method and http_method.lower() != method.lower():
+            continue
+        if name and name not in route_name:
+            continue
+        click.echo(f"{http_method:<6} | {uri:<15} | {route_name:<20} | {action}")
+
+
+@cli.group(name='config')
+def config():
+    """Configuration management commands."""
+    pass
+
+
+@config.command()
+def cache():
+    """Cache the configuration files."""
+    click.echo("⚡ Caching configuration files...")
+    try:
+        from app.Config.ConfigManager import ConfigManager
+        config_manager = ConfigManager()
+        config_manager.cache_config()
+        click.echo("✅ Configuration cached successfully.")
+    except Exception as e:
+        click.echo(f"❌ Config caching error: {str(e)}")
+
+
+@config.command()
+def clear():
+    """Clear the configuration cache."""
+    click.echo("🧹 Clearing configuration cache...")
+    try:
+        from app.Config.ConfigManager import ConfigManager
+        config_manager = ConfigManager()
+        config_manager.clear_cache()
+        click.echo("✅ Configuration cache cleared.")
+    except Exception as e:
+        click.echo(f"❌ Config cache clearing error: {str(e)}")
+
+
+@cli.group(name='key')
+def key():
+    """Application key management commands."""
+    pass
+
+
+@key.command()
+@click.option('--show', is_flag=True, help='Display the key instead of modifying files')
+def generate(show):
+    """Generate a new application key."""
+    import secrets
+    import string
+    
+    # Generate a 32-character random key
+    alphabet = string.ascii_letters + string.digits
+    new_key = ''.join(secrets.choice(alphabet) for _ in range(32))
+    
+    if show:
+        click.echo(f"Application key: {new_key}")
+    else:
+        click.echo("🔑 Generating application key...")
+        
+        try:
+            import os
+            from pathlib import Path
+            
+            env_file = Path('.env')
+            if env_file.exists():
+                content = env_file.read_text()
+                if 'APP_KEY=' in content:
+                    # Replace existing key
+                    import re
+                    content = re.sub(r'APP_KEY=.*', f'APP_KEY={new_key}', content)
+                else:
+                    # Add new key
+                    content += f'\nAPP_KEY={new_key}\n'
+                
+                env_file.write_text(content)
+                click.echo(f"✅ Application key set to: {new_key}")
+            else:
+                click.echo(f"⚠️  .env file not found. Generated key: {new_key}")
+                click.echo("💡 Create a .env file and add APP_KEY={new_key}")
+        except Exception as e:
+            click.echo(f"❌ Error updating .env file: {str(e)}")
+            click.echo(f"💡 Generated key: {new_key}")
+
+
+@cli.command()
+def tinker():
+    """Start an interactive Python shell."""
+    click.echo("🐍 Starting FastAPI Laravel interactive shell...")
+    click.echo("Available objects: app, models")
+    
+    # Create application context
+    app = create_application()
+    
+    import code
+    
+    # Import all models dynamically
+    models = {}
+    try:
+        from app.Models import User, Role, Permission, OAuth2Client, OAuth2AccessToken
+        from app.Models import ChatRoom, Order, JobBatch, Job, Notification
+        models.update({
+            'User': User,
+            'Role': Role, 
+            'Permission': Permission,
+            'OAuth2Client': OAuth2Client,
+            'OAuth2AccessToken': OAuth2AccessToken,
+            'ChatRoom': ChatRoom,
+            'Order': Order,
+            'JobBatch': JobBatch,
+            'Job': Job,
+            'Notification': Notification
+        })
+    except ImportError as e:
+        click.echo(f"⚠️  Some models could not be imported: {e}")
+    
+    namespace = {
+        'app': app,
+        'models': models,
+    }
+    
+    code.interact(local=namespace)
+
+
+@cli.command()
+def about():
+    """Display basic information about the application."""
+    app = create_application()
+    
+    click.echo("🚀 FastAPI Laravel Application")
+    click.echo("=" * 40)
+    click.echo(f"Environment: {app.environment()}")
+    click.echo(f"Debug Mode: {app.is_debug()}")
+    click.echo(f"Version: {app.version()}")
+    click.echo(f"Base Path: {app.base_path()}")
+    click.echo(f"Locale: {app.locale()}")
+    click.echo(f"Timezone: {app.timezone()}")
+    click.echo("")
+    click.echo("📦 Framework Information:")
+    click.echo("   FastAPI with Laravel-style architecture")
+    click.echo("   OAuth2 authentication server")
+    click.echo("   Background queue processing")
+    click.echo("   Real-time broadcasting")
+    click.echo("   Comprehensive monitoring")
+
+
+if __name__ == '__main__':
+    cli()

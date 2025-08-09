@@ -1,0 +1,207 @@
+@extends('layouts.app')
+
+@section('title', 'User Profile - ' . user.name)
+
+@section('head')
+    <link href="{{ asset('css/profile.css') }}" rel="stylesheet">
+@endsection
+
+@section('content')
+<div class="container mx-auto px-4 py-8">
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <!-- Profile Header -->
+        <div class="bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-8 text-white">
+            <div class="flex items-center">
+                <div class="w-20 h-20 rounded-full bg-white bg-opacity-20 flex items-center justify-center text-2xl font-bold">
+                    {{ user.name[0] | upper }}
+                </div>
+                <div class="ml-6">
+                    <h1 class="text-3xl font-bold">{{ user.name }}</h1>
+                    <p class="text-blue-100">{{ user.email }}</p>
+                    @isset(user.title)
+                        <p class="text-blue-200 text-sm">{{ user.title }}</p>
+                    @endisset
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Content -->
+        <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- User Information -->
+                <div>
+                    <h2 class="text-xl font-semibold mb-4">Personal Information</h2>
+                    <dl class="space-y-2">
+                        <div class="flex">
+                            <dt class="font-medium text-gray-500 w-24">Name:</dt>
+                            <dd class="text-gray-900">{{ user.name }}</dd>
+                        </div>
+                        <div class="flex">
+                            <dt class="font-medium text-gray-500 w-24">Email:</dt>
+                            <dd class="text-gray-900">{{ user.email }}</dd>
+                        </div>
+                        @isset(user.phone)
+                            <div class="flex">
+                                <dt class="font-medium text-gray-500 w-24">Phone:</dt>
+                                <dd class="text-gray-900">{{ user.phone }}</dd>
+                            </div>
+                        @endisset
+                        @isset(user.location)
+                            <div class="flex">
+                                <dt class="font-medium text-gray-500 w-24">Location:</dt>
+                                <dd class="text-gray-900">{{ user.location }}</dd>
+                            </div>
+                        @endisset
+                        <div class="flex">
+                            <dt class="font-medium text-gray-500 w-24">Joined:</dt>
+                            <dd class="text-gray-900">{{ user.created_at.strftime('%B %d, %Y') }}</dd>
+                        </div>
+                    </dl>
+                </div>
+
+                <!-- User Stats -->
+                <div>
+                    <h2 class="text-xl font-semibold mb-4">Statistics</h2>
+                    <div class="grid grid-cols-2 gap-4">
+                        @isset(user.stats.posts)
+                            <div class="bg-blue-50 p-4 rounded-lg text-center">
+                                <div class="text-2xl font-bold text-blue-600">{{ user.stats.posts }}</div>
+                                <div class="text-sm text-blue-500">Posts</div>
+                            </div>
+                        @endisset
+                        @isset(user.stats.followers)
+                            <div class="bg-green-50 p-4 rounded-lg text-center">
+                                <div class="text-2xl font-bold text-green-600">{{ user.stats.followers }}</div>
+                                <div class="text-sm text-green-500">Followers</div>
+                            </div>
+                        @endisset
+                        @isset(user.stats.following)
+                            <div class="bg-purple-50 p-4 rounded-lg text-center">
+                                <div class="text-2xl font-bold text-purple-600">{{ user.stats.following }}</div>
+                                <div class="text-sm text-purple-500">Following</div>
+                            </div>
+                        @endisset
+                        @isset(user.stats.points)
+                            <div class="bg-yellow-50 p-4 rounded-lg text-center">
+                                <div class="text-2xl font-bold text-yellow-600">{{ user.stats.points }}</div>
+                                <div class="text-sm text-yellow-500">Points</div>
+                            </div>
+                        @endisset
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Roles and Permissions -->
+            @if(user.roles)
+                <div class="mt-8">
+                    <h2 class="text-xl font-semibold mb-4">Roles & Permissions</h2>
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        @foreach(user.roles as role)
+                            <span class="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-sm font-medium">
+                                {{ role.name | title }}
+                            </span>
+                        @endforeach
+                    </div>
+
+                    <!-- Admin Actions -->
+                    @hasrole('admin')
+                        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                            <h3 class="font-medium text-red-800 mb-2">Admin Actions</h3>
+                            <div class="space-x-2">
+                                <button class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
+                                    Suspend User
+                                </button>
+                                <button class="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700">
+                                    Reset Password
+                                </button>
+                            </div>
+                        </div>
+                    @endhasrole
+
+                    @hasanyrole(['moderator', 'admin'])
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-4">
+                            <h3 class="font-medium text-yellow-800 mb-2">Moderator Actions</h3>
+                            <div class="space-x-2">
+                                <button class="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700">
+                                    Send Warning
+                                </button>
+                                <button class="bg-orange-600 text-white px-4 py-2 rounded hover:bg-orange-700">
+                                    Temporary Ban
+                                </button>
+                            </div>
+                        </div>
+                    @endhasanyrole
+                </div>
+            @endif
+
+            <!-- Recent Activity -->
+            @if(user.recent_activities)
+                <div class="mt-8">
+                    <h2 class="text-xl font-semibold mb-4">Recent Activity</h2>
+                    <div class="space-y-3">
+                        @forelse(user.recent_activities as activity)
+                            <div class="flex items-center p-3 bg-gray-50 rounded-lg">
+                                <div class="flex-shrink-0">
+                                    <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                                        <svg class="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="ml-3 flex-1">
+                                    <p class="text-sm text-gray-900">{{ activity.description }}</p>
+                                    <p class="text-xs text-gray-500">{{ activity.created_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                                </div>
+                            </div>
+                        @empty
+                            <p class="text-gray-500 text-center py-8">No recent activity found.</p>
+                        @endforelse
+                    </div>
+                </div>
+            @endif
+
+            <!-- Action Buttons -->
+            <div class="mt-8 flex justify-between">
+                @can('edit-users')
+                    <button class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
+                        Edit Profile
+                    </button>
+                @endcan
+
+                @cannot('edit-users')
+                    @if(user.id == current_user.id)
+                        <button class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
+                            Edit My Profile
+                        </button>
+                    @endif
+                @endcannot
+
+                <div class="space-x-2">
+                    @unless(user.id == current_user.id)
+                        <button class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                            Follow
+                        </button>
+                        <button class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">
+                            Message
+                        </button>
+                    @endunless
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
+
+@section('scripts')
+<script>
+    // User data for JavaScript
+    const userData = @json(user);
+    
+    console.log('User Profile loaded for:', userData.name);
+    
+    // Example of using the data
+    document.addEventListener('DOMContentLoaded', function() {
+        // Any profile-specific JavaScript here
+    });
+</script>
+@endsection

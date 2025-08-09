@@ -1,0 +1,320 @@
+@extends('layouts.app')
+
+@section('title', 'Welcome - FastAPI Laravel')
+
+@push('styles')
+<style>
+    .hero-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 5rem 0;
+        text-align: center;
+    }
+    
+    .features-section {
+        padding: 4rem 0;
+        background-color: #f8f9fa;
+    }
+    
+    .feature-card {
+        background: white;
+        border-radius: 10px;
+        padding: 2rem;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        height: 100%;
+        transition: transform 0.3s ease;
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .feature-icon {
+        font-size: 3rem;
+        color: #667eea;
+        margin-bottom: 1rem;
+    }
+    
+    .stats-section {
+        background: #2c3e50;
+        color: white;
+        padding: 3rem 0;
+    }
+    
+    .stat-item {
+        text-align: center;
+    }
+    
+    .stat-number {
+        font-size: 3rem;
+        font-weight: bold;
+        color: #3498db;
+    }
+    
+    .btn-custom {
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        border: none;
+        color: white;
+        padding: 12px 30px;
+        border-radius: 25px;
+        font-weight: 500;
+        text-decoration: none;
+        display: inline-block;
+        transition: transform 0.3s ease;
+    }
+    
+    .btn-custom:hover {
+        transform: translateY(-2px);
+        color: white;
+        text-decoration: none;
+    }
+</style>
+@endpush
+
+@section('content')
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <h1 class="display-4 mb-4">
+                    <i class="fas fa-rocket"></i>
+                    Welcome to FastAPI Laravel
+                </h1>
+                <p class="lead mb-4">
+                    A powerful web application that combines FastAPI's performance with Laravel's elegant architecture patterns.
+                    Experience the best of both worlds - modern Python development with time-tested PHP framework conventions.
+                </p>
+                <div class="d-flex justify-content-center gap-3 flex-wrap">
+                    <a href="{{ url('/docs') }}" class="btn-custom">
+                        <i class="fas fa-book"></i> View API Documentation
+                    </a>
+                    <a href="{{ url('/about') }}" class="btn-custom">
+                        <i class="fas fa-info-circle"></i> Learn More
+                    </a>
+                    @guest
+                        <a href="{{ url('/api/v1/auth/register') }}" class="btn-custom">
+                            <i class="fas fa-user-plus"></i> Get Started
+                        </a>
+                    @endguest
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="features-section">
+    <div class="container">
+        <div class="row mb-5">
+            <div class="col-12 text-center">
+                <h2 class="display-5 mb-3">🏗️ Architecture Features</h2>
+                <p class="lead text-muted">Built with Laravel conventions and modern FastAPI performance</p>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-layer-group"></i>
+                    </div>
+                    <h4>Laravel-Style MVC</h4>
+                    <p>Complete Model-View-Controller architecture with proper separation of concerns, service layers, and dependency injection.</p>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h4>OAuth2 Authentication</h4>
+                    <p>Complete OAuth2 server implementation with all grant types, JWT tokens, and comprehensive security features.</p>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <h4>Eloquent-Style Models</h4>
+                    <p>Active Record pattern with relationships, scopes, soft deletes, and mass assignment protection.</p>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-cogs"></i>
+                    </div>
+                    <h4>Middleware Pipeline</h4>
+                    <p>Laravel-style HTTP kernel with middleware groups, priorities, and conditional middleware application.</p>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-broadcast-tower"></i>
+                    </div>
+                    <h4>Real-time Broadcasting</h4>
+                    <p>WebSocket support with channel authorization, private channels, and real-time event broadcasting.</p>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-tasks"></i>
+                    </div>
+                    <h4>Background Queues</h4>
+                    <p>Laravel-style job queuing system with batching, chaining, rate limiting, and failure handling.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Statistics Section -->
+<section class="stats-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-3 col-6 mb-4">
+                <div class="stat-item">
+                    <div class="stat-number" data-count="100">0</div>
+                    <h5>Laravel Features</h5>
+                    <p>Comprehensive implementation of Laravel patterns</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-6 mb-4">
+                <div class="stat-item">
+                    <div class="stat-number" data-count="50">0</div>
+                    <h5>API Endpoints</h5>
+                    <p>RESTful APIs with proper authentication</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-6 mb-4">
+                <div class="stat-item">
+                    <div class="stat-number" data-count="25">0</div>
+                    <h5>Artisan Commands</h5>
+                    <p>CLI commands for development and deployment</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-6 mb-4">
+                <div class="stat-item">
+                    <div class="stat-number" data-count="15">0</div>
+                    <h5>Middleware</h5>
+                    <p>Request/response processing layers</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Quick Start Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto text-center">
+                <h2 class="display-5 mb-4">🚀 Quick Start</h2>
+                <p class="lead mb-4">
+                    Get started with FastAPI Laravel in just a few simple steps
+                </p>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                        <strong>1</strong>
+                    </div>
+                    <h4>Explore the API</h4>
+                </div>
+                <p>Visit the interactive API documentation to explore all available endpoints and test them directly in your browser.</p>
+                <a href="{{ url('/docs') }}" class="btn btn-outline-primary">View API Docs</a>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                        <strong>2</strong>
+                    </div>
+                    <h4>Authentication</h4>
+                </div>
+                <p>Register an account or login to access protected endpoints and explore the OAuth2 authentication flow.</p>
+                @auth
+                    <a href="{{ url('/dashboard') }}" class="btn btn-outline-success">Go to Dashboard</a>
+                @else
+                    <a href="{{ url('/api/v1/auth/register') }}" class="btn btn-outline-success">Register Now</a>
+                @endauth
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-info text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                        <strong>3</strong>
+                    </div>
+                    <h4>Monitor & Manage</h4>
+                </div>
+                <p>Access the monitoring dashboard to view system health, performance metrics, and manage application resources.</p>
+                <a href="{{ url('/monitoring/dashboard') }}" class="btn btn-outline-info">View Monitoring</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Environment Info -->
+@env('local', 'development')
+<section class="py-3 bg-warning text-dark">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 text-center">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>Development Mode:</strong> This application is running in {{ config('app.env') }} environment.
+            </div>
+        </div>
+    </div>
+</section>
+@endenv
+
+@endsetction
+
+@push('scripts')
+<script>
+    // Animate counters
+    document.addEventListener('DOMContentLoaded', function() {
+        const counters = document.querySelectorAll('[data-count]');
+        
+        counters.forEach(counter => {
+            const target = parseInt(counter.getAttribute('data-count'));
+            const increment = target / 50;
+            let current = 0;
+            
+            const updateCounter = () => {
+                if (current < target) {
+                    current += increment;
+                    counter.textContent = Math.ceil(current);
+                    setTimeout(updateCounter, 40);
+                } else {
+                    counter.textContent = target;
+                }
+            };
+            
+            // Start animation when element is visible
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        updateCounter();
+                        observer.unobserve(entry.target);
+                    }
+                });
+            });
+            
+            observer.observe(counter);
+        });
+    });
+</script>
+@endpush

@@ -1,0 +1,31 @@
+from __future__ import annotations
+
+from typing import Any, Dict, List, Optional
+from pydantic import BaseModel, validator
+from app.Http.Requests.FormRequest import FormRequest
+
+
+class {{ class }}(FormRequest):
+    """{{ class }} form request."""
+    
+    # Fields
+    # Add your fields here
+    
+    def authorize(self) -> bool:
+        """Determine if the user is authorized to make this request."""
+        return True
+    
+    def rules(self) -> Dict[str, List[str]]:
+        """Get the validation rules that apply to the request."""
+        return {
+            # Add your validation rules here
+            # "name": ["required", "string", "max:255"],
+            # "email": ["required", "email", "unique:users,email"],
+        }
+    
+    def messages(self) -> Dict[str, str]:
+        """Get the custom validation messages."""
+        return {
+            # Add custom messages here
+            # "name.required": "The name field is required.",
+        }

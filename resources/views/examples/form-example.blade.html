@@ -1,0 +1,345 @@
+@extends('layouts.app')
+
+@section('title', 'Contact Form')
+
+@section('head')
+    <style>
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        .error-message {
+            color: #dc3545;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+        .success-message {
+            color: #28a745;
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            padding: 0.75rem;
+            border-radius: 0.375rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+@endsection
+
+@section('content')
+<div class="max-w-2xl mx-auto py-8 px-4">
+    <div class="bg-white rounded-lg shadow-lg p-8">
+        <div class="mb-6">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Contact Us</h1>
+            <p class="text-gray-600">We'd love to hear from you. Send us a message and we'll respond as soon as possible.</p>
+        </div>
+
+        <!-- Success Message -->
+        @if(session('success'))
+            <div class="success-message">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        <!-- Form -->
+        <form method="POST" action="{{ route('contact.store') }}" novalidate>
+            @csrf
+            
+            <!-- Name Field -->
+            <div class="form-group">
+                <label for="name" class="block text-sm font-medium text-gray-700 mb-1">
+                    Full Name <span class="text-red-500">*</span>
+                </label>
+                <input 
+                    type="text" 
+                    id="name" 
+                    name="name" 
+                    value="{{ old('name') }}"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('name') border-red-300 @enderror"
+                    placeholder="Enter your full name"
+                >
+                @error('name')
+                    <div class="error-message">{{ message }}</div>
+                @enderror
+            </div>
+
+            <!-- Email Field -->
+            <div class="form-group">
+                <label for="email" class="block text-sm font-medium text-gray-700 mb-1">
+                    Email Address <span class="text-red-500">*</span>
+                </label>
+                <input 
+                    type="email" 
+                    id="email" 
+                    name="email" 
+                    value="{{ old('email') }}"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('email') border-red-300 @enderror"
+                    placeholder="Enter your email address"
+                >
+                @error('email')
+                    <div class="error-message">{{ message }}</div>
+                @enderror
+            </div>
+
+            <!-- Phone Field (Optional) -->
+            <div class="form-group">
+                <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">
+                    Phone Number
+                </label>
+                <input 
+                    type="tel" 
+                    id="phone" 
+                    name="phone" 
+                    value="{{ old('phone') }}"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('phone') border-red-300 @enderror"
+                    placeholder="Enter your phone number (optional)"
+                >
+                @error('phone')
+                    <div class="error-message">{{ message }}</div>
+                @enderror
+            </div>
+
+            <!-- Subject Field -->
+            <div class="form-group">
+                <label for="subject" class="block text-sm font-medium text-gray-700 mb-1">
+                    Subject <span class="text-red-500">*</span>
+                </label>
+                <select 
+                    id="subject" 
+                    name="subject"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('subject') border-red-300 @enderror"
+                >
+                    <option value="">Select a subject</option>
+                    <option value="general" {{ old('subject') == 'general' ? 'selected' : '' }}>General Inquiry</option>
+                    <option value="support" {{ old('subject') == 'support' ? 'selected' : '' }}>Technical Support</option>
+                    <option value="billing" {{ old('subject') == 'billing' ? 'selected' : '' }}>Billing Question</option>
+                    <option value="partnership" {{ old('subject') == 'partnership' ? 'selected' : '' }}>Partnership</option>
+                    <option value="other" {{ old('subject') == 'other' ? 'selected' : '' }}>Other</option>
+                </select>
+                @error('subject')
+                    <div class="error-message">{{ message }}</div>
+                @enderror
+            </div>
+
+            <!-- Priority Field -->
+            <div class="form-group">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                <div class="space-y-2">
+                    <label class="flex items-center">
+                        <input 
+                            type="radio" 
+                            name="priority" 
+                            value="low" 
+                            {{ old('priority', 'normal') == 'low' ? 'checked' : '' }}
+                            class="mr-2 text-blue-600 focus:ring-blue-500"
+                        >
+                        <span class="text-sm text-gray-700">Low - General question or feedback</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input 
+                            type="radio" 
+                            name="priority" 
+                            value="normal" 
+                            {{ old('priority', 'normal') == 'normal' ? 'checked' : '' }}
+                            class="mr-2 text-blue-600 focus:ring-blue-500"
+                        >
+                        <span class="text-sm text-gray-700">Normal - Standard inquiry</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input 
+                            type="radio" 
+                            name="priority" 
+                            value="high" 
+                            {{ old('priority') == 'high' ? 'checked' : '' }}
+                            class="mr-2 text-blue-600 focus:ring-blue-500"
+                        >
+                        <span class="text-sm text-gray-700">High - Urgent issue requiring immediate attention</span>
+                    </label>
+                </div>
+                @error('priority')
+                    <div class="error-message">{{ message }}</div>
+                @enderror
+            </div>
+
+            <!-- Message Field -->
+            <div class="form-group">
+                <label for="message" class="block text-sm font-medium text-gray-700 mb-1">
+                    Message <span class="text-red-500">*</span>
+                </label>
+                <textarea 
+                    id="message" 
+                    name="message" 
+                    rows="6"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('message') border-red-300 @enderror"
+                    placeholder="Please describe your inquiry in detail..."
+                >{{ old('message') }}</textarea>
+                @error('message')
+                    <div class="error-message">{{ message }}</div>
+                @enderror
+            </div>
+
+            <!-- Newsletter Subscription -->
+            <div class="form-group">
+                <label class="flex items-center">
+                    <input 
+                        type="checkbox" 
+                        name="subscribe_newsletter" 
+                        value="1"
+                        {{ old('subscribe_newsletter') ? 'checked' : '' }}
+                        class="mr-2 text-blue-600 focus:ring-blue-500"
+                    >
+                    <span class="text-sm text-gray-700">Subscribe to our newsletter for updates and special offers</span>
+                </label>
+            </div>
+
+            <!-- Terms Agreement -->
+            <div class="form-group">
+                <label class="flex items-start">
+                    <input 
+                        type="checkbox" 
+                        name="agree_terms" 
+                        value="1"
+                        {{ old('agree_terms') ? 'checked' : '' }}
+                        class="mr-2 mt-1 text-blue-600 focus:ring-blue-500"
+                        required
+                    >
+                    <span class="text-sm text-gray-700">
+                        I agree to the <a href="{{ route('terms') }}" class="text-blue-600 hover:underline" target="_blank">Terms of Service</a> 
+                        and <a href="{{ route('privacy') }}" class="text-blue-600 hover:underline" target="_blank">Privacy Policy</a> 
+                        <span class="text-red-500">*</span>
+                    </span>
+                </label>
+                @error('agree_terms')
+                    <div class="error-message">{{ message }}</div>
+                @enderror
+            </div>
+
+            <!-- Conditional Fields Based on User Status -->
+            @auth
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                    <p class="text-blue-800 text-sm">
+                        <strong>Logged in as:</strong> {{ current_user.name }} ({{ current_user.email }})
+                    </p>
+                    <p class="text-blue-600 text-xs mt-1">
+                        We'll use this information to follow up on your inquiry.
+                    </p>
+                </div>
+            @else
+                @guest
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                        <p class="text-yellow-800 text-sm">
+                            <strong>Not logged in?</strong> 
+                            <a href="{{ route('login') }}" class="text-blue-600 hover:underline">Sign in</a> 
+                            to access your message history and faster support.
+                        </p>
+                    </div>
+                @endguest
+            @endauth
+
+            <!-- Environment-specific Notice -->
+            @env('local', 'development')
+                <div class="bg-gray-100 border border-gray-300 rounded-lg p-4 mb-4">
+                    <p class="text-gray-700 text-sm">
+                        <strong>Development Mode:</strong> This form is in development mode. Messages may not be sent.
+                    </p>
+                </div>
+            @endenv
+
+            @production
+                <!-- Analytics and tracking code only in production -->
+                <input type="hidden" name="form_source" value="production_contact_form">
+            @endproduction
+
+            <!-- Submit Button -->
+            <div class="flex items-center justify-between">
+                <button 
+                    type="submit" 
+                    class="bg-blue-600 text-white px-8 py-3 rounded-lg font-medium hover:bg-blue-700 focus:ring-4 focus:ring-blue-200 transition-colors"
+                >
+                    Send Message
+                </button>
+                
+                <div class="text-sm text-gray-500">
+                    <span class="text-red-500">*</span> Required fields
+                </div>
+            </div>
+        </form>
+
+        <!-- Additional Information -->
+        <div class="mt-8 pt-6 border-t border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Other Ways to Reach Us</h3>
+            <div class="grid md:grid-cols-2 gap-4">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0">
+                        <svg class="w-5 h-5 text-gray-400 mt-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path>
+                            <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-gray-900">Email Support</p>
+                        <p class="text-sm text-gray-500">support@example.com</p>
+                        <p class="text-xs text-gray-400">Response within 24 hours</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-start">
+                    <div class="flex-shrink-0">
+                        <svg class="w-5 h-5 text-gray-400 mt-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-gray-900">Phone Support</p>
+                        <p class="text-sm text-gray-500">1-800-123-4567</p>
+                        <p class="text-xs text-gray-400">Mon-Fri 9AM-6PM EST</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
+
+@section('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Form validation enhancements
+        const form = document.querySelector('form');
+        const submitButton = form.querySelector('button[type="submit"]');
+        
+        form.addEventListener('submit', function() {
+            submitButton.disabled = true;
+            submitButton.textContent = 'Sending...';
+        });
+        
+        // Character counter for message field
+        const messageField = document.getElementById('message');
+        const messageWrapper = messageField.parentNode;
+        
+        // Create character counter
+        const counter = document.createElement('div');
+        counter.className = 'text-xs text-gray-500 mt-1';
+        counter.textContent = '0 characters';
+        messageWrapper.appendChild(counter);
+        
+        messageField.addEventListener('input', function() {
+            const length = this.value.length;
+            counter.textContent = `${length} characters`;
+            
+            if (length > 1000) {
+                counter.className = 'text-xs text-red-500 mt-1';
+            } else {
+                counter.className = 'text-xs text-gray-500 mt-1';
+            }
+        });
+        
+        // Auto-hide success/error messages
+        const messages = document.querySelectorAll('.success-message, .error-message');
+        messages.forEach(message => {
+            if (message.classList.contains('success-message')) {
+                setTimeout(() => {
+                    message.style.display = 'none';
+                }, 5000);
+            }
+        });
+    });
+</script>
+@endsection

@@ -1,0 +1,35 @@
+"""
+{{ description }}
+
+Revision ID: {{ revision }}
+Create Date: {{ timestamp }}
+"""
+
+from alembic import op
+import sqlalchemy as sa
+
+
+# revision identifiers
+revision = '{{ revision }}'
+down_revision = {{ down_revision }}
+branch_labels = None
+depends_on = None
+
+
+def upgrade() -> None:
+    """Update {{ table }} table."""
+    # Add your schema changes here
+    # Examples:
+    # op.add_column('{{ table }}', sa.Column('new_column', sa.String(255), nullable=True))
+    # op.alter_column('{{ table }}', 'existing_column', type_=sa.Text())
+    # op.create_index('idx_{{ table }}_column', '{{ table }}', ['column_name'])
+    pass
+
+
+def downgrade() -> None:
+    """Reverse changes to {{ table }} table."""
+    # Add your rollback logic here
+    # Examples:
+    # op.drop_column('{{ table }}', 'new_column')
+    # op.drop_index('idx_{{ table }}_column', table_name='{{ table }}')
+    pass
