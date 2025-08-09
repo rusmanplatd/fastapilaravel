@@ -7,13 +7,14 @@ import os
 import uuid
 import hashlib
 import mimetypes
-from typing import Dict, List, Optional, Any, Union, BinaryIO
+from typing import Dict, List, Optional, Any, Union, BinaryIO, Tuple
 from pathlib import Path
 from datetime import datetime
 from dataclasses import dataclass
 from enum import Enum
 
-from fastapi import UploadFile, HTTPException, status
+from fastapi import HTTPException, status
+from fastapi.datastructures import UploadFile
 from PIL import Image
 
 
@@ -43,9 +44,9 @@ class UploadedFileInfo:
     hash: str
     extension: str
     disk: str = "local"
-    metadata: Dict[str, Any] = None
+    metadata: Optional[Dict[str, Any]] = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.metadata is None:
             self.metadata = {}
 
@@ -275,7 +276,7 @@ class ImageUploadManager(FileUploadManager):
         self,
         file: UploadFile,
         path: str = "",
-        thumbnail_sizes: Optional[Dict[str, tuple]] = None,
+        thumbnail_sizes: Optional[Dict[str, Tuple[int, int]]] = None,
         validator: Optional[FileUploadValidator] = None
     ) -> Dict[str, UploadedFileInfo]:
         """Store image with generated thumbnails"""

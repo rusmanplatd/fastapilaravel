@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import asyncio
 import json
-from typing import Dict, Any, Type, Optional, List, Callable, Union
+from typing import Dict, Any, Type, Optional, List, Callable, Union, TypeVar
 from datetime import datetime, timedelta
 from dataclasses import dataclass, field
 from enum import Enum
@@ -42,7 +42,7 @@ class JobRegistry:
     Manages job types, scheduling, and execution tracking
     """
     
-    def __init__(self):
+    def __init__(self) -> None:
         self._registered_jobs: Dict[str, Type[Job]] = {}
         self._job_results: Dict[str, JobResult] = {}
         self._scheduled_jobs: Dict[str, datetime] = {}
@@ -62,7 +62,7 @@ class JobRegistry:
     
     def schedule(self, job: Job, run_at: datetime) -> str:
         """Schedule a job to run at specific time"""
-        job_id = job.get_job_id()
+        job_id = job.job_id or str(id(job))
         self._scheduled_jobs[job_id] = run_at
         
         # Store job result as pending
@@ -143,7 +143,7 @@ class JobRegistry:
         for key, value in kwargs.items():
             setattr(result, key, value)
     
-    def add_middleware(self, middleware: Callable) -> None:
+    def add_middleware(self, middleware: Callable[..., Any]) -> None:
         """Add job middleware"""
         self._job_middlewares.append(middleware)
     
@@ -257,8 +257,8 @@ class JobPipeline:
     def __init__(self, name: str = ""):
         self.name = name
         self.jobs: List[Job] = []
-        self.on_failure: Optional[Callable] = None
-        self.on_success: Optional[Callable] = None
+        self.on_failure: Optional[Callable[..., Any]] = None
+        self.on_success: Optional[Callable[..., Any]] = None
         self.stop_on_failure: bool = True
     
     def then(self, job: Job) -> JobPipeline:
@@ -266,12 +266,12 @@ class JobPipeline:
         self.jobs.append(job)
         return self
     
-    def catch(self, callback: Callable) -> JobPipeline:
+    def catch(self, callback: Callable[..., Any]) -> JobPipeline:
         """Set failure callback"""
         self.on_failure = callback
         return self
     
-    def finally_do(self, callback: Callable) -> JobPipeline:
+    def finally_do(self, callback: Callable[..., Any]) -> JobPipeline:
         """Set success callback"""
         self.on_success = callback
         return self
@@ -359,7 +359,7 @@ def schedule_at(job: Job, time_str: str) -> str:
     return job_registry.schedule(job, run_at)
 
 
-def recurring(cron: str, name: str = "") -> Callable:
+def recurring(cron: str, name: str = "") -> Callable[[Type[Job]], Type[Job]]:
     """Decorator for recurring jobs"""
     def decorator(job_class: Type[Job]) -> Type[Job]:
         job_registry.schedule_recurring(job_class, cron, name)

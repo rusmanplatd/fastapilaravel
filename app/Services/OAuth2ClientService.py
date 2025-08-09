@@ -344,8 +344,9 @@ class OAuth2ClientService:
         if not client:
             return False
         
-        # TODO: Implement restore functionality if needed
-        pass
+        # Restore the client by setting is_revoked to False and is_active to True
+        client.is_revoked = False
+        client.is_active = True
         db.commit()
         
         return True

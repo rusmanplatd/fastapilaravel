@@ -77,7 +77,9 @@ class AppServiceProvider(ServiceProvider):
     def _create_notification_service(self) -> Any:
         """Create notification service instance."""
         from app.Services.NotificationService import NotificationService
-        return NotificationService()
+        from config.database import get_database
+        db = next(get_database())
+        return NotificationService(db)
     
     def _create_auth_service(self) -> Any:
         """Create auth service instance."""
@@ -89,9 +91,7 @@ class AppServiceProvider(ServiceProvider):
     def _create_activity_log_service(self) -> Any:
         """Create activity log service instance."""
         from app.Services.ActivityLogService import ActivityLogService
-        from config.database import get_database
-        db = next(get_database())
-        return ActivityLogService(db)
+        return ActivityLogService()
     
     def _create_config_repository(self) -> Any:
         """Create config repository instance."""
@@ -106,7 +106,7 @@ class AppServiceProvider(ServiceProvider):
     def _create_validator(self) -> Any:
         """Create validator instance."""
         from app.Validation.Validator import Validator
-        return Validator()
+        return Validator({}, {})
     
     def _create_password_utils(self) -> Any:
         """Create password utils instance."""
@@ -125,8 +125,8 @@ class AppServiceProvider(ServiceProvider):
     
     def _create_filesystem_adapter(self) -> Any:
         """Create filesystem adapter instance."""
-        from app.Storage.FilesystemAdapter import FilesystemAdapter
-        return FilesystemAdapter()
+        from app.Storage.FilesystemAdapter import LocalFilesystemAdapter
+        return LocalFilesystemAdapter()
     
     def _register_facades(self) -> None:
         """Register facade mappings."""

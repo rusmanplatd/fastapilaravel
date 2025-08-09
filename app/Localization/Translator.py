@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import json
 import os
-from typing import Dict, Any, Optional, List, Union
+from typing import Dict, Any, Optional, List, Union, Set
 from pathlib import Path
 from functools import lru_cache
 from contextvars import ContextVar
@@ -23,7 +23,7 @@ class Translator:
         self.lang_path = Path(lang_path)
         self.fallback_locale = fallback_locale
         self._translations: Dict[str, Dict[str, Any]] = {}
-        self._loaded_locales: set = set()
+        self._loaded_locales: Set[str] = set()
         
         # Create language directory if it doesn't exist
         self.lang_path.mkdir(parents=True, exist_ok=True)
@@ -31,7 +31,6 @@ class Translator:
         # Load fallback locale by default
         self._load_locale(self.fallback_locale)
     
-    @lru_cache(maxsize=512)
     def get(self, key: str, locale: Optional[str] = None, replacements: Optional[Dict[str, str]] = None, fallback: Optional[str] = None) -> str:
         """
         Get translated string by key
@@ -62,8 +61,12 @@ class Translator:
         # Apply replacements if provided
         if replacements:
             translation = self._apply_replacements(translation, replacements)
-        
-        return translation
+            
+        # Ensure we return a string
+        if isinstance(translation, str):
+            return translation
+        else:
+            return str(translation)
     
     def has(self, key: str, locale: Optional[str] = None) -> bool:
         """Check if translation key exists"""
@@ -102,11 +105,9 @@ class Translator:
                 chosen = translation["other"]
             else:
                 chosen = str(translation.get("1", key))
-        elif isinstance(translation, str):
-            # Simple string, no pluralization
-            chosen = translation
         else:
-            chosen = key
+            # Simple string or other type, no pluralization
+            chosen = str(translation) if translation is not None else key
         
         # Apply replacements
         if not replacements:
@@ -176,7 +177,7 @@ class Translator:
         
         self._loaded_locales.add(locale)
     
-    def _get_translation(self, key: str, locale: str) -> Optional[str]:
+    def _get_translation(self, key: str, locale: str) -> Optional[Union[str, Dict[Any, Any]]]:
         """Get translation from loaded translations"""
         if locale not in self._translations:
             return None
@@ -204,7 +205,7 @@ class Translator:
         
         return current if isinstance(current, (str, dict)) else None
     
-    def _apply_replacements(self, text: str, replacements: Dict[str, str]) -> str:
+    def _apply_replacements(self, text: Union[str, Dict[Any, Any]], replacements: Dict[str, str]) -> str:
         """Apply placeholder replacements to translated text"""
         if not isinstance(text, str):
             return str(text)

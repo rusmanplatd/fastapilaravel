@@ -244,11 +244,51 @@ class OperatorFilter(FilterInterface):
         
         if self.operator == FilterOperator.DYNAMIC:
             if isinstance(value, dict) and 'operator' in value and 'value' in value:
-                # TODO: Implement proper column resolution and operator application
-                return query.filter(text(f"column = {repr(value['value'])}"))
+                # Get the actual column from the model
+                model = getattr(query, 'column_descriptions', [{}])[0].get('entity')
+                if model and hasattr(model, property_name):
+                    column = getattr(model, property_name)
+                    operator = value['operator'].lower()
+                    filter_value = value['value']
+                    
+                    # Apply proper operator
+                    if operator == 'eq' or operator == '=':
+                        return query.filter(column == filter_value)
+                    elif operator == 'ne' or operator == '!=':
+                        return query.filter(column != filter_value)
+                    elif operator == 'gt' or operator == '>':
+                        return query.filter(column > filter_value)
+                    elif operator == 'gte' or operator == '>=':
+                        return query.filter(column >= filter_value)
+                    elif operator == 'lt' or operator == '<':
+                        return query.filter(column < filter_value)
+                    elif operator == 'lte' or operator == '<=':
+                        return query.filter(column <= filter_value)
+                    elif operator == 'like':
+                        return query.filter(column.like(f"%{filter_value}%"))
+                    elif operator == 'in':
+                        if isinstance(filter_value, list):
+                            return query.filter(column.in_(filter_value))
+                    elif operator == 'not_in':
+                        if isinstance(filter_value, list):
+                            return query.filter(~column.in_(filter_value))
+                
+                # Fallback for unknown columns/operators
+                return query.filter(text(f"{property_name} = {repr(value['value'])}"))
         
-        # Apply static operator - placeholder implementation
-        return query.filter(text(f"column = {repr(value)}"))
+        # Apply static operator with proper column resolution
+        model = getattr(query, 'column_descriptions', [{}])[0].get('entity')
+        if model and hasattr(model, property_name):
+            column = getattr(model, property_name)
+            if self.operator == FilterOperator.EQUALS:
+                return query.filter(column == value)
+            elif self.operator == FilterOperator.LIKE:
+                return query.filter(column.like(f"%{value}%"))
+            elif self.operator == FilterOperator.IN and isinstance(value, list):
+                return query.filter(column.in_(value))
+        
+        # Fallback implementation
+        return query.filter(text(f"{property_name} = {repr(value)}"))
 
 
 class ScopeFilter(FilterInterface):

@@ -69,7 +69,9 @@ class {name}(BaseController):
         db: Session = Depends(get_db)
     ) -> Dict[str, Any]:
         """Display a listing of the resource."""
-        # TODO: Implement index logic
+        # Implement index logic: query your model, apply filters, pagination
+        # Example: resources = db.query(YourModel).limit(10).all()
+        # return self.success_response(JsonResource.collection(resources))
         return self.success_response([], "Resources retrieved successfully")
     
     async def store(
@@ -78,7 +80,12 @@ class {name}(BaseController):
         db: Session = Depends(get_db)
     ) -> Dict[str, Any]:
         """Store a newly created resource."""
-        # TODO: Implement store logic
+        # Implement store logic: validate request data, create new resource
+        # Example: data = await request.json()
+        # resource = YourModel(**data)
+        # db.add(resource)
+        # db.commit()
+        # return self.success_response(JsonResource(resource).to_dict())
         return self.success_response(None, "Resource created successfully", 201)
     
     async def show(
@@ -88,7 +95,11 @@ class {name}(BaseController):
         db: Session = Depends(get_db)
     ) -> Dict[str, Any]:
         """Display the specified resource."""
-        # TODO: Implement show logic
+        # Implement show logic: find resource by ID, handle not found
+        # Example: resource = db.get(YourModel, id)
+        # if not resource:
+        #     raise HTTPException(status_code=404, detail="Resource not found")
+        # return self.success_response(JsonResource(resource).to_dict())
         return self.success_response(None, "Resource retrieved successfully")
     
     async def update(
@@ -98,7 +109,15 @@ class {name}(BaseController):
         db: Session = Depends(get_db)
     ) -> Dict[str, Any]:
         """Update the specified resource."""
-        # TODO: Implement update logic
+        # Implement update logic: find resource, validate data, update
+        # Example: resource = db.get(YourModel, id)
+        # if not resource:
+        #     raise HTTPException(status_code=404, detail="Resource not found")
+        # data = await request.json()
+        # for key, value in data.items():
+        #     setattr(resource, key, value)
+        # db.commit()
+        # return self.success_response(JsonResource(resource).to_dict())
         return self.success_response(None, "Resource updated successfully")
     
     async def destroy(
@@ -108,7 +127,12 @@ class {name}(BaseController):
         db: Session = Depends(get_db)
     ) -> Dict[str, Any]:
         """Remove the specified resource."""
-        # TODO: Implement destroy logic
+        # Implement destroy logic: find resource, delete it
+        # Example: resource = db.get(YourModel, id)
+        # if not resource:
+        #     raise HTTPException(status_code=404, detail="Resource not found")
+        # db.delete(resource)
+        # db.commit()
         return self.success_response(None, "Resource deleted successfully")
 '''
         else:
@@ -134,6 +158,7 @@ class {name}(BaseController):
         db: Session = Depends(get_db)
     ) -> Dict[str, Any]:
         """Handle the incoming request."""
-        # TODO: Implement your logic here
+        # Implement your controller logic here
+        # Add your business logic, database operations, etc.
         return self.success_response("Hello from {name}!")
 '''

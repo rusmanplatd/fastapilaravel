@@ -58,8 +58,9 @@ class Pipeline:
                 method = getattr(pipe, self.method)
                 if callable(method):
                     return method(passable, stack)
-            
-            return stack(passable)
+                return stack(passable)
+            else:
+                return stack(passable)
         
         return closure
 

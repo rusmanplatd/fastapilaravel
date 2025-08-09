@@ -16,7 +16,7 @@ class AuthManager:
     Manages multiple authentication guards
     """
     
-    def __init__(self):
+    def __init__(self) -> None:
         self._guards: Dict[str, Guard] = {}
         self._default_guard = "web"
         self._guard_configs = {
@@ -79,7 +79,7 @@ class AuthManager:
         """Determine if the current user is a guest"""
         return await self.guard().guest()
     
-    async def user(self):
+    async def user(self) -> Any:
         """Get the currently authenticated user"""
         return await self.guard().user()
     
@@ -99,11 +99,11 @@ class AuthManager:
         """Log a user into the application for a single request"""
         return await self.guard().once(credentials)
     
-    async def login(self, user, remember: bool = False) -> None:
+    async def login(self, user: Any, remember: bool = False) -> None:
         """Log a user into the application"""
         return await self.guard().login(user, remember)
     
-    async def login_using_id(self, id: str, remember: bool = False):
+    async def login_using_id(self, id: str, remember: bool = False) -> Any:
         """Log a user into the application using their ID"""
         return await self.guard().login_using_id(id, remember)
     

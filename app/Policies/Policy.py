@@ -100,7 +100,7 @@ class Gate:
                 if hasattr(policy, method_name):
                     method = getattr(policy, method_name)
                     if callable(method):
-                        result = method(user, *arguments)
+                        result = bool(method(user, *arguments))
                         
                         # Run policy after method
                         after_result = policy.after(user, ability, result)

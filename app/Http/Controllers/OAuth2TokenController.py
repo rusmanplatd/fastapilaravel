@@ -348,8 +348,29 @@ class OAuth2TokenController(BaseController):
             List of personal access tokens
         """
         try:
-            # TODO: Implement personal access tokens in OAuth2AuthServerService
-            raise NotImplementedError("Personal access tokens not yet implemented")
+            # Get user's personal access tokens
+            import json
+            from app.Models.OAuth2AccessToken import OAuth2AccessToken
+            tokens = db.query(OAuth2AccessToken).filter(
+                OAuth2AccessToken.user_id == user_id,
+                OAuth2AccessToken.name.isnot(None),  # Personal access tokens have names
+                OAuth2AccessToken.is_revoked == False
+            ).all()
+            
+            token_list = []
+            for token in tokens:
+                token_list.append({
+                    "id": token.id,
+                    "token_id": token.token_id,
+                    "name": token.name,
+                    "scopes": json.loads(token.scopes) if token.scopes else [],
+                    "abilities": json.loads(token.abilities) if token.abilities else [],
+                    "created_at": token.created_at.isoformat(),
+                    "expires_at": token.expires_at.isoformat(),
+                    "last_used_at": token.updated_at.isoformat() if token.updated_at else None
+                })
+            
+            return self.success_response(token_list, "Personal access tokens retrieved successfully")
             
         except Exception as e:
             raise HTTPException(
@@ -379,8 +400,65 @@ class OAuth2TokenController(BaseController):
             Created personal access token
         """
         try:
-            # TODO: Implement personal access tokens in OAuth2AuthServerService  
-            raise NotImplementedError("Personal access tokens not yet implemented")
+            # Get or create personal access client for the user
+            import json
+            from datetime import datetime, timedelta
+            from app.Models.User import User
+            from app.Models.OAuth2Client import OAuth2Client
+            from app.Utils.ULIDUtils import ULIDUtils
+            
+            user = db.get(User, user_id)
+            if not user:
+                raise HTTPException(status_code=404, detail="User not found")
+            
+            # Find or create personal access client
+            personal_client = db.query(OAuth2Client).filter(
+                OAuth2Client.is_personal_access_client == True,
+                OAuth2Client.user_id == user_id
+            ).first()
+            
+            if not personal_client:
+                # Create personal access client for user
+                personal_client = OAuth2Client(
+                    client_id=ULIDUtils.generate(),
+                    name=f"{getattr(user, 'username', None) or user.email} Personal Access Client",
+                    user_id=user.id,
+                    is_personal_access_client=True,
+                    is_confidential=False,
+                    grant_types="personal_access",
+                    allowed_scopes=" ".join(scopes)
+                )
+                db.add(personal_client)
+                db.commit()
+                db.refresh(personal_client)
+            
+            # Calculate expiration
+            expires_at = datetime.utcnow() + timedelta(days=expires_days or 365)
+            
+            # Create access token using OAuth2AuthServerService
+            auth_service = OAuth2AuthServerService()
+            access_token = auth_service.create_access_token(
+                db=db,
+                client=personal_client,
+                user=user,
+                scopes=scopes,
+                name=name
+            )
+            
+            # Update expiration if custom
+            if expires_days:
+                access_token.expires_at = expires_at
+                db.commit()
+            
+            return self.success_response({
+                "id": access_token.id,
+                "token_id": access_token.token_id,
+                "name": access_token.name,
+                "scopes": json.loads(access_token.scopes),
+                "created_at": access_token.created_at.isoformat(),
+                "expires_at": access_token.expires_at.isoformat(),
+                "access_token": access_token.token
+            }, "Personal access token created successfully")
             
         except Exception as e:
             raise HTTPException(
@@ -406,8 +484,29 @@ class OAuth2TokenController(BaseController):
             Personal access token details
         """
         try:
-            # TODO: Implement personal access tokens in OAuth2AuthServerService
-            raise NotImplementedError("Personal access tokens not yet implemented")
+            # Get personal access token by ID and user
+            import json
+            from app.Models.OAuth2AccessToken import OAuth2AccessToken
+            token = db.query(OAuth2AccessToken).filter(
+                OAuth2AccessToken.id == token_id,
+                OAuth2AccessToken.user_id == user_id,
+                OAuth2AccessToken.name.isnot(None),  # Personal access tokens have names
+                OAuth2AccessToken.is_revoked == False
+            ).first()
+            
+            if not token:
+                raise HTTPException(status_code=404, detail="Personal access token not found")
+            
+            return self.success_response({
+                "id": token.id,
+                "token_id": token.token_id,
+                "name": token.name,
+                "scopes": json.loads(token.scopes) if token.scopes else [],
+                "abilities": json.loads(token.abilities) if token.abilities else [],
+                "created_at": token.created_at.isoformat(),
+                "expires_at": token.expires_at.isoformat(),
+                "last_used_at": token.updated_at.isoformat() if token.updated_at else None
+            }, "Personal access token retrieved successfully")
             
         except HTTPException:
             raise
@@ -435,8 +534,26 @@ class OAuth2TokenController(BaseController):
             Revocation response
         """
         try:
-            # TODO: Implement personal access tokens in OAuth2AuthServerService
-            raise NotImplementedError("Personal access tokens not yet implemented")
+            # Find and revoke personal access token
+            from app.Models.OAuth2AccessToken import OAuth2AccessToken
+            token = db.query(OAuth2AccessToken).filter(
+                OAuth2AccessToken.id == token_id,
+                OAuth2AccessToken.user_id == user_id,
+                OAuth2AccessToken.name.isnot(None),  # Personal access tokens have names
+                OAuth2AccessToken.is_revoked == False
+            ).first()
+            
+            if not token:
+                raise HTTPException(status_code=404, detail="Personal access token not found")
+            
+            # Revoke the token
+            auth_service = OAuth2AuthServerService()
+            success = auth_service.revoke_access_token(db, token.token_id)
+            
+            if success:
+                return self.success_response(None, "Personal access token revoked successfully")
+            else:
+                raise HTTPException(status_code=500, detail="Failed to revoke token")
             
         except HTTPException:
             raise
@@ -464,8 +581,22 @@ class OAuth2TokenController(BaseController):
             Deletion response
         """
         try:
-            # TODO: Implement personal access tokens in OAuth2AuthServerService
-            raise NotImplementedError("Personal access tokens not yet implemented")
+            # Find and delete personal access token
+            from app.Models.OAuth2AccessToken import OAuth2AccessToken
+            token = db.query(OAuth2AccessToken).filter(
+                OAuth2AccessToken.id == token_id,
+                OAuth2AccessToken.user_id == user_id,
+                OAuth2AccessToken.name.isnot(None),  # Personal access tokens have names
+            ).first()
+            
+            if not token:
+                raise HTTPException(status_code=404, detail="Personal access token not found")
+            
+            # Delete the token record completely
+            db.delete(token)
+            db.commit()
+            
+            return self.success_response(None, "Personal access token deleted successfully")
             
         except HTTPException:
             raise

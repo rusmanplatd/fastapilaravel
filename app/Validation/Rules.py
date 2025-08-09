@@ -388,7 +388,8 @@ class DecimalRule(ValidationRule):
                 return False
             
             # Decimal places
-            decimal_places_count = max(0, -exponent)
+            exponent_int = int(exponent) if isinstance(exponent, int) else 0
+            decimal_places_count = max(0, -exponent_int)
             return decimal_places_count <= decimal_places
             
         except (ValueError, InvalidOperation):
@@ -401,7 +402,7 @@ class DecimalRule(ValidationRule):
 class ConfirmedRule(ValidationRule):
     """Validate that a field has a matching confirmation field"""
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.data: Optional[Dict[str, Any]] = None
     
     def set_data(self, data: Dict[str, Any]) -> None:
@@ -415,7 +416,7 @@ class ConfirmedRule(ValidationRule):
         confirmation_field = f"{attribute}_confirmation"
         confirmation_value = self.data.get(confirmation_field)
         
-        return value == confirmation_value
+        return bool(value == confirmation_value)
     
     def message(self) -> str:
         return "The {attribute} confirmation does not match."
@@ -424,7 +425,7 @@ class ConfirmedRule(ValidationRule):
 class DifferentRule(ValidationRule):
     """Validate that a field has a different value from another field"""
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.data: Optional[Dict[str, Any]] = None
     
     def set_data(self, data: Dict[str, Any]) -> None:
@@ -438,7 +439,7 @@ class DifferentRule(ValidationRule):
         other_field = parameters[0]
         other_value = self.data.get(other_field)
         
-        return value != other_value
+        return bool(value != other_value)
     
     def message(self) -> str:
         return "The {attribute} and {other} must be different."
@@ -447,7 +448,7 @@ class DifferentRule(ValidationRule):
 class SameRule(ValidationRule):
     """Validate that a field has the same value as another field"""
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.data: Optional[Dict[str, Any]] = None
     
     def set_data(self, data: Dict[str, Any]) -> None:
@@ -461,7 +462,7 @@ class SameRule(ValidationRule):
         other_field = parameters[0]
         other_value = self.data.get(other_field)
         
-        return value == other_value
+        return bool(value == other_value)
     
     def message(self) -> str:
         return "The {attribute} and {other} must match."
@@ -470,7 +471,7 @@ class SameRule(ValidationRule):
 class RequiredIfRule(ValidationRule):
     """Validate that a field is required if another field has a specific value"""
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.data: Optional[Dict[str, Any]] = None
     
     def set_data(self, data: Dict[str, Any]) -> None:
@@ -506,7 +507,7 @@ class RequiredIfRule(ValidationRule):
 class RequiredUnlessRule(ValidationRule):
     """Validate that a field is required unless another field has a specific value"""
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.data: Optional[Dict[str, Any]] = None
     
     def set_data(self, data: Dict[str, Any]) -> None:

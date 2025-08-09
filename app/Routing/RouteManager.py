@@ -237,7 +237,7 @@ class RouteCache:
         cached = self.get_cached_routes()
         if cached and name in cached:
             route = cached[name]
-            url = route.get('path', '')
+            url = str(route.get('path', ''))
             
             # Replace route parameters
             if parameters:
