@@ -1,0 +1,240 @@
+{% extends "layouts/base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto text-center">
+        <div class="mb-5">
+            <h1 class="display-4 fw-bold text-primary">
+                <i class="bi bi-lightning-charge-fill me-3"></i>FastAPI Laravel
+            </h1>
+            <p class="lead text-muted">
+                A modern web application with Laravel-style architecture built on FastAPI
+            </p>
+        </div>
+        
+        {% if not user %}
+            <div class="row justify-content-center mb-5">
+                <div class="col-md-6">
+                    <div class="d-grid gap-2 d-md-block">
+                        <a href="/login" class="btn btn-primary btn-lg me-2">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+                        </a>
+                        <a href="/register" class="btn btn-outline-primary btn-lg">
+                            <i class="bi bi-person-plus me-2"></i>Create Account
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="alert alert-success" role="alert">
+                <i class="bi bi-person-check-fill me-2"></i>
+                Welcome back, <strong>{{ user.name }}</strong>! 
+                <a href="/dashboard" class="alert-link">Go to your dashboard</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Features Grid -->
+<div class="row g-4 my-5">
+    <div class="col-md-6 col-lg-3">
+        <div class="card h-100 text-center">
+            <div class="card-body">
+                <div class="bg-primary text-white rounded-circle p-3 d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                    <i class="bi bi-layers-fill fs-4"></i>
+                </div>
+                <h5 class="card-title">Laravel Architecture</h5>
+                <p class="card-text text-muted">
+                    MVC patterns, service providers, middleware, and dependency injection
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-3">
+        <div class="card h-100 text-center">
+            <div class="card-body">
+                <div class="bg-success text-white rounded-circle p-3 d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                    <i class="bi bi-shield-lock-fill fs-4"></i>
+                </div>
+                <h5 class="card-title">Authentication</h5>
+                <p class="card-text text-muted">
+                    Session-based auth, OAuth2 server, JWT tokens, and MFA support
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-3">
+        <div class="card h-100 text-center">
+            <div class="card-body">
+                <div class="bg-info text-white rounded-circle p-3 d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                    <i class="bi bi-database-fill fs-4"></i>
+                </div>
+                <h5 class="card-title">Database ORM</h5>
+                <p class="card-text text-muted">
+                    Eloquent-style models, relationships, migrations, and seeders
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-3">
+        <div class="card h-100 text-center">
+            <div class="card-body">
+                <div class="bg-warning text-white rounded-circle p-3 d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                    <i class="bi bi-rocket-takeoff-fill fs-4"></i>
+                </div>
+                <h5 class="card-title">Modern Stack</h5>
+                <p class="card-text text-muted">
+                    FastAPI, Pydantic, SQLAlchemy, Bootstrap 5, and TypeScript
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Links -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-dark text-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-link-45deg me-2"></i>Quick Links
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6 col-lg-3">
+                        <a href="/docs" class="btn btn-outline-primary w-100">
+                            <i class="bi bi-code-slash me-2"></i>API Documentation
+                        </a>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <a href="/.well-known/oauth-authorization-server" class="btn btn-outline-success w-100">
+                            <i class="bi bi-key me-2"></i>OAuth2 Metadata
+                        </a>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <a href="/monitoring/health" class="btn btn-outline-info w-100">
+                            <i class="bi bi-heart-pulse me-2"></i>Health Check
+                        </a>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <a href="/about" class="btn btn-outline-secondary w-100">
+                            <i class="bi bi-info-circle me-2"></i>About
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Demo Section -->
+<div class="row mt-5">
+    <div class="col-12">
+        <div class="card bg-light">
+            <div class="card-body text-center py-5">
+                <h3 class="text-muted mb-3">
+                    <i class="bi bi-play-circle me-2"></i>Try the Demo
+                </h3>
+                <p class="text-muted mb-4">
+                    Experience the full authentication flow with session management and Bootstrap 5 UI
+                </p>
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                            <a href="/register" class="btn btn-success me-md-2">
+                                <i class="bi bi-person-plus me-2"></i>Create Account
+                            </a>
+                            <a href="/login" class="btn btn-primary">
+                                <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+                            </a>
+                        </div>
+                        <p class="small text-muted mt-3 mb-0">
+                            Registration and login with real form validation and session persistence
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+.hero-section {
+    text-align: center;
+    padding: 4rem 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    margin: -2rem -15px 3rem -15px;
+}
+
+.feature-grid, .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin: 2rem 0;
+}
+
+.feature-card, .stat-card {
+    background: #f8f9fa;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.stat-card {
+    text-align: center;
+}
+
+.stat-card h4 {
+    font-size: 2.5rem;
+    color: #667eea;
+    margin-bottom: 0.5rem;
+}
+
+.api-links {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 1rem;
+}
+
+.btn {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    background: #667eea;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: background 0.3s;
+}
+
+.btn:hover {
+    background: #5a6fd8;
+}
+
+.btn-outline-primary {
+    background: transparent;
+    border: 2px solid #667eea;
+    color: #667eea;
+}
+
+.btn-outline-primary:hover {
+    background: #667eea;
+    color: white;
+}
+
+code {
+    background: #e9ecef;
+    padding: 0.25rem 0.5rem;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+    color: #495057;
+}
+</style>
+{% endblock %}

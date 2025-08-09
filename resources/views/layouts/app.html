@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>{% block title %}{{ title | default('FastAPI Laravel') }}{% endblock %}</title>
+    
+    <!-- Styles -->
+    <link href="{{ asset('css/app.css') }}" rel="stylesheet">
+    {% block styles %}{% endblock %}
+</head>
+<body>
+    <div id="app">
+        <!-- Navigation -->
+        <nav class="navbar">
+            <div class="container">
+                <a href="{{ url('/') }}" class="navbar-brand">
+                    {{ app_name | default('FastAPI Laravel') }}
+                </a>
+                
+                <div class="navbar-nav">
+                    {% if user %}
+                        <span class="nav-item">Welcome, {{ user.name }}!</span>
+                        <a href="{{ route('logout') }}" class="nav-link">Logout</a>
+                    {% else %}
+                        <a href="{{ route('login') }}" class="nav-link">Login</a>
+                        <a href="{{ route('register') }}" class="nav-link">Register</a>
+                    {% endif %}
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            {% if errors %}
+                <div class="alert alert-danger">
+                    <ul>
+                    {% for error in errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+
+            {% if success %}
+                <div class="alert alert-success">
+                    {{ success }}
+                </div>
+            {% endif %}
+
+            {% block content %}{% endblock %}
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="container">
+                <p>&copy; {{ current_year }} {{ app_name | default('FastAPI Laravel') }}. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script src="{{ asset('js/app.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

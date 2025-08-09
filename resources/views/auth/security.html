@@ -1,0 +1,357 @@
+{% extends "layouts/base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0">
+                <i class="bi bi-shield-lock me-2"></i>Security Settings
+            </h2>
+            <a href="/dashboard" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- MFA Status Overview -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-{% if mfa_status.mfa_enabled %}success{% else %}warning{% endif %} text-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-{% if mfa_status.mfa_enabled %}shield-check{% else %}shield-exclamation{% endif %} me-2"></i>
+                    Multi-Factor Authentication Status
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        {% if mfa_status.mfa_enabled %}
+                            <div class="alert alert-success" role="alert">
+                                <i class="bi bi-check-circle-fill me-2"></i>
+                                <strong>Multi-Factor Authentication is enabled</strong> and protecting your account.
+                            </div>
+                        {% else %}
+                            <div class="alert alert-warning" role="alert">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                <strong>Multi-Factor Authentication is disabled.</strong> 
+                                Enable MFA to add an extra layer of security to your account.
+                            </div>
+                        {% endif %}
+                        
+                        <p class="text-muted mb-0">
+                            Multi-Factor Authentication adds an extra layer of security by requiring a second form of verification when signing in.
+                        </p>
+                    </div>
+                    <div class="col-md-4 text-md-end">
+                        <div class="h4 mb-2">
+                            <span class="badge bg-{% if mfa_status.mfa_enabled %}success{% else %}secondary{% endif %} fs-6">
+                                {{ 'Enabled' if mfa_status.mfa_enabled else 'Disabled' }}
+                            </span>
+                        </div>
+                        {% if mfa_status.mfa_required %}
+                            <small class="text-danger">
+                                <i class="bi bi-exclamation-triangle me-1"></i>Required by admin
+                            </small>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- TOTP Authentication -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-phone me-2"></i>Authenticator App (TOTP)
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h6>Time-based One-Time Password (TOTP)</h6>
+                        <p class="text-muted mb-2">
+                            Use an authenticator app like Google Authenticator, Authy, or 1Password to generate time-based codes.
+                        </p>
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-{% if mfa_status.methods.totp.enabled %}success{% else %}secondary{% endif %} me-2">
+                                {{ 'Enabled' if mfa_status.methods.totp.enabled else 'Disabled' }}
+                            </span>
+                            {% if mfa_status.methods.totp.setup %}
+                                <small class="text-success">
+                                    <i class="bi bi-check-circle me-1"></i>Configured
+                                </small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-md-end">
+                        {% if not mfa_status.methods.totp.enabled %}
+                            <a href="/security/mfa/setup-totp" class="btn btn-success">
+                                <i class="bi bi-plus-circle me-1"></i>Setup TOTP
+                            </a>
+                        {% else %}
+                            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#disableTotpModal">
+                                <i class="bi bi-trash me-1"></i>Disable
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- WebAuthn Security Keys -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-key me-2"></i>Security Keys (WebAuthn)
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h6>Hardware Security Keys & Biometric Authentication</h6>
+                        <p class="text-muted mb-2">
+                            Use hardware security keys (like YubiKey) or built-in biometric authentication (Touch ID, Face ID, Windows Hello) for the highest level of security.
+                        </p>
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-{% if mfa_status.methods.webauthn.enabled %}success{% else %}secondary{% endif %} me-2">
+                                {{ 'Enabled' if mfa_status.methods.webauthn.enabled else 'Disabled' }}
+                            </span>
+                            {% if mfa_status.methods.webauthn.credentials_count > 0 %}
+                                <small class="text-success">
+                                    <i class="bi bi-check-circle me-1"></i>{{ mfa_status.methods.webauthn.credentials_count }} credential(s) registered
+                                </small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-md-end">
+                        <a href="/security/mfa/setup-webauthn" class="btn btn-primary">
+                            <i class="bi bi-plus-circle me-1"></i>Add Security Key
+                        </a>
+                    </div>
+                </div>
+                
+                {% if mfa_status.methods.webauthn.credentials_count > 0 %}
+                    <hr>
+                    <h6>Registered Security Keys</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Type</th>
+                                    <th>Added</th>
+                                    <th>Last Used</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- WebAuthn credentials will be loaded here -->
+                                <tr>
+                                    <td colspan="5" class="text-muted">Loading credentials...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SMS Authentication (if available) -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-chat-dots me-2"></i>SMS Authentication
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h6>Text Message Verification</h6>
+                        <p class="text-muted mb-2">
+                            Receive verification codes via SMS text message. Note: SMS is less secure than authenticator apps or security keys.
+                        </p>
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-{% if mfa_status.methods.sms.enabled %}success{% else %}secondary{% endif %} me-2">
+                                {{ 'Enabled' if mfa_status.methods.sms.enabled else 'Disabled' }}
+                            </span>
+                            {% if mfa_status.methods.sms.phone_number %}
+                                <small class="text-success">
+                                    <i class="bi bi-check-circle me-1"></i>{{ mfa_status.methods.sms.phone_number }}
+                                </small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-md-end">
+                        {% if not mfa_status.methods.sms.enabled %}
+                            <button class="btn btn-outline-primary" disabled>
+                                <i class="bi bi-gear me-1"></i>Coming Soon
+                            </button>
+                        {% else %}
+                            <button class="btn btn-outline-danger" disabled>
+                                <i class="bi bi-trash me-1"></i>Disable
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recovery Options -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-life-preserver me-2"></i>Recovery Options
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Backup Codes</h6>
+                        <p class="text-muted small">
+                            One-time use recovery codes that can be used if you lose access to your primary MFA methods.
+                        </p>
+                        <button class="btn btn-outline-warning btn-sm">
+                            <i class="bi bi-download me-1"></i>Generate New Codes
+                        </button>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Account Recovery</h6>
+                        <p class="text-muted small">
+                            If you lose access to all MFA methods, you can request account recovery via email.
+                        </p>
+                        <button class="btn btn-outline-info btn-sm" disabled>
+                            <i class="bi bi-envelope me-1"></i>Recovery Process
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Disable TOTP Modal -->
+<div class="modal fade" id="disableTotpModal" tabindex="-1" aria-labelledby="disableTotpModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="disableTotpModalLabel">
+                    <i class="bi bi-exclamation-triangle text-warning me-2"></i>Disable TOTP Authentication
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="/security/mfa/disable-totp" method="POST">
+                <div class="modal-body">
+                    <div class="alert alert-warning" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <strong>Warning:</strong> Disabling TOTP will reduce the security of your account.
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="confirmPassword" class="form-label">Confirm your password to proceed:</label>
+                        <input type="password" class="form-control" id="confirmPassword" name="password" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash me-1"></i>Disable TOTP
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Load WebAuthn credentials if any exist
+        if ({{ mfa_status.methods.webauthn.credentials_count | default(0) }} > 0) {
+            loadWebAuthnCredentials();
+        }
+        
+        // Add tooltips to badges
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+    
+    async function loadWebAuthnCredentials() {
+        try {
+            const response = await fetch('/api/v1/mfa/webauthn/credentials');
+            if (response.ok) {
+                const credentials = await response.json();
+                updateCredentialsTable(credentials);
+            }
+        } catch (error) {
+            console.error('Failed to load WebAuthn credentials:', error);
+        }
+    }
+    
+    function updateCredentialsTable(credentials) {
+        const tbody = document.querySelector('.table tbody');
+        if (!credentials || credentials.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-muted">No security keys registered</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = credentials.map(cred => `
+            <tr>
+                <td>${cred.name || 'Unnamed Key'}</td>
+                <td>
+                    <span class="badge bg-primary">${cred.type}</span>
+                </td>
+                <td><small class="text-muted">${new Date(cred.created_at).toLocaleDateString()}</small></td>
+                <td><small class="text-muted">${cred.last_used ? new Date(cred.last_used).toLocaleDateString() : 'Never'}</small></td>
+                <td>
+                    <button class="btn btn-outline-danger btn-sm" onclick="removeCredential('${cred.id}')">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    }
+    
+    async function removeCredential(credentialId) {
+        if (!confirm('Are you sure you want to remove this security key? This action cannot be undone.')) {
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/api/v1/mfa/webauthn/credentials/${credentialId}`, {
+                method: 'DELETE'
+            });
+            
+            if (response.ok) {
+                // Reload the page to refresh the credentials list
+                location.reload();
+            } else {
+                alert('Failed to remove security key. Please try again.');
+            }
+        } catch (error) {
+            console.error('Failed to remove credential:', error);
+            alert('Failed to remove security key. Please try again.');
+        }
+    }
+</script>
+{% endblock %}

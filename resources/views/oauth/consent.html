@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ client_name }} wants to access your account</title>
+    <style>
+        body {
+            font-family: 'Google Sans', Roboto, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+            color: #202124;
+            line-height: 1.4;
+        }
+        
+        .container {
+            max-width: 450px;
+            margin: 40px auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            padding: 24px 24px 0;
+            text-align: center;
+        }
+        
+        .google-logo {
+            width: 74px;
+            height: 24px;
+            margin-bottom: 16px;
+        }
+        
+        .client-info {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 16px 0;
+            padding: 16px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .client-logo {
+            width: 32px;
+            height: 32px;
+            border-radius: 4px;
+            margin-right: 12px;
+            background-color: #e8eaed;
+        }
+        
+        .client-name {
+            font-size: 16px;
+            font-weight: 500;
+            color: #202124;
+        }
+        
+        .main-title {
+            font-size: 24px;
+            font-weight: 400;
+            margin: 16px 0 8px;
+            color: #202124;
+        }
+        
+        .subtitle {
+            font-size: 14px;
+            color: #5f6368;
+            margin-bottom: 24px;
+        }
+        
+        .account-info {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            margin: 0 24px 24px;
+        }
+        
+        .account-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: #1a73e8;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+            margin-right: 12px;
+        }
+        
+        .account-details {
+            flex: 1;
+        }
+        
+        .account-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: #202124;
+        }
+        
+        .account-email {
+            font-size: 12px;
+            color: #5f6368;
+        }
+        
+        .permissions-section {
+            padding: 0 24px 24px;
+        }
+        
+        .permissions-title {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 16px;
+            color: #202124;
+        }
+        
+        .permission-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 16px;
+            padding: 12px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .permission-icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+            margin-top: 2px;
+            opacity: 0.7;
+        }
+        
+        .permission-content {
+            flex: 1;
+        }
+        
+        .permission-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: #202124;
+            margin-bottom: 4px;
+        }
+        
+        .permission-description {
+            font-size: 13px;
+            color: #5f6368;
+            line-height: 1.3;
+        }
+        
+        .high-risk-warning {
+            background-color: #fef7e0;
+            border: 1px solid #f9ab00;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 16px 24px;
+        }
+        
+        .warning-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: #e37400;
+            margin-bottom: 4px;
+        }
+        
+        .warning-text {
+            font-size: 13px;
+            color: #5f6368;
+        }
+        
+        .actions {
+            padding: 24px;
+            border-top: 1px solid #e8eaed;
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        
+        .btn {
+            padding: 10px 24px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border: 1px solid transparent;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        
+        .btn-cancel {
+            background-color: white;
+            color: #1a73e8;
+            border-color: #dadce0;
+        }
+        
+        .btn-cancel:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .btn-allow {
+            background-color: #1a73e8;
+            color: white;
+        }
+        
+        .btn-allow:hover {
+            background-color: #1557b1;
+        }
+        
+        .footer-links {
+            text-align: center;
+            padding: 16px 24px;
+            border-top: 1px solid #e8eaed;
+            background-color: #f8f9fa;
+        }
+        
+        .footer-links a {
+            color: #5f6368;
+            text-decoration: none;
+            font-size: 12px;
+            margin: 0 8px;
+        }
+        
+        .footer-links a:hover {
+            text-decoration: underline;
+        }
+        
+        .scope-count {
+            font-size: 13px;
+            color: #5f6368;
+            margin-bottom: 16px;
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                margin: 20px;
+                max-width: none;
+            }
+            
+            .actions {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <!-- Google-style logo placeholder -->
+            <svg class="google-logo" viewBox="0 0 74 24" fill="none">
+                <path d="M9.24 8.19v2.46h5.88c-.18 1.38-.64 2.39-1.34 3.1-.86.86-2.2 1.8-4.54 1.8-3.62 0-6.45-2.92-6.45-6.54s2.83-6.54 6.45-6.54c1.95 0 3.38.77 4.43 1.76L15.4 2.5C13.94 1.08 11.98 0 9.24 0 4.28 0 .11 4.04.11 9s4.17 9 9.13 9c2.68 0 4.7-.88 6.28-2.52 1.62-1.62 2.13-3.91 2.13-5.75 0-.57-.04-1.1-.13-1.54H9.24z" fill="#4285F4"/>
+                <path d="M25 6.19c-3.21 0-5.83 2.44-5.83 5.81 0 3.34 2.62 5.81 5.83 5.81s5.83-2.47 5.83-5.81c0-3.37-2.62-5.81-5.83-5.81zm0 9.33c-1.76 0-3.28-1.45-3.28-3.52 0-2.09 1.52-3.52 3.28-3.52s3.28 1.43 3.28 3.52c0 2.07-1.52 3.52-3.28 3.52z" fill="#EA4335"/>
+                <path d="M53.58 6.19c-3.21 0-5.83 2.44-5.83 5.81 0 3.34 2.62 5.81 5.83 5.81s5.83-2.47 5.83-5.81c0-3.37-2.62-5.81-5.83-5.81zm0 9.33c-1.76 0-3.28-1.45-3.28-3.52 0-2.09 1.52-3.52 3.28-3.52s3.28 1.43 3.28 3.52c0 2.07-1.52 3.52-3.28 3.52z" fill="#FBBC05"/>
+                <path d="M42.08 6.19c-3.21 0-5.83 2.44-5.83 5.81 0 3.34 2.62 5.81 5.83 5.81s5.83-2.47 5.83-5.81c0-3.37-2.62-5.81-5.83-5.81zm0 9.33c-1.76 0-3.28-1.45-3.28-3.52 0-2.09 1.52-3.52 3.28-3.52s3.28 1.43 3.28 3.52c0 2.07-1.52 3.52-3.28 3.52z" fill="#34A853"/>
+                <path d="M71.54 6.19c-3.21 0-5.83 2.44-5.83 5.81 0 3.34 2.62 5.81 5.83 5.81s5.83-2.47 5.83-5.81c0-3.37-2.62-5.81-5.83-5.81zm0 9.33c-1.76 0-3.28-1.45-3.28-3.52 0-2.09 1.52-3.52 3.28-3.52s3.28 1.43 3.28 3.52c0 2.07-1.52 3.52-3.28 3.52z" fill="#EA4335"/>
+            </svg>
+            
+            <div class="client-info">
+                {% if client_logo %}
+                    <img src="{{ client_logo }}" alt="{{ client_name }}" class="client-logo">
+                {% else %}
+                    <div class="client-logo"></div>
+                {% endif %}
+                <div class="client-name">{{ client_name }}</div>
+            </div>
+            
+            <h1 class="main-title">{{ client_name }} wants to access your account</h1>
+            <p class="subtitle">This will allow {{ client_name }} to:</p>
+        </div>
+        
+        <div class="account-info">
+            <div class="account-avatar">
+                {{ user.name[0] if user.name else user.email[0] }}
+            </div>
+            <div class="account-details">
+                <div class="account-name">{{ user.name or user.email }}</div>
+                <div class="account-email">{{ user.email }}</div>
+            </div>
+        </div>
+        
+        <div class="permissions-section">
+            {% if scope_count > 0 %}
+                <div class="scope-count">{{ scope_count }} permission{{ 's' if scope_count > 1 else '' }} requested</div>
+            {% endif %}
+            
+            {% for scope in scopes %}
+                <div class="permission-item">
+                    <svg class="permission-icon" viewBox="0 0 24 24" fill="currentColor">
+                        {% if scope.icon == "user" %}
+                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                        {% elif scope.icon == "email" %}
+                            <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                        {% elif scope.icon == "profile" %}
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                        {% elif scope.icon == "phone" %}
+                            <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+                        {% elif scope.icon == "location" %}
+                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                        {% elif scope.icon == "refresh" %}
+                            <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+                        {% elif scope.icon == "read" %}
+                            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+                        {% elif scope.icon == "write" %}
+                            <path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z"/>
+                        {% elif scope.icon == "admin" %}
+                            <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M10,17L6,13L7.41,11.59L10,14.17L16.59,7.58L18,9L10,17Z"/>
+                        {% else %}
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                        {% endif %}
+                    </svg>
+                    <div class="permission-content">
+                        <div class="permission-title">{{ scope.title }}</div>
+                        <div class="permission-description">{{ scope.description }}</div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        
+        {% if show_advanced %}
+            <div class="high-risk-warning">
+                <div class="warning-title">This app has not been verified</div>
+                <div class="warning-text">This app hasn't been verified by our security review process. Proceed only if you trust the developer.</div>
+            </div>
+        {% endif %}
+        
+        <form action="/oauth/consent" method="post">
+            {% for key, value in authorization_params.items() %}
+                {% if value %}
+                    <input type="hidden" name="{{ key }}" value="{{ value }}">
+                {% endif %}
+            {% endfor %}
+            
+            <div class="actions">
+                <button type="submit" name="action" value="deny" class="btn btn-cancel">Cancel</button>
+                <button type="submit" name="action" value="allow" class="btn btn-allow">Allow</button>
+            </div>
+        </form>
+        
+        <div class="footer-links">
+            {% if policy_uri %}
+                <a href="{{ policy_uri }}" target="_blank">Privacy Policy</a>
+            {% endif %}
+            {% if tos_uri %}
+                <a href="{{ tos_uri }}" target="_blank">Terms of Service</a>
+            {% endif %}
+            {% if client_uri %}
+                <a href="{{ client_uri }}" target="_blank">Learn more</a>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

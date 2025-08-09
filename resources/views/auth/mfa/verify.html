@@ -1,0 +1,408 @@
+{% extends "layouts/base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow-sm">
+            <div class="card-header bg-warning text-dark text-center py-4">
+                <h4 class="mb-0">
+                    <i class="bi bi-shield-lock-fill me-2"></i>Multi-Factor Authentication
+                </h4>
+            </div>
+            <div class="card-body p-4">
+                <div class="text-center mb-4">
+                    <div class="mb-3">
+                        <div class="bg-warning text-dark rounded-circle p-3 d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                            <i class="bi bi-shield-check fs-4"></i>
+                        </div>
+                    </div>
+                    <p class="text-muted">
+                        Additional verification required for <strong>{{ user.email }}</strong>
+                    </p>
+                </div>
+
+                <!-- MFA Method Selection -->
+                <div class="mb-4">
+                    <h6 class="mb-3">Choose your verification method:</h6>
+                    
+                    <!-- TOTP Option -->
+                    {% if mfa_status.methods.totp.enabled %}
+                        <div class="card mb-3 mfa-option" data-method="totp">
+                            <div class="card-body py-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3">
+                                        <i class="bi bi-phone fs-4 text-success"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1">Authenticator App</h6>
+                                        <small class="text-muted">Enter code from your authenticator app</small>
+                                    </div>
+                                    <div>
+                                        <input type="radio" class="form-check-input" name="mfaMethod" value="totp" id="methodTotp">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- WebAuthn Option -->
+                    {% if mfa_status.methods.webauthn.enabled %}
+                        <div class="card mb-3 mfa-option" data-method="webauthn">
+                            <div class="card-body py-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3">
+                                        <i class="bi bi-key fs-4 text-primary"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1">Security Key</h6>
+                                        <small class="text-muted">Use your security key or biometric authentication</small>
+                                    </div>
+                                    <div>
+                                        <input type="radio" class="form-check-input" name="mfaMethod" value="webauthn" id="methodWebauthn">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- SMS Option (if available) -->
+                    {% if mfa_status.methods.sms.enabled %}
+                        <div class="card mb-3 mfa-option" data-method="sms">
+                            <div class="card-body py-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3">
+                                        <i class="bi bi-chat-dots fs-4 text-info"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1">SMS Code</h6>
+                                        <small class="text-muted">Send code to {{ mfa_status.methods.sms.phone_number }}</small>
+                                    </div>
+                                    <div>
+                                        <input type="radio" class="form-check-input" name="mfaMethod" value="sms" id="methodSms">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- TOTP Verification Form -->
+                <div id="totpForm" class="verification-form d-none">
+                    <form action="/login/mfa/verify" method="POST">
+                        <input type="hidden" name="method" value="totp">
+                        
+                        {% if errors.code %}
+                            <div class="alert alert-danger" role="alert">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                {% for error in errors.code %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        
+                        <div class="mb-3">
+                            <label for="totpCode" class="form-label">Authentication Code</label>
+                            <input 
+                                type="text" 
+                                class="form-control form-control-lg text-center font-monospace" 
+                                id="totpCode" 
+                                name="code" 
+                                placeholder="000000"
+                                maxlength="6"
+                                required
+                                autocomplete="one-time-code"
+                            >
+                            <div class="form-text">
+                                Enter the 6-digit code from your authenticator app
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="bi bi-check-circle me-2"></i>Verify Code
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- WebAuthn Verification -->
+                <div id="webauthnForm" class="verification-form d-none">
+                    <div class="text-center mb-4">
+                        <div class="mb-3">
+                            <i class="bi bi-key-fill display-6 text-primary"></i>
+                        </div>
+                        <h6>Touch your security key or use biometric authentication</h6>
+                        <p class="text-muted small">
+                            Insert your security key and follow the prompts, or use your device's built-in authentication.
+                        </p>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-primary btn-lg" id="webauthnBtn" onclick="startWebAuthnAuth()">
+                            <i class="bi bi-shield-check me-2"></i>Authenticate
+                        </button>
+                        <button type="button" class="btn btn-primary btn-lg d-none" id="webauthnLoadingBtn" disabled>
+                            <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                            Authenticating...
+                        </button>
+                    </div>
+                    
+                    <div class="alert alert-danger d-none mt-3" id="webauthnError" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <span id="webauthnErrorMessage"></span>
+                    </div>
+                </div>
+
+                <!-- Back to Login -->
+                <hr class="my-4">
+                <div class="text-center">
+                    <p class="mb-2">
+                        <a href="/login" class="text-decoration-none">
+                            <i class="bi bi-arrow-left me-1"></i>Back to Login
+                        </a>
+                    </p>
+                    <small class="text-muted">
+                        Having trouble? <a href="/support" class="text-decoration-none">Contact Support</a>
+                    </small>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Help Card -->
+        <div class="card mt-4 bg-light">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="bi bi-question-circle me-2"></i>Need Help?
+                </h6>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="small fw-bold">Lost your authenticator?</h6>
+                        <p class="small text-muted">
+                            Use a backup code or contact support for account recovery.
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="small fw-bold">Security key issues?</h6>
+                        <p class="small text-muted">
+                            Try a different USB port or use biometric authentication if available.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle MFA method selection
+        const methodOptions = document.querySelectorAll('.mfa-option');
+        const methodRadios = document.querySelectorAll('input[name="mfaMethod"]');
+        
+        methodOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                const method = this.dataset.method;
+                const radio = this.querySelector('input[type="radio"]');
+                radio.checked = true;
+                showVerificationForm(method);
+                updateSelectedOption(option);
+            });
+        });
+        
+        methodRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                if (this.checked) {
+                    showVerificationForm(this.value);
+                    updateSelectedOption(this.closest('.mfa-option'));
+                }
+            });
+        });
+        
+        // Auto-select first available method
+        {% if mfa_status.methods.totp.enabled %}
+            document.getElementById('methodTotp').checked = true;
+            showVerificationForm('totp');
+            updateSelectedOption(document.querySelector('[data-method="totp"]'));
+        {% elif mfa_status.methods.webauthn.enabled %}
+            document.getElementById('methodWebauthn').checked = true;
+            showVerificationForm('webauthn');
+            updateSelectedOption(document.querySelector('[data-method="webauthn"]'));
+        {% endif %}
+        
+        // TOTP code input formatting
+        const totpInput = document.getElementById('totpCode');
+        if (totpInput) {
+            totpInput.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length > 6) {
+                    value = value.substring(0, 6);
+                }
+                e.target.value = value;
+                
+                // Auto-submit when 6 digits are entered
+                if (value.length === 6) {
+                    setTimeout(() => {
+                        e.target.form.submit();
+                    }, 500);
+                }
+            });
+            
+            totpInput.addEventListener('keypress', function(e) {
+                if (!/\d/.test(e.key) && !['Backspace', 'Delete', 'Tab', 'Enter'].includes(e.key)) {
+                    e.preventDefault();
+                }
+            });
+        }
+    });
+    
+    function updateSelectedOption(selectedOption) {
+        // Remove selection from all options
+        document.querySelectorAll('.mfa-option').forEach(option => {
+            option.classList.remove('border-primary', 'bg-primary-subtle');
+        });
+        
+        // Add selection to the chosen option
+        selectedOption.classList.add('border-primary', 'bg-primary-subtle');
+    }
+    
+    function showVerificationForm(method) {
+        // Hide all forms
+        document.querySelectorAll('.verification-form').forEach(form => {
+            form.classList.add('d-none');
+        });
+        
+        // Show selected form
+        const formId = method + 'Form';
+        const form = document.getElementById(formId);
+        if (form) {
+            form.classList.remove('d-none');
+            
+            // Auto-focus on input
+            if (method === 'totp') {
+                setTimeout(() => {
+                    document.getElementById('totpCode').focus();
+                }, 100);
+            }
+        }
+    }
+    
+    async function startWebAuthnAuth() {
+        const btn = document.getElementById('webauthnBtn');
+        const loadingBtn = document.getElementById('webauthnLoadingBtn');
+        const errorAlert = document.getElementById('webauthnError');
+        
+        btn.classList.add('d-none');
+        loadingBtn.classList.remove('d-none');
+        errorAlert.classList.add('d-none');
+        
+        try {
+            // Get authentication options
+            const optionsResponse = await fetch('/security/mfa/webauthn/authentication-options', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+            
+            if (!optionsResponse.ok) {
+                throw new Error('Failed to get authentication options');
+            }
+            
+            const options = await optionsResponse.json();
+            
+            // Convert base64url to ArrayBuffer
+            options.challenge = base64urlToArrayBuffer(options.challenge);
+            if (options.allowCredentials) {
+                options.allowCredentials = options.allowCredentials.map(cred => ({
+                    ...cred,
+                    id: base64urlToArrayBuffer(cred.id)
+                }));
+            }
+            
+            // Perform WebAuthn authentication
+            const credential = await navigator.credentials.get({
+                publicKey: options
+            });
+            
+            // Convert response for server
+            const credentialJson = {
+                id: credential.id,
+                rawId: arrayBufferToBase64url(credential.rawId),
+                response: {
+                    clientDataJSON: arrayBufferToBase64url(credential.response.clientDataJSON),
+                    authenticatorData: arrayBufferToBase64url(credential.response.authenticatorData),
+                    signature: arrayBufferToBase64url(credential.response.signature),
+                    userHandle: credential.response.userHandle ? arrayBufferToBase64url(credential.response.userHandle) : null
+                },
+                type: credential.type
+            };
+            
+            // Send to server for verification
+            const verifyResponse = await fetch('/login/mfa/verify-webauthn', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(credentialJson)
+            });
+            
+            const result = await verifyResponse.json();
+            
+            if (verifyResponse.ok && result.success) {
+                // Redirect to dashboard
+                window.location.href = result.redirect_url || '/dashboard';
+            } else {
+                throw new Error(result.error || 'Authentication failed');
+            }
+            
+        } catch (error) {
+            console.error('WebAuthn authentication error:', error);
+            
+            let errorMessage = 'Authentication failed. Please try again.';
+            if (error.name === 'NotAllowedError') {
+                errorMessage = 'Authentication was cancelled or timed out.';
+            } else if (error.name === 'SecurityError') {
+                errorMessage = 'Security error occurred. Please ensure you\'re using HTTPS.';
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+            
+            document.getElementById('webauthnErrorMessage').textContent = errorMessage;
+            errorAlert.classList.remove('d-none');
+        } finally {
+            btn.classList.remove('d-none');
+            loadingBtn.classList.add('d-none');
+        }
+    }
+    
+    // Helper functions for base64url encoding/decoding
+    function base64urlToArrayBuffer(base64url) {
+        const padding = '='.repeat((4 - base64url.length % 4) % 4);
+        const base64 = (base64url + padding)
+            .replace(/-/g, '+')
+            .replace(/_/g, '/');
+        
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+        
+        for (let i = 0; i < rawData.length; ++i) {
+            outputArray[i] = rawData.charCodeAt(i);
+        }
+        return outputArray.buffer;
+    }
+    
+    function arrayBufferToBase64url(buffer) {
+        const bytes = new Uint8Array(buffer);
+        let str = '';
+        for (const byte of bytes) {
+            str += String.fromCharCode(byte);
+        }
+        return window.btoa(str)
+            .replace(/\+/g, '-')
+            .replace(/\//g, '_')
+            .replace(/=/g, '');
+    }
+</script>
+{% endblock %}

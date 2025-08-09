@@ -1,0 +1,368 @@
+{% extends "layouts/base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white text-center py-4">
+                <h4 class="mb-0">
+                    <i class="bi bi-key me-2"></i>Setup WebAuthn Security Key
+                </h4>
+            </div>
+            <div class="card-body p-4">
+                <!-- Step Progress -->
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="badge bg-primary" id="step1Badge">Step 1</span>
+                        <div class="flex-fill mx-3">
+                            <div class="progress" style="height: 4px;">
+                                <div class="progress-bar bg-primary" role="progressbar" style="width: 50%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" id="progressBar"></div>
+                            </div>
+                        </div>
+                        <span class="badge bg-light text-dark" id="step2Badge">Step 2</span>
+                    </div>
+                    <div class="d-flex justify-content-between mt-2">
+                        <small class="text-primary fw-semibold" id="step1Text">Prepare</small>
+                        <small class="text-muted" id="step2Text">Register</small>
+                    </div>
+                </div>
+
+                <!-- Status Display -->
+                <div id="statusCard" class="card bg-light mb-4">
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <i class="bi bi-key-fill display-4 text-primary"></i>
+                        </div>
+                        <h5>Ready to Register Security Key</h5>
+                        <p class="text-muted mb-0">
+                            Click the button below to start the registration process for your security key or biometric authenticator.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Information Cards -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card h-100 border-0 bg-light">
+                            <div class="card-body text-center">
+                                <i class="bi bi-usb-drive-fill text-primary fs-4 mb-2"></i>
+                                <h6>Hardware Keys</h6>
+                                <p class="small text-muted mb-0">
+                                    YubiKey, SoloKeys, and other FIDO2 security keys
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card h-100 border-0 bg-light">
+                            <div class="card-body text-center">
+                                <i class="bi bi-fingerprint text-success fs-4 mb-2"></i>
+                                <h6>Biometric Auth</h6>
+                                <p class="small text-muted mb-0">
+                                    Touch ID, Face ID, Windows Hello, fingerprint readers
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="d-grid gap-2 mb-4">
+                    <button type="button" class="btn btn-primary btn-lg" id="registerBtn" onclick="startRegistration()">
+                        <i class="bi bi-plus-circle me-2"></i>Register Security Key
+                    </button>
+                    <button type="button" class="btn btn-success btn-lg d-none" id="completeBtn" onclick="completeSetup()">
+                        <i class="bi bi-check-circle me-2"></i>Complete Setup
+                    </button>
+                </div>
+
+                <!-- Loading State -->
+                <div class="text-center d-none" id="loadingState">
+                    <div class="spinner-border text-primary me-3" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <span id="loadingText">Preparing registration...</span>
+                </div>
+
+                <!-- Error Display -->
+                <div class="alert alert-danger d-none" id="errorAlert" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <span id="errorMessage"></span>
+                </div>
+
+                <!-- Success Display -->
+                <div class="alert alert-success d-none" id="successAlert" role="alert">
+                    <i class="bi bi-check-circle-fill me-2"></i>
+                    <span id="successMessage"></span>
+                </div>
+
+                <div class="text-center">
+                    <a href="/security" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Back to Security Settings
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Browser Support Info -->
+        <div class="card mt-4 bg-light">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="bi bi-browser-chrome me-2"></i>Browser Compatibility
+                </h6>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="small fw-bold text-success">Fully Supported:</h6>
+                        <ul class="list-unstyled small">
+                            <li><i class="bi bi-check-circle text-success me-1"></i> Chrome 67+</li>
+                            <li><i class="bi bi-check-circle text-success me-1"></i> Firefox 60+</li>
+                            <li><i class="bi bi-check-circle text-success me-1"></i> Edge 18+</li>
+                            <li><i class="bi bi-check-circle text-success me-1"></i> Safari 14+</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="small fw-bold">What you need:</h6>
+                        <ul class="small">
+                            <li>A FIDO2 security key, or</li>
+                            <li>Built-in biometric authentication</li>
+                            <li>HTTPS connection (required)</li>
+                            <li>Modern browser with WebAuthn support</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Security Notice -->
+        <div class="alert alert-info mt-4" role="alert">
+            <i class="bi bi-shield-check-fill me-2"></i>
+            <strong>Highest Security:</strong> WebAuthn provides the strongest protection against phishing and account takeover attacks. 
+            Your security key cannot be duplicated or stolen remotely.
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let registrationInProgress = false;
+    
+    // Check WebAuthn support on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        checkWebAuthnSupport();
+    });
+    
+    function checkWebAuthnSupport() {
+        if (!window.PublicKeyCredential) {
+            showError('WebAuthn is not supported in this browser. Please use a modern browser like Chrome, Firefox, Edge, or Safari.');
+            document.getElementById('registerBtn').disabled = true;
+            return false;
+        }
+        
+        // Check if platform authenticator is available
+        if (PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable) {
+            PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable().then(function(available) {
+                if (available) {
+                    updateStatusCard('platform');
+                }
+            });
+        }
+        
+        return true;
+    }
+    
+    function updateStatusCard(type) {
+        const statusCard = document.getElementById('statusCard');
+        const cardBody = statusCard.querySelector('.card-body');
+        
+        if (type === 'platform') {
+            cardBody.innerHTML = `
+                <div class="mb-3">
+                    <i class="bi bi-fingerprint display-4 text-success"></i>
+                </div>
+                <h5>Biometric Authentication Available</h5>
+                <p class="text-muted mb-0">
+                    Your device supports built-in biometric authentication (fingerprint, face recognition, etc.).
+                </p>
+            `;
+        }
+    }
+    
+    async function startRegistration() {
+        if (registrationInProgress) return;
+        
+        registrationInProgress = true;
+        showLoading('Preparing registration...');
+        hideError();
+        hideSuccess();
+        
+        try {
+            // Get registration options from server
+            const optionsResponse = await fetch('/security/mfa/webauthn/registration-options', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+            
+            if (!optionsResponse.ok) {
+                throw new Error('Failed to get registration options');
+            }
+            
+            const options = await optionsResponse.json();
+            
+            // Convert base64url to ArrayBuffer for challenge and user.id
+            options.challenge = base64urlToArrayBuffer(options.challenge);
+            options.user.id = base64urlToArrayBuffer(options.user.id);
+            
+            // Convert excludeCredentials if present
+            if (options.excludeCredentials) {
+                options.excludeCredentials = options.excludeCredentials.map(cred => ({
+                    ...cred,
+                    id: base64urlToArrayBuffer(cred.id)
+                }));
+            }
+            
+            updateProgress(75);
+            showLoading('Touch your security key or use biometric authentication...');
+            
+            // Call WebAuthn API
+            const credential = await navigator.credentials.create({
+                publicKey: options
+            });
+            
+            updateProgress(90);
+            showLoading('Verifying registration...');
+            
+            // Convert ArrayBuffer to base64url for sending to server
+            const credentialJson = {
+                id: credential.id,
+                rawId: arrayBufferToBase64url(credential.rawId),
+                response: {
+                    clientDataJSON: arrayBufferToBase64url(credential.response.clientDataJSON),
+                    attestationObject: arrayBufferToBase64url(credential.response.attestationObject)
+                },
+                type: credential.type
+            };
+            
+            // Send to server for verification
+            const verifyResponse = await fetch('/security/mfa/webauthn/registration-verify', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(credentialJson)
+            });
+            
+            const verifyResult = await verifyResponse.json();
+            
+            if (verifyResponse.ok && verifyResult.success) {
+                updateProgress(100);
+                hideLoading();
+                showSuccess('Security key registered successfully!');
+                document.getElementById('registerBtn').classList.add('d-none');
+                document.getElementById('completeBtn').classList.remove('d-none');
+                updateStepProgress(2);
+            } else {
+                throw new Error(verifyResult.error || 'Registration verification failed');
+            }
+            
+        } catch (error) {
+            console.error('WebAuthn registration error:', error);
+            hideLoading();
+            
+            if (error.name === 'NotAllowedError') {
+                showError('Registration was cancelled or timed out. Please try again.');
+            } else if (error.name === 'SecurityError') {
+                showError('Registration failed due to security restrictions. Make sure you\'re using HTTPS.');
+            } else if (error.name === 'NotSupportedError') {
+                showError('This security key is not supported. Please try a different key.');
+            } else {
+                showError(`Registration failed: ${error.message}`);
+            }
+        } finally {
+            registrationInProgress = false;
+        }
+    }
+    
+    function completeSetup() {
+        window.location.href = '/security';
+    }
+    
+    function updateProgress(percentage) {
+        const progressBar = document.getElementById('progressBar');
+        progressBar.style.width = percentage + '%';
+        progressBar.setAttribute('aria-valuenow', percentage);
+    }
+    
+    function updateStepProgress(step) {
+        if (step === 2) {
+            document.getElementById('step1Badge').classList.remove('bg-primary');
+            document.getElementById('step1Badge').classList.add('bg-success');
+            document.getElementById('step2Badge').classList.remove('bg-light', 'text-dark');
+            document.getElementById('step2Badge').classList.add('bg-primary');
+            document.getElementById('step1Text').classList.remove('text-primary');
+            document.getElementById('step1Text').classList.add('text-success');
+            document.getElementById('step2Text').classList.remove('text-muted');
+            document.getElementById('step2Text').classList.add('text-primary', 'fw-semibold');
+        }
+    }
+    
+    function showLoading(message) {
+        document.getElementById('loadingText').textContent = message;
+        document.getElementById('loadingState').classList.remove('d-none');
+        document.getElementById('registerBtn').disabled = true;
+    }
+    
+    function hideLoading() {
+        document.getElementById('loadingState').classList.add('d-none');
+        document.getElementById('registerBtn').disabled = false;
+    }
+    
+    function showError(message) {
+        document.getElementById('errorMessage').textContent = message;
+        document.getElementById('errorAlert').classList.remove('d-none');
+    }
+    
+    function hideError() {
+        document.getElementById('errorAlert').classList.add('d-none');
+    }
+    
+    function showSuccess(message) {
+        document.getElementById('successMessage').textContent = message;
+        document.getElementById('successAlert').classList.remove('d-none');
+    }
+    
+    function hideSuccess() {
+        document.getElementById('successAlert').classList.add('d-none');
+    }
+    
+    // Helper functions for base64url encoding/decoding
+    function base64urlToArrayBuffer(base64url) {
+        const padding = '='.repeat((4 - base64url.length % 4) % 4);
+        const base64 = (base64url + padding)
+            .replace(/-/g, '+')
+            .replace(/_/g, '/');
+        
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+        
+        for (let i = 0; i < rawData.length; ++i) {
+            outputArray[i] = rawData.charCodeAt(i);
+        }
+        return outputArray.buffer;
+    }
+    
+    function arrayBufferToBase64url(buffer) {
+        const bytes = new Uint8Array(buffer);
+        let str = '';
+        for (const byte of bytes) {
+            str += String.fromCharCode(byte);
+        }
+        return window.btoa(str)
+            .replace(/\+/g, '-')
+            .replace(/\//g, '_')
+            .replace(/=/g, '');
+    }
+</script>
+{% endblock %}

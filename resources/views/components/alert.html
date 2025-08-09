@@ -1,0 +1,15 @@
+{# Alert Component - Jinja2 #}
+{% set alert_type = type | default('info') %}
+{% set dismissible = dismissible | default(false) %}
+
+<div class="alert alert-{{ alert_type }}{% if dismissible %} alert-dismissible{% endif %}">
+    {% if dismissible %}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    {% endif %}
+    
+    {% if title %}
+        <h5 class="alert-heading">{{ title }}</h5>
+    {% endif %}
+    
+    {{ message if message else caller() if caller else '' }}
+</div>

@@ -1,0 +1,305 @@
+{% extends "layouts/base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white text-center py-4">
+                <h4 class="mb-0">
+                    <i class="bi bi-person-plus-fill me-2"></i>Create Account
+                </h4>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" action="/register" novalidate>
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Full Name</label>
+                        <input 
+                            type="text" 
+                            class="form-control{% if errors.name %} is-invalid{% endif %}" 
+                            id="name" 
+                            name="name" 
+                            value="{{ old.name or '' }}"
+                            required 
+                            autofocus
+                            placeholder="Enter your full name"
+                        >
+                        {% if errors.name %}
+                            <div class="invalid-feedback">
+                                {% for error in errors.name %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email Address</label>
+                        <input 
+                            type="email" 
+                            class="form-control{% if errors.email %} is-invalid{% endif %}" 
+                            id="email" 
+                            name="email" 
+                            value="{{ old.email or '' }}"
+                            required
+                            placeholder="Enter your email"
+                        >
+                        {% if errors.email %}
+                            <div class="invalid-feedback">
+                                {% for error in errors.email %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <div class="input-group">
+                            <input 
+                                type="password" 
+                                class="form-control{% if errors.password %} is-invalid{% endif %}" 
+                                id="password" 
+                                name="password" 
+                                required
+                                placeholder="Create a strong password"
+                            >
+                            <button 
+                                class="btn btn-outline-secondary" 
+                                type="button" 
+                                id="togglePassword"
+                            >
+                                <i class="bi bi-eye" id="toggleIcon"></i>
+                            </button>
+                        </div>
+                        <div class="form-text">
+                            <small class="text-muted">Password must be at least 8 characters long.</small>
+                        </div>
+                        {% if errors.password %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in errors.password %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="password_confirmation" class="form-label">Confirm Password</label>
+                        <div class="input-group">
+                            <input 
+                                type="password" 
+                                class="form-control{% if errors.password_confirmation %} is-invalid{% endif %}" 
+                                id="password_confirmation" 
+                                name="password_confirmation" 
+                                required
+                                placeholder="Confirm your password"
+                            >
+                            <button 
+                                class="btn btn-outline-secondary" 
+                                type="button" 
+                                id="togglePasswordConfirmation"
+                            >
+                                <i class="bi bi-eye" id="toggleConfirmationIcon"></i>
+                            </button>
+                        </div>
+                        {% if errors.password_confirmation %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in errors.password_confirmation %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="terms" required>
+                        <label class="form-check-label" for="terms">
+                            I agree to the <a href="/terms" class="text-decoration-none" target="_blank">Terms of Service</a> 
+                            and <a href="/privacy" class="text-decoration-none" target="_blank">Privacy Policy</a>
+                        </label>
+                        <div class="invalid-feedback">
+                            You must agree to the terms and conditions.
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="bi bi-person-plus me-2"></i>Create Account
+                        </button>
+                    </div>
+                </form>
+                
+                <hr class="my-4">
+                
+                <div class="text-center">
+                    <p class="mb-0">
+                        Already have an account? 
+                        <a href="/login" class="text-decoration-none fw-semibold">
+                            Sign in here
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Password Strength Indicator -->
+        <div class="card mt-3">
+            <div class="card-body py-3">
+                <div class="row">
+                    <div class="col">
+                        <small class="text-muted d-block mb-2">Password Strength:</small>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar" id="passwordStrength" role="progressbar" style="width: 0%"></div>
+                        </div>
+                        <small class="text-muted" id="strengthText">Enter a password</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Toggle password visibility
+    document.getElementById('togglePassword').addEventListener('click', function() {
+        const passwordField = document.getElementById('password');
+        const toggleIcon = document.getElementById('toggleIcon');
+        
+        if (passwordField.type === 'password') {
+            passwordField.type = 'text';
+            toggleIcon.classList.remove('bi-eye');
+            toggleIcon.classList.add('bi-eye-slash');
+        } else {
+            passwordField.type = 'password';
+            toggleIcon.classList.remove('bi-eye-slash');
+            toggleIcon.classList.add('bi-eye');
+        }
+    });
+    
+    // Toggle password confirmation visibility
+    document.getElementById('togglePasswordConfirmation').addEventListener('click', function() {
+        const passwordField = document.getElementById('password_confirmation');
+        const toggleIcon = document.getElementById('toggleConfirmationIcon');
+        
+        if (passwordField.type === 'password') {
+            passwordField.type = 'text';
+            toggleIcon.classList.remove('bi-eye');
+            toggleIcon.classList.add('bi-eye-slash');
+        } else {
+            passwordField.type = 'password';
+            toggleIcon.classList.remove('bi-eye-slash');
+            toggleIcon.classList.add('bi-eye');
+        }
+    });
+    
+    // Password strength checker
+    function checkPasswordStrength(password) {
+        let strength = 0;
+        let text = 'Weak';
+        let colorClass = 'bg-danger';
+        
+        if (password.length >= 8) strength += 25;
+        if (/[a-z]/.test(password)) strength += 25;
+        if (/[A-Z]/.test(password)) strength += 25;
+        if (/[0-9]/.test(password)) strength += 12.5;
+        if (/[^A-Za-z0-9]/.test(password)) strength += 12.5;
+        
+        if (strength <= 25) {
+            text = 'Weak';
+            colorClass = 'bg-danger';
+        } else if (strength <= 50) {
+            text = 'Fair';
+            colorClass = 'bg-warning';
+        } else if (strength <= 75) {
+            text = 'Good';
+            colorClass = 'bg-info';
+        } else {
+            text = 'Strong';
+            colorClass = 'bg-success';
+        }
+        
+        return { strength, text, colorClass };
+    }
+    
+    document.getElementById('password').addEventListener('input', function() {
+        const password = this.value;
+        const strengthBar = document.getElementById('passwordStrength');
+        const strengthText = document.getElementById('strengthText');
+        
+        if (password.length === 0) {
+            strengthBar.style.width = '0%';
+            strengthBar.className = 'progress-bar';
+            strengthText.textContent = 'Enter a password';
+            return;
+        }
+        
+        const result = checkPasswordStrength(password);
+        strengthBar.style.width = result.strength + '%';
+        strengthBar.className = `progress-bar ${result.colorClass}`;
+        strengthText.textContent = result.text;
+    });
+    
+    // Form validation
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const name = document.getElementById('name');
+        const email = document.getElementById('email');
+        const password = document.getElementById('password');
+        const passwordConfirmation = document.getElementById('password_confirmation');
+        const terms = document.getElementById('terms');
+        let isValid = true;
+        
+        // Clear previous validation states
+        [name, email, password, passwordConfirmation, terms].forEach(field => {
+            field.classList.remove('is-invalid');
+        });
+        
+        // Name validation
+        if (!name.value.trim() || name.value.trim().length < 2) {
+            name.classList.add('is-invalid');
+            isValid = false;
+        }
+        
+        // Email validation
+        if (!email.value.trim() || !email.value.includes('@')) {
+            email.classList.add('is-invalid');
+            isValid = false;
+        }
+        
+        // Password validation
+        if (!password.value.trim() || password.value.length < 8) {
+            password.classList.add('is-invalid');
+            isValid = false;
+        }
+        
+        // Password confirmation validation
+        if (!passwordConfirmation.value.trim() || passwordConfirmation.value !== password.value) {
+            passwordConfirmation.classList.add('is-invalid');
+            isValid = false;
+        }
+        
+        // Terms validation
+        if (!terms.checked) {
+            terms.classList.add('is-invalid');
+            isValid = false;
+        }
+        
+        if (!isValid) {
+            e.preventDefault();
+        }
+    });
+    
+    // Real-time password confirmation validation
+    document.getElementById('password_confirmation').addEventListener('input', function() {
+        const password = document.getElementById('password').value;
+        const confirmation = this.value;
+        
+        if (confirmation && confirmation !== password) {
+            this.classList.add('is-invalid');
+        } else {
+            this.classList.remove('is-invalid');
+        }
+    });
+</script>
+{% endblock %}

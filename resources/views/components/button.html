@@ -1,0 +1,22 @@
+{# Button Component - Jinja2 #}
+{% set btn_type = type | default('primary') %}
+{% set btn_size = size | default('') %}
+{% set btn_disabled = disabled | default(false) %}
+{% set btn_href = href | default('') %}
+{% set btn_target = target | default('') %}
+
+{% if btn_href %}
+    <a href="{{ btn_href }}" 
+       class="btn btn-{{ btn_type }}{% if btn_size %} btn-{{ btn_size }}{% endif %}"
+       {% if btn_target %}target="{{ btn_target }}"{% endif %}
+       {% if btn_disabled %}disabled{% endif %}>
+        {{ text if text else caller() if caller else '' }}
+    </a>
+{% else %}
+    <button type="{{ button_type | default('button') }}" 
+            class="btn btn-{{ btn_type }}{% if btn_size %} btn-{{ btn_size }}{% endif %}"
+            {% if btn_disabled %}disabled{% endif %}
+            {% if onclick %}onclick="{{ onclick }}"{% endif %}>
+        {{ text if text else caller() if caller else '' }}
+    </button>
+{% endif %}

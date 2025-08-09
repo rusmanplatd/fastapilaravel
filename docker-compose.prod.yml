@@ -1,0 +1,103 @@
+# Production configuration for docker-compose
+# Use with: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
+
+services:
+  app:
+    # Inherit build context from main compose file
+    build: .
+    environment:
+      # Production environment
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - LOG_LEVEL=info
+      - DB_ECHO=false
+      - DB_SEED_ON_STARTUP=false
+      
+      # Production security
+      - RATE_LIMIT_ENABLED=true
+      - SECURE_SSL_REDIRECT=true
+      - SECURE_HSTS_SECONDS=31536000
+      
+      # Production features
+      - CACHE_ENABLED=true
+      - COMPRESSION_ENABLED=true
+      - ANALYTICS_ENABLED=true
+      
+      # Disable development features
+      - DEBUG_TOOLBAR_ENABLED=false
+      - SQL_DEBUG=false
+      - FEATURE_EXPERIMENTAL_FEATURES=false
+    
+    # Production command (no reload)
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
+    
+    # Don't mount source code in production
+    volumes:
+      - app_storage:/app/storage
+      - app_logs:/app/storage/logs
+    
+    # Production restart policy
+    restart: always
+    
+    # Resource limits for production
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+  
+  postgres:
+    # Use the same image as base compose
+    image: postgres:17-alpine
+    environment:
+      # Production database settings
+      - POSTGRES_DB=fastapi_laravel_prod
+      - POSTGRES_USER=postgres
+      # In real production, use secrets management
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-change-this-in-production}
+    
+    # Don't expose ports in production
+    ports: []
+    
+    # Production restart policy
+    restart: always
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+  
+  redis:
+    # Use the same image as base compose
+    image: redis:8-alpine
+    # Don't expose ports in production
+    ports: []
+    
+    # Production restart policy
+    restart: always
+    
+    # Redis configuration for production
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+
+# Include volumes from main compose
+volumes:
+  app_storage:
+  app_logs:

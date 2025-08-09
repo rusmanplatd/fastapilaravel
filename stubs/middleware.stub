@@ -1,0 +1,18 @@
+from __future__ import annotations
+
+from typing import Callable
+from fastapi import Request, Response
+
+
+class {{ class }}:
+    """{{ class }} middleware."""
+    
+    async def __call__(self, request: Request, call_next: Callable) -> Response:
+        """Process the request."""
+        # Pre-processing logic here
+        
+        response = await call_next(request)
+        
+        # Post-processing logic here
+        
+        return response

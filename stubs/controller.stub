@@ -1,0 +1,38 @@
+from __future__ import annotations
+
+from typing import Any, Dict
+from fastapi import Depends, Request
+from sqlalchemy.orm import Session
+
+from app.Http.Controllers.BaseController import BaseController
+from config.database import get_db
+
+
+class {{ class }}(BaseController):
+    """{{ class }} for handling requests."""
+    
+    def __init__(self) -> None:
+        super().__init__()
+    
+    async def index(
+        self,
+        request: Request,
+        db: Session = Depends(get_db)
+    ) -> Dict[str, Any]:
+        """Handle the incoming request."""
+        try:
+            # Implement your controller logic here
+            # Example:
+            # resources = db.query(YourModel).all()
+            # return self.success_response(data={"resources": [resource.to_dict() for resource in resources]})
+            
+            return self.success_response(
+                message="Welcome to {{ class }}",
+                data={"controller": "{{ class }}", "status": "active"}
+            )
+        except Exception as e:
+            return self.error_response(
+                message="An error occurred while processing your request",
+                errors={"exception": str(e)},
+                status_code=500
+            )

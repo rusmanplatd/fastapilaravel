@@ -1,0 +1,123 @@
+services:
+  app:
+    build: .
+    container_name: fastapi-laravel-app
+    ports:
+      - "8000:8000"
+    environment:
+      # Application Configuration
+      - APP_NAME=FastAPI Laravel
+      - APP_ENV=development
+      - APP_DEBUG=true
+      - APP_SECRET_KEY=dev-secret-key-change-in-production-min-32-chars
+      - APP_URL=http://localhost:8000
+      - HOST=0.0.0.0
+      - PORT=8000
+      
+      # Database Configuration
+      - DB_CONNECTION=postgresql
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_DATABASE=fastapi_laravel
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - DB_SEED_ON_STARTUP=true
+      
+      # Redis Configuration
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+      - CACHE_DRIVER=redis
+      - QUEUE_CONNECTION=redis
+      
+      # Security & Auth
+      - ACCESS_TOKEN_EXPIRE_MINUTES=60
+      - OAUTH2_ENABLED=true
+      - MFA_ENABLED=true
+      
+      # CORS Configuration
+      - CORS_ORIGINS=http://localhost:3000,http://localhost:8080,http://localhost:8000
+      - CORS_ALLOW_CREDENTIALS=true
+      
+      # Feature Flags
+      - FEATURE_REGISTRATION_ENABLED=true
+      - FEATURE_EMAIL_VERIFICATION_REQUIRED=false
+      - FEATURE_ANALYTICS_ENABLED=true
+    volumes:
+      - app_storage:/app/storage
+      - app_logs:/app/storage/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - fastapi-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/monitoring/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  redis:
+    image: redis:8-alpine
+    container_name: fastapi-laravel-redis
+    # ports:
+    #   - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    networks:
+      - fastapi-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  postgres:
+    image: postgres:17-alpine
+    container_name: fastapi-laravel-postgres
+    environment:
+      POSTGRES_DB: fastapi_laravel
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - fastapi-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  nginx:
+    image: nginx:alpine
+    container_name: fastapi-laravel-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - app
+    restart: unless-stopped
+    networks:
+      - fastapi-network
+
+volumes:
+  postgres_data:
+  redis_data:
+  app_storage:
+  app_logs:
+
+networks:
+  fastapi-network:
+    driver: bridge

@@ -1,0 +1,28 @@
+from __future__ import annotations
+
+from typing import Optional
+from sqlalchemy import Column, Integer, String, DateTime, Text
+from sqlalchemy.sql import func
+from app.Models.BaseModel import BaseModel
+
+
+class {{ class }}(BaseModel):
+    """{{ class }} model."""
+    
+    __tablename__ = "{{ table }}"
+    
+    # Columns
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    # Fillable attributes
+    __fillable__ = ["name", "description"]
+    
+    # Hidden attributes
+    __hidden__ = []
+    
+    # Casts
+    __casts__ = {}

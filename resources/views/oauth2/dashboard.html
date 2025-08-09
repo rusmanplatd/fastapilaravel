@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OAuth2 Analytics Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/date-fns@2.29.3/index.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .success-card {
+            background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+        }
+        .error-card {
+            background: linear-gradient(135deg, #fc4a1a 0%, #f7b733 100%);
+        }
+        .performance-card {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        .dark-mode {
+            background-color: #1a202c;
+            color: #e2e8f0;
+        }
+        .sidebar-active {
+            transform: translateX(0);
+        }
+        .sidebar-inactive {
+            transform: translateX(-100%);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+    <!-- Navigation -->
+    <nav class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+        <div class="px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <button id="sidebar-toggle" class="lg:hidden p-2 rounded-md text-gray-500 hover:text-gray-600">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h1 class="ml-2 text-xl font-semibold text-gray-900 dark:text-white">
+                        OAuth2 Analytics Dashboard
+                    </h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <!-- Time Range Selector -->
+                    <select id="time-range" class="rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                        <option value="1">Last 24 Hours</option>
+                        <option value="7">Last 7 Days</option>
+                        <option value="30" selected>Last 30 Days</option>
+                        <option value="90">Last 90 Days</option>
+                    </select>
+                    
+                    <!-- Dark Mode Toggle -->
+                    <button id="dark-mode-toggle" class="p-2 rounded-md text-gray-500 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-300">
+                        <i class="fas fa-moon dark:hidden"></i>
+                        <i class="fas fa-sun hidden dark:inline"></i>
+                    </button>
+                    
+                    <!-- Refresh Button -->
+                    <button id="refresh-btn" class="p-2 rounded-md text-gray-500 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-300">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                    
+                    <!-- Export Menu -->
+                    <div class="relative" id="export-menu">
+                        <button class="p-2 rounded-md text-gray-500 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-300">
+                            <i class="fas fa-download"></i>
+                        </button>
+                        <div class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-gray-700 rounded-md shadow-lg z-10">
+                            <a href="#" id="export-csv" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600">
+                                <i class="fas fa-file-csv mr-2"></i>Export CSV
+                            </a>
+                            <a href="#" id="export-json" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600">
+                                <i class="fas fa-file-code mr-2"></i>Export JSON
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="flex">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="w-64 bg-white dark:bg-gray-800 shadow-sm border-r border-gray-200 dark:border-gray-700 fixed inset-y-0 left-0 z-50 transform lg:translate-x-0 lg:static lg:inset-0 sidebar-inactive lg:sidebar-active transition-transform duration-200 ease-in-out">
+            <div class="flex flex-col h-full pt-16 lg:pt-0">
+                <nav class="flex-1 px-4 py-6 space-y-2">
+                    <a href="#overview" class="nav-link active flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                        <i class="fas fa-tachometer-alt mr-3"></i>Overview
+                    </a>
+                    <a href="#tokens" class="nav-link flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                        <i class="fas fa-key mr-3"></i>Token Analytics
+                    </a>
+                    <a href="#clients" class="nav-link flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                        <i class="fas fa-users mr-3"></i>Client Analytics
+                    </a>
+                    <a href="#security" class="nav-link flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                        <i class="fas fa-shield-alt mr-3"></i>Security Events
+                    </a>
+                    <a href="#performance" class="nav-link flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                        <i class="fas fa-chart-line mr-3"></i>Performance
+                    </a>
+                    <a href="#webhooks" class="nav-link flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                        <i class="fas fa-webhook mr-3"></i>Webhooks
+                    </a>
+                    <a href="#real-time" class="nav-link flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                        <i class="fas fa-broadcast-tower mr-3"></i>Real-time
+                    </a>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 lg:ml-0 min-h-screen">
+            <div class="px-4 sm:px-6 lg:px-8 py-8">
+                
+                <!-- Overview Section -->
+                <section id="overview-section" class="space-y-6">
+                    <!-- Key Metrics Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div class="metric-card rounded-lg p-6 text-white shadow-lg">
+                            <div class="flex items-center">
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-white opacity-75">Total Tokens Issued</p>
+                                    <p id="total-tokens" class="text-3xl font-bold">-</p>
+                                </div>
+                                <div class="ml-4">
+                                    <i class="fas fa-key text-2xl opacity-75"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="success-card rounded-lg p-6 text-white shadow-lg">
+                            <div class="flex items-center">
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-white opacity-75">Success Rate</p>
+                                    <p id="success-rate" class="text-3xl font-bold">-</p>
+                                </div>
+                                <div class="ml-4">
+                                    <i class="fas fa-check-circle text-2xl opacity-75"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="error-card rounded-lg p-6 text-white shadow-lg">
+                            <div class="flex items-center">
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-white opacity-75">Active Users</p>
+                                    <p id="active-users" class="text-3xl font-bold">-</p>
+                                </div>
+                                <div class="ml-4">
+                                    <i class="fas fa-users text-2xl opacity-75"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="performance-card rounded-lg p-6 text-white shadow-lg">
+                            <div class="flex items-center">
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-white opacity-75">Avg Response Time</p>
+                                    <p id="avg-response-time" class="text-3xl font-bold">-</p>
+                                </div>
+                                <div class="ml-4">
+                                    <i class="fas fa-stopwatch text-2xl opacity-75"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts Row -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Token Requests Over Time</h3>
+                            <div class="chart-container">
+                                <canvas id="token-requests-chart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Grant Type Distribution</h3>
+                            <div class="chart-container">
+                                <canvas id="grant-types-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Top Clients Table -->
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+                        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Top Clients</h3>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                <thead class="bg-gray-50 dark:bg-gray-700">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Client</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Requests</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Success Rate</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Last Active</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="top-clients-table" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                    <!-- Client rows will be inserted here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Real-time Events Section -->
+                <section id="real-time-section" class="hidden space-y-6">
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+                        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Real-time Events</h3>
+                            <div class="flex items-center space-x-2">
+                                <div id="connection-status" class="flex items-center">
+                                    <div class="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                                    <span class="text-sm text-gray-600 dark:text-gray-400">Connected</span>
+                                </div>
+                                <button id="pause-real-time" class="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 rounded-md">
+                                    <i class="fas fa-pause"></i> Pause
+                                </button>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <div id="real-time-events" class="space-y-2 max-h-96 overflow-y-auto">
+                                <!-- Real-time events will be inserted here -->
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Security Events Section -->
+                <section id="security-section" class="hidden space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded-lg p-6">
+                            <div class="flex items-center">
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-red-800 dark:text-red-200">Security Alerts</p>
+                                    <p id="security-alerts" class="text-2xl font-bold text-red-900 dark:text-red-100">-</p>
+                                </div>
+                                <div class="ml-4">
+                                    <i class="fas fa-exclamation-triangle text-red-500 text-2xl"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-yellow-50 dark:bg-yellow-900 border border-yellow-200 dark:border-yellow-700 rounded-lg p-6">
+                            <div class="flex items-center">
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-yellow-800 dark:text-yellow-200">Rate Limited</p>
+                                    <p id="rate-limited" class="text-2xl font-bold text-yellow-900 dark:text-yellow-100">-</p>
+                                </div>
+                                <div class="ml-4">
+                                    <i class="fas fa-ban text-yellow-500 text-2xl"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-orange-50 dark:bg-orange-900 border border-orange-200 dark:border-orange-700 rounded-lg p-6">
+                            <div class="flex items-center">
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-orange-800 dark:text-orange-200">Invalid Clients</p>
+                                    <p id="invalid-clients" class="text-2xl font-bold text-orange-900 dark:text-orange-100">-</p>
+                                </div>
+                                <div class="ml-4">
+                                    <i class="fas fa-user-slash text-orange-500 text-2xl"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Security Events Timeline</h3>
+                        <div class="chart-container">
+                            <canvas id="security-events-chart"></canvas>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 flex items-center space-x-3">
+            <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+            <span class="text-gray-900 dark:text-white">Loading...</span>
+        </div>
+    </div>
+
+    <script src="/static/js/oauth2-dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,282 @@
+{% extends "layouts/base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0">
+                <i class="bi bi-speedometer2 me-2"></i>Dashboard
+            </h2>
+            <div class="text-muted">
+                Welcome back, <strong>{{ user.name }}</strong>!
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- User Info Card -->
+    <div class="col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-person-circle me-2"></i>Profile Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Name</label>
+                        <p class="form-control-plaintext">{{ user.name }}</p>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Email</label>
+                        <p class="form-control-plaintext">{{ user.email }}</p>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">User ID</label>
+                        <p class="form-control-plaintext">{{ user.id }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <a href="/profile" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-pencil me-1"></i>Edit Profile
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions Card -->
+    <div class="col-lg-8 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-lightning-charge me-2"></i>Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="d-grid">
+                            <a href="/api/docs" class="btn btn-outline-primary">
+                                <i class="bi bi-code-slash me-2"></i>API Documentation
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-grid">
+                            <a href="/oauth/clients" class="btn btn-outline-success">
+                                <i class="bi bi-key me-2"></i>OAuth2 Clients
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-grid">
+                            <a href="/notifications" class="btn btn-outline-warning">
+                                <i class="bi bi-bell me-2"></i>Notifications
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-grid">
+                            <a href="/security" class="btn btn-outline-danger">
+                                <i class="bi bi-shield-lock me-2"></i>Security & MFA
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Recent Activity -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-clock-history me-2"></i>Recent Activity
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item border-0 px-0">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <i class="bi bi-box-arrow-in-right text-success me-2"></i>
+                                <strong>Logged in</strong>
+                            </div>
+                            <small class="text-muted">Just now</small>
+                        </div>
+                        <p class="mb-0 mt-1 text-muted small">
+                            Successful login from your current session
+                        </p>
+                    </div>
+                    <div class="list-group-item border-0 px-0">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <i class="bi bi-person-plus text-info me-2"></i>
+                                <strong>Account created</strong>
+                            </div>
+                            <small class="text-muted">Recently</small>
+                        </div>
+                        <p class="mb-0 mt-1 text-muted small">
+                            Welcome to FastAPI Laravel!
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <a href="/activity" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-list me-1"></i>View All Activity
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- System Status -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-success text-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-graph-up me-2"></i>System Status
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-6">
+                        <div class="text-center p-3 bg-light rounded">
+                            <div class="h4 text-success mb-1">
+                                <i class="bi bi-check-circle-fill"></i>
+                            </div>
+                            <div class="small text-muted">API Status</div>
+                            <div class="fw-semibold">Online</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-center p-3 bg-light rounded">
+                            <div class="h4 text-success mb-1">
+                                <i class="bi bi-database-check"></i>
+                            </div>
+                            <div class="small text-muted">Database</div>
+                            <div class="fw-semibold">Connected</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-center p-3 bg-light rounded">
+                            <div class="h4 text-info mb-1">
+                                <i class="bi bi-shield-check"></i>
+                            </div>
+                            <div class="small text-muted">OAuth2</div>
+                            <div class="fw-semibold">Active</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-center p-3 bg-light rounded">
+                            <div class="h4 text-warning mb-1">
+                                <i class="bi bi-cpu"></i>
+                            </div>
+                            <div class="small text-muted">Performance</div>
+                            <div class="fw-semibold">Good</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <a href="/monitoring/health" class="btn btn-outline-success btn-sm">
+                    <i class="bi bi-heart-pulse me-1"></i>Health Check
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Features Overview -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-dark text-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-layers me-2"></i>Available Features
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-4">
+                    <div class="col-md-6 col-lg-3">
+                        <div class="text-center">
+                            <div class="bg-primary text-white rounded-circle p-3 d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                                <i class="bi bi-key-fill fs-4"></i>
+                            </div>
+                            <h6>OAuth2 Authentication</h6>
+                            <p class="text-muted small">Complete OAuth2 server with all grant types</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <div class="text-center">
+                            <div class="bg-success text-white rounded-circle p-3 d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                                <i class="bi bi-shield-check fs-4"></i>
+                            </div>
+                            <h6>Multi-Factor Auth</h6>
+                            <p class="text-muted small">TOTP and WebAuthn support</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <div class="text-center">
+                            <div class="bg-info text-white rounded-circle p-3 d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                                <i class="bi bi-database fs-4"></i>
+                            </div>
+                            <h6>Laravel ORM</h6>
+                            <p class="text-muted small">Eloquent-style models and relationships</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <div class="text-center">
+                            <div class="bg-warning text-white rounded-circle p-3 d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                                <i class="bi bi-bell-fill fs-4"></i>
+                            </div>
+                            <h6>Notifications</h6>
+                            <p class="text-muted small">Multi-channel notification system</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Add some interactivity to the dashboard
+    document.addEventListener('DOMContentLoaded', function() {
+        // Animate the status indicators
+        const statusIndicators = document.querySelectorAll('.bg-success, .bg-info, .bg-warning');
+        statusIndicators.forEach((indicator, index) => {
+            setTimeout(() => {
+                indicator.style.opacity = '0';
+                indicator.style.transform = 'scale(0.8)';
+                setTimeout(() => {
+                    indicator.style.transition = 'all 0.3s ease';
+                    indicator.style.opacity = '1';
+                    indicator.style.transform = 'scale(1)';
+                }, 50);
+            }, index * 100);
+        });
+        
+        // Add hover effects to cards
+        const cards = document.querySelectorAll('.card');
+        cards.forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-2px)';
+                this.style.transition = 'transform 0.2s ease';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+            });
+        });
+    });
+</script>
+{% endblock %}

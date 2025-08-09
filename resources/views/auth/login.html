@@ -1,0 +1,157 @@
+{% extends "layouts/base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white text-center py-4">
+                <h4 class="mb-0">
+                    <i class="bi bi-shield-lock-fill me-2"></i>Sign In
+                </h4>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" action="/login" novalidate>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email Address</label>
+                        <input 
+                            type="email" 
+                            class="form-control{% if errors.email %} is-invalid{% endif %}" 
+                            id="email" 
+                            name="email" 
+                            value="{{ old.email or '' }}"
+                            required 
+                            autofocus
+                            placeholder="Enter your email"
+                        >
+                        {% if errors.email %}
+                            <div class="invalid-feedback">
+                                {% for error in errors.email %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <div class="input-group">
+                            <input 
+                                type="password" 
+                                class="form-control{% if errors.password %} is-invalid{% endif %}" 
+                                id="password" 
+                                name="password" 
+                                required
+                                placeholder="Enter your password"
+                            >
+                            <button 
+                                class="btn btn-outline-secondary" 
+                                type="button" 
+                                id="togglePassword"
+                            >
+                                <i class="bi bi-eye" id="toggleIcon"></i>
+                            </button>
+                        </div>
+                        {% if errors.password %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in errors.password %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="remember" name="remember" value="1">
+                        <label class="form-check-label" for="remember">
+                            Remember me
+                        </label>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+                        </button>
+                    </div>
+                </form>
+                
+                <hr class="my-4">
+                
+                <div class="text-center">
+                    <p class="mb-2">
+                        <a href="/forgot-password" class="text-decoration-none">
+                            <i class="bi bi-question-circle me-1"></i>Forgot your password?
+                        </a>
+                    </p>
+                    <p class="mb-0">
+                        Don't have an account? 
+                        <a href="/register" class="text-decoration-none fw-semibold">
+                            Create one here
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Demo Credentials -->
+        <div class="card mt-3 bg-light">
+            <div class="card-body py-3">
+                <div class="row text-center">
+                    <div class="col">
+                        <small class="text-muted">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Demo: Use any email and password to test the form validation
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Toggle password visibility
+    document.getElementById('togglePassword').addEventListener('click', function() {
+        const passwordField = document.getElementById('password');
+        const toggleIcon = document.getElementById('toggleIcon');
+        
+        if (passwordField.type === 'password') {
+            passwordField.type = 'text';
+            toggleIcon.classList.remove('bi-eye');
+            toggleIcon.classList.add('bi-eye-slash');
+        } else {
+            passwordField.type = 'password';
+            toggleIcon.classList.remove('bi-eye-slash');
+            toggleIcon.classList.add('bi-eye');
+        }
+    });
+    
+    // Form validation
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const email = document.getElementById('email');
+        const password = document.getElementById('password');
+        let isValid = true;
+        
+        // Clear previous validation states
+        email.classList.remove('is-invalid');
+        password.classList.remove('is-invalid');
+        
+        // Email validation
+        if (!email.value.trim() || !email.value.includes('@')) {
+            email.classList.add('is-invalid');
+            isValid = false;
+        }
+        
+        // Password validation
+        if (!password.value.trim()) {
+            password.classList.add('is-invalid');
+            isValid = false;
+        }
+        
+        if (!isValid) {
+            e.preventDefault();
+        }
+    });
+</script>
+{% endblock %}

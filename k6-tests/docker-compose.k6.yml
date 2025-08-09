@@ -1,0 +1,137 @@
+# Docker Compose for K6 Testing Infrastructure
+# Usage: docker-compose -f docker-compose.k6.yml up -d
+
+services:
+  # PostgreSQL for K6 tests
+  postgres-k6:
+    image: ${DOCKER_POSTGRES_IMAGE}
+    container_name: fastapilaravel-k6-postgres
+    env_file:
+      - .env.k6
+    environment:
+      POSTGRES_DB: ${DB_DATABASE}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "${K6_POSTGRES_EXTERNAL_PORT}:5432"  # Use different port to avoid conflicts
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./setup/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    restart: unless-stopped
+    networks:
+      - k6-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_DATABASE}"]
+      interval: ${HEALTH_CHECK_INTERVAL}
+      timeout: ${HEALTH_CHECK_TIMEOUT}
+      retries: ${HEALTH_CHECK_RETRIES}
+      start_period: ${HEALTH_CHECK_START_PERIOD}
+
+  # Redis for K6 tests (caching, queues)
+  redis-k6:
+    image: ${DOCKER_REDIS_IMAGE}
+    container_name: fastapilaravel-k6-redis
+    env_file:
+      - .env.k6
+    ports:
+      - "${K6_REDIS_EXTERNAL_PORT}:6379"  # Use different port to avoid conflicts
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    networks:
+      - k6-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: ${HEALTH_CHECK_INTERVAL}
+      timeout: ${HEALTH_CHECK_TIMEOUT}
+      retries: ${HEALTH_CHECK_RETRIES}
+
+  # FastAPI application for K6 testing
+  app-k6:
+    build: 
+      context: ../
+      dockerfile: Dockerfile
+    container_name: fastapilaravel-k6-app
+    env_file:
+      - .env.k6
+    ports:
+      - "8001:${PORT}"  # Use different port for K6 testing
+    volumes:
+      - app_storage:/app/storage
+      - app_logs:/app/storage/logs
+    depends_on:
+      postgres-k6:
+        condition: service_healthy
+      redis-k6:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - k6-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${PORT}${HEALTH_CHECK_PATH}"]
+      interval: ${HEALTH_CHECK_INTERVAL}
+      timeout: ${HEALTH_CHECK_TIMEOUT}
+      retries: ${HEALTH_CHECK_RETRIES}
+      start_period: ${HEALTH_CHECK_START_PERIOD}
+
+  # K6 Test Runner
+  k6-runner:
+    image: ${DOCKER_K6_IMAGE}
+    container_name: fastapilaravel-k6-runner
+    env_file:
+      - .env.k6
+    volumes:
+      - ./:/k6-tests:ro
+      - results:/results
+    working_dir: /k6-tests
+    environment:
+      - BASE_URL=http://app-k6:${PORT}
+      - TEST_DB_URL=${DATABASE_URL}
+      - K6_OUT=${K6_OUT}
+    depends_on:
+      app-k6:
+        condition: service_healthy
+    networks:
+      - k6-network
+    profiles:
+      - testing  # Only start when explicitly requested
+
+  # Database Setup Service
+  db-setup:
+    build:
+      context: ../
+      dockerfile: Dockerfile
+    container_name: fastapilaravel-k6-db-setup
+    env_file:
+      - .env.k6
+    environment:
+      - PYTHONPATH=/app
+      - TEST_DB_URL=${DATABASE_URL}
+    volumes:
+      - ./setup:/app/k6-setup:ro
+    working_dir: /app
+    command: python k6-setup/test-db-setup.py
+    depends_on:
+      postgres-k6:
+        condition: service_healthy
+    networks:
+      - k6-network
+    profiles:
+      - setup  # Only run when explicitly requested
+
+volumes:
+  postgres_data:
+    name: ${POSTGRES_VOLUME_NAME}
+  redis_data:
+    name: ${REDIS_VOLUME_NAME}
+  app_storage:
+    name: ${APP_STORAGE_VOLUME_NAME}
+  app_logs:
+    name: ${APP_LOGS_VOLUME_NAME}
+  results:
+    name: ${RESULTS_VOLUME_NAME}
+
+networks:
+  k6-network:
+    name: ${DOCKER_NETWORK_NAME}
+    driver: bridge
