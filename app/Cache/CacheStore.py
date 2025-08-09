@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union, Callable
 from abc import ABC, abstractmethod
 import time
 import json
@@ -62,7 +62,7 @@ class CacheStore(ABC):
         """Store an item in the cache indefinitely."""
         return self.put(key, value, None)
     
-    def remember(self, key: str, ttl: Optional[int], callback: callable) -> Any:
+    def remember(self, key: str, ttl: Optional[int], callback: Callable[[], Any]) -> Any:
         """Get an item from cache or store the result of callback."""
         value = self.get(key)
         if value is None:
@@ -70,7 +70,7 @@ class CacheStore(ABC):
             self.put(key, value, ttl)
         return value
     
-    def remember_forever(self, key: str, callback: callable) -> Any:
+    def remember_forever(self, key: str, callback: Callable[[], Any]) -> Any:
         """Get an item from cache or store callback result forever."""
         return self.remember(key, None, callback)
     
@@ -126,7 +126,7 @@ class ArrayCacheStore(CacheStore):
             current = 0
         new_value = current + value
         self.put(key, new_value)
-        return new_value
+        return int(new_value)
     
     def decrement(self, key: str, value: int = 1) -> int:
         """Decrement the value of an item in the cache."""
@@ -242,7 +242,7 @@ class FileCacheStore(CacheStore):
             current = 0
         new_value = current + value
         self.put(key, new_value)
-        return new_value
+        return int(new_value)
     
     def decrement(self, key: str, value: int = 1) -> int:
         """Decrement the value of an item in file cache."""
@@ -290,7 +290,7 @@ class CacheManager:
         """Clear default cache store."""
         return self.store().flush()
     
-    def remember(self, key: str, ttl: Optional[int], callback: callable) -> Any:
+    def remember(self, key: str, ttl: Optional[int], callback: Callable[[], Any]) -> Any:
         """Remember item in default cache store."""
         return self.store().remember(key, ttl, callback)
     

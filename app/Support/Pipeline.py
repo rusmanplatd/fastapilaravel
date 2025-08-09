@@ -53,13 +53,13 @@ class Pipeline:
                 # If pipe is a string, try to resolve it
                 # This would need proper class resolution in a real implementation
                 return stack(passable)
-            else:
+            elif hasattr(pipe, self.method):
                 # If pipe is an object with the specified method
-                if hasattr(pipe, self.method):
-                    method = getattr(pipe, self.method)
-                    if callable(method):
-                        return method(passable, stack)
-                return stack(passable)
+                method = getattr(pipe, self.method)
+                if callable(method):
+                    return method(passable, stack)
+            
+            return stack(passable)
         
         return closure
 

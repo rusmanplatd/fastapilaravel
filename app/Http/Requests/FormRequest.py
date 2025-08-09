@@ -4,7 +4,7 @@ from typing import Dict, Any, List, Optional, Type, Callable, Union
 from abc import ABC, abstractmethod
 from fastapi import HTTPException, status, Request
 from pydantic import BaseModel, validator
-from pydantic_core import ValidationError
+from pydantic_core import ValidationError, ErrorDetails
 from functools import wraps
 
 
@@ -71,7 +71,7 @@ class FormRequest(BaseModel, ABC):
                 }
             )
     
-    def _format_validation_errors(self, errors: List[Dict[str, Any]]) -> Dict[str, List[str]]:
+    def _format_validation_errors(self, errors: List[ErrorDetails]) -> Dict[str, List[str]]:
         """Format validation errors in Laravel style."""
         formatted_errors: Dict[str, List[str]] = {}
         

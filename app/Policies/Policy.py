@@ -104,7 +104,9 @@ class Gate:
                         
                         # Run policy after method
                         after_result = policy.after(user, ability, result)
-                        return after_result if after_result is not None else result
+                        if after_result is not None:
+                            return after_result
+                        return result
         
         # Check defined abilities
         if ability in self._abilities:

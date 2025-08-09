@@ -1,0 +1,53 @@
+{
+  "welcome": "Welcome to FastAPI Laravel",
+  "hello": "Hello :name",
+  "goodbye": "Goodbye :name",
+  "thank_you": "Thank you",
+  "please": "Please",
+  "yes": "Yes",
+  "no": "No",
+  "save": "Save",
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "edit": "Edit",
+  "create": "Create",
+  "update": "Update",
+  "view": "View",
+  "back": "Back",
+  "next": "Next",
+  "previous": "Previous",
+  "home": "Home",
+  "dashboard": "Dashboard",
+  "profile": "Profile",
+  "settings": "Settings",
+  "success": "Operation completed successfully",
+  "error": "An error occurred",
+  "warning": "Warning",
+  "info": "Information",
+  "confirmation": "Are you sure?",
+  "loading": "Loading...",
+  "search": "Search",
+  "filter": "Filter",
+  "sort": "Sort",
+  "export": "Export",
+  "import": "Import",
+  "upload": "Upload",
+  "download": "Download",
+  "file_uploaded": "File uploaded successfully",
+  "file_deleted": "File deleted successfully",
+  "posts": {
+    "0": "No posts found",
+    "1": "1 post found", 
+    "other": ":count posts found"
+  },
+  "users": {
+    "0": "No users found",
+    "1": "1 user found",
+    "other": ":count users found"
+  },
+  "items": {
+    "0": "No items",
+    "1": "1 item",
+    "other": ":count items"
+  }
+}

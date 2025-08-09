@@ -1,15 +1,29 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Type, Callable, Optional, TypeVar, Union
+from typing import Any, Dict, List, Type, Callable, Optional, TypeVar, Union, Generator
 from abc import ABC, abstractmethod
 import random
 import string
 from datetime import datetime, timedelta
+from contextlib import contextmanager
 from faker import Faker
 
 T = TypeVar('T')
 
 fake = Faker()
+
+
+class FactorySequence:
+    """Factory sequence for generating sequential values"""
+    
+    def __init__(self, callback: Callable[[int], Any]):
+        self.callback = callback
+        self.index = 0
+    
+    def __call__(self) -> Any:
+        result = self.callback(self.index)
+        self.index += 1
+        return result
 
 
 class Factory(ABC):
@@ -21,6 +35,8 @@ class Factory(ABC):
         self.states: List[Callable[[Dict[str, Any]], Dict[str, Any]]] = []
         self.after_creating: List[Callable[[T], None]] = []
         self.after_making: List[Callable[[T], None]] = []
+        self.with_relationships: Dict[str, Any] = {}
+        self.sequences: Dict[str, FactorySequence] = {}
     
     @abstractmethod
     def definition(self) -> Dict[str, Any]:
@@ -77,7 +93,7 @@ class Factory(ABC):
         factory.after_making = self.after_making + [callback]
         return factory
     
-    def _make_instance(self, attributes: Dict[str, Any]) -> Any:
+    def _make_instance(self, attributes: Dict[str, Any]) -> T:
         """Create a model instance without persisting."""
         data = self.definition()
         
@@ -97,9 +113,9 @@ class Factory(ABC):
         
         return instance
     
-    def _create_instance(self, attributes: Dict[str, Any]) -> Any:
+    def _create_instance(self, attributes: Dict[str, Any]) -> T:
         """Create and persist a model instance."""
-        instance: Any = self._make_instance(attributes)
+        instance = self._make_instance(attributes)
         
         # Here you would save to database
         # For now, just run after creating callbacks
@@ -108,10 +124,79 @@ class Factory(ABC):
         
         return instance
     
-    def sequence(self, callback: Callable[[int], Dict[str, Any]]) -> Factory:
+    def sequence(self, attribute: str, callback: Callable[[int], Any]) -> Factory:
         """Generate attributes using a sequence."""
-        # This would need more complex implementation
-        return self
+        factory = self._clone()
+        factory.sequences[attribute] = FactorySequence(callback)
+        return factory
+    
+    def lazy(self, callback: Callable[[], Any]) -> Any:
+        """Lazy evaluation of factory attributes"""
+        return callback
+    
+    def with_relations(self, **relations) -> Factory:
+        """Set up relationships to be created with the model"""
+        factory = self._clone()
+        factory.with_relationships.update(relations)
+        return factory
+    
+    def has(self, relation_name: str, factory_or_callback: Union[Factory, Callable], count: int = 1) -> Factory:
+        """Create related models using has* relationship pattern"""
+        factory = self._clone()
+        
+        if isinstance(factory_or_callback, Factory):
+            related_factory = factory_or_callback.times(count)
+        else:
+            related_factory = factory_or_callback
+        
+        factory.with_relationships[relation_name] = related_factory
+        return factory
+    
+    def for_relation(self, parent_model, relation_key: str = None) -> Factory:
+        """Create models for a specific parent relationship"""
+        factory = self._clone()
+        key = relation_key or f"{parent_model.__class__.__name__.lower()}_id"
+        factory.with_relationships[key] = parent_model.id if hasattr(parent_model, 'id') else parent_model
+        return factory
+    
+    @contextmanager
+    def fake_locale(self, locale: str) -> Generator[None, None, None]:
+        """Temporarily change faker locale"""
+        original_locale = fake.locale
+        fake.locale = locale
+        try:
+            yield
+        finally:
+            fake.locale = original_locale
+    
+    def raw(self, attributes: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """Get raw attributes without creating a model instance"""
+        data = self.definition()
+        
+        # Apply sequences
+        for attr, sequence in self.sequences.items():
+            data[attr] = sequence()
+        
+        # Apply states
+        for state in self.states:
+            data.update(state(data))
+        
+        # Apply provided attributes
+        if attributes:
+            data.update(attributes)
+        
+        return data
+    
+    def _clone(self) -> Factory:
+        """Clone the factory with all its state"""
+        factory = self.__class__(self.model_class)
+        factory.count = self.count
+        factory.states = self.states.copy()
+        factory.after_creating = self.after_creating.copy()
+        factory.after_making = self.after_making.copy()
+        factory.with_relationships = self.with_relationships.copy()
+        factory.sequences = self.sequences.copy()
+        return factory
     
     @classmethod
     def fake_email(cls) -> str:

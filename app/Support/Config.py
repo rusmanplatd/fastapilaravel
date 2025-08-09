@@ -54,8 +54,7 @@ class ConfigRepository:
                     return default
             return value
         except (KeyError, TypeError):
-            pass
-        return default
+            return default
     
     def set(self, key: str, value: Any) -> None:
         """Set a configuration value using dot notation."""

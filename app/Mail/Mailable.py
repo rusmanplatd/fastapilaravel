@@ -193,9 +193,9 @@ class Mailable(ABC):
         if self.markdown_view:
             # Convert markdown to HTML
             try:
-                import markdown
+                import markdown  # type: ignore[import-untyped]
                 md_content = self.render_view(self.markdown_view)
-                message.html_body = markdown.markdown(md_content)  # type: ignore[attr-defined]
+                message.html_body = markdown.markdown(md_content)
             except ImportError:
                 # Fallback if markdown not installed
                 message.html_body = self.render_view(self.markdown_view)
@@ -224,12 +224,11 @@ class MailManager:
         from app.Jobs.Examples.SendEmailJob import SendEmailJob
         
         message = mailable.to_mail_message()
-        job = SendEmailJob(
+        return str(SendEmailJob.dispatch(
             to_email=",".join(message.to),
             subject=message.subject,
             body=message.html_body or message.text_body
-        )
-        return str(job.dispatch())
+        ))
     
     def later(self, delay: int, mailable: Mailable, queue_name: str = "emails") -> str:
         """Queue a mailable for later sending with delay."""
@@ -240,8 +239,13 @@ class MailManager:
             to_email=",".join(message.to),
             subject=message.subject,
             body=message.html_body or message.text_body
-        ).delay_until(delay)
-        return str(job.dispatch())
+        )
+        job.options.delay = delay
+        return str(job.__class__.dispatch(
+            to_email=",".join(message.to),
+            subject=message.subject,
+            body=message.html_body or message.text_body
+        ))
 
 
 # Global mail manager instance

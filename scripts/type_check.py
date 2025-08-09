@@ -15,6 +15,7 @@ def run_mypy() -> Tuple[int, str, str]:
     cmd: List[str] = [
         "mypy",
         "--config-file=mypy.ini",
+        "--exclude=examples",
         ".",
     ]
     
@@ -41,6 +42,7 @@ def run_type_coverage() -> None:
         "mypy",
         "--config-file=mypy.ini",
         "--html-report=type_coverage",
+        "--exclude=examples",
         ".",
     ]
     

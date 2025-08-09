@@ -1,12 +1,14 @@
 from __future__ import annotations
 
-from typing import Any, Type, Optional
+from typing import Any, Type, Optional, Dict, Callable
 from abc import ABC, abstractmethod
 from .ServiceContainer import container
 
 
 class Facade(ABC):
     """Base Facade class following Laravel's facade pattern."""
+    
+    _resolved_instances: Dict[str, Any] = {}
     
     @classmethod
     @abstractmethod
@@ -17,16 +19,38 @@ class Facade(ABC):
     @classmethod
     def get_facade_root(cls) -> Any:
         """Get the root object behind the facade."""
-        return container.make(cls.get_facade_accessor())
+        accessor = cls.get_facade_accessor()
+        
+        # Use cached instance if available (singleton-like behavior)
+        if accessor in cls._resolved_instances:
+            return cls._resolved_instances[accessor]
+        
+        instance = container.make(accessor)
+        cls._resolved_instances[accessor] = instance
+        return instance
     
-    def __class_getitem__(cls, item: Any) -> Any:
-        """Support for generic facades."""
-        return cls.get_facade_root()
+    @classmethod
+    def clear_resolved_instance(cls) -> None:
+        """Clear the resolved facade instance."""
+        accessor = cls.get_facade_accessor()
+        if accessor in cls._resolved_instances:
+            del cls._resolved_instances[accessor]
     
-    def __getattr__(self, name: str) -> Any:
+    @classmethod
+    def clear_resolved_instances(cls) -> None:
+        """Clear all resolved facade instances."""
+        cls._resolved_instances.clear()
+    
+    @classmethod
+    def __getattr__(cls, name: str) -> Any:
         """Proxy attribute access to the facade root."""
-        root = self.get_facade_root()
-        return getattr(root, name)
+        root = cls.get_facade_root()
+        attr = getattr(root, name)
+        
+        # If it's a method, return a callable that binds to the root
+        if callable(attr):
+            return attr
+        return attr
 
 
 # Example Facades
@@ -69,3 +93,75 @@ class Log(Facade):
     @classmethod
     def get_facade_accessor(cls) -> str:
         return "ActivityLogService"
+
+
+class Cache(Facade):
+    """Cache facade."""
+    
+    @classmethod
+    def get_facade_accessor(cls) -> str:
+        return "CacheManager"
+
+
+class Mail(Facade):
+    """Mail facade."""
+    
+    @classmethod
+    def get_facade_accessor(cls) -> str:
+        return "MailManager"
+
+
+class Storage(Facade):
+    """Storage facade."""
+    
+    @classmethod
+    def get_facade_accessor(cls) -> str:
+        return "FilesystemAdapter"
+
+
+class Gate(Facade):
+    """Gate facade for authorization."""
+    
+    @classmethod
+    def get_facade_accessor(cls) -> str:
+        return "Gate"
+
+
+class Broadcast(Facade):
+    """Broadcast facade."""
+    
+    @classmethod
+    def get_facade_accessor(cls) -> str:
+        return "BroadcastManager"
+
+
+class Config(Facade):
+    """Config facade."""
+    
+    @classmethod
+    def get_facade_accessor(cls) -> str:
+        return "ConfigRepository"
+
+
+class DB(Facade):
+    """Database facade."""
+    
+    @classmethod
+    def get_facade_accessor(cls) -> str:
+        return "Database"
+
+
+class Validator(Facade):
+    """Validator facade."""
+    
+    @classmethod
+    def get_facade_accessor(cls) -> str:
+        return "Validator"
+
+
+class Hash(Facade):
+    """Hash facade."""
+    
+    @classmethod
+    def get_facade_accessor(cls) -> str:
+        return "PasswordUtils"

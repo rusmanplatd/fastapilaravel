@@ -1,0 +1,118 @@
+@extends('layouts.app')
+
+@section('title', 'Dashboard')
+
+@section('content')
+<div class="bg-white overflow-hidden shadow rounded-lg">
+    <div class="px-4 py-5 sm:p-6">
+        <h3 class="text-lg leading-6 font-medium text-gray-900">
+            Dashboard
+        </h3>
+        <div class="mt-2 max-w-xl text-sm text-gray-500">
+            <p>Welcome to your dashboard. Here you can manage your account and view your data.</p>
+        </div>
+        
+        <div class="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            @can('view-users')
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="p-5">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <div class="w-8 h-8 bg-indigo-500 rounded-md flex items-center justify-center">
+                                    <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt class="text-sm font-medium text-gray-500 truncate">
+                                        Users
+                                    </dt>
+                                    <dd class="text-lg font-medium text-gray-900">
+                                        {{ total_users or 0 }}
+                                    </dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endcan
+
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <div class="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
+                                <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">
+                                    Active Sessions
+                                </dt>
+                                <dd class="text-lg font-medium text-gray-900">
+                                    {{ active_sessions or 1 }}
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <div class="w-8 h-8 bg-yellow-500 rounded-md flex items-center justify-center">
+                                <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">
+                                    API Calls Today
+                                </dt>
+                                <dd class="text-lg font-medium text-gray-900">
+                                    {{ api_calls_today or 0 }}
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if(recent_activities)
+            <div class="mt-8">
+                <h4 class="text-lg font-medium text-gray-900 mb-4">Recent Activity</h4>
+                <div class="bg-gray-50 shadow overflow-hidden sm:rounded-lg">
+                    <ul class="divide-y divide-gray-200">
+                        @foreach(recent_activities as activity)
+                            <li class="px-6 py-4">
+                                <div class="flex items-center justify-between">
+                                    <div class="text-sm font-medium text-gray-900">
+                                        {{ activity.description }}
+                                    </div>
+                                    <div class="text-sm text-gray-500">
+                                        {{ activity.created_at | strftime('%Y-%m-%d %H:%M') }}
+                                    </div>
+                                </div>
+                            </li>
+                        @empty
+                            <li class="px-6 py-4 text-sm text-gray-500">
+                                No recent activity found.
+                            </li>
+                        @endforelse
+                    </ul>
+                </div>
+            </div>
+        @endif
+    </div>
+</div>
+@endsection

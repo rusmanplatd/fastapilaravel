@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Type, Optional, Callable
+from typing import Any, Dict, List, Type, Optional, Callable, Coroutine
 from abc import ABC, abstractmethod
 from sqlalchemy import event
 from sqlalchemy.orm import Session
@@ -19,7 +19,7 @@ class ModelObserver(ABC):
         """Handle the model "creating" event. Return False to cancel."""
         pass
     
-    def created(self, model: Any) -> None:
+    def created(self, model: Any) -> Optional[Coroutine[Any, Any, None]]:
         """Handle the model "created" event."""
         pass
     
@@ -27,7 +27,7 @@ class ModelObserver(ABC):
         """Handle the model "updating" event. Return False to cancel."""
         pass
     
-    def updated(self, model: Any) -> None:
+    def updated(self, model: Any) -> Optional[Coroutine[Any, Any, None]]:
         """Handle the model "updated" event."""
         pass
     
@@ -43,7 +43,7 @@ class ModelObserver(ABC):
         """Handle the model "deleting" event. Return False to cancel."""
         pass
     
-    def deleted(self, model: Any) -> None:
+    def deleted(self, model: Any) -> Optional[Coroutine[Any, Any, None]]:
         """Handle the model "deleted" event."""
         pass
     

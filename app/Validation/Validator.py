@@ -123,6 +123,9 @@ class Validator:
             'max': MaxRule(),
             'unique': UniqueRule(),
         }
+        
+        # Load enhanced rules
+        self._load_enhanced_rules()
     
     def validate(self) -> Dict[str, Any]:
         """Validate the data."""
@@ -205,6 +208,50 @@ class Validator:
                 message = message.replace(f'{{param{i}}}', param)
         
         return message
+    
+    def _load_enhanced_rules(self) -> None:
+        """Load enhanced validation rules"""
+        from app.Validation.Rules import (
+            AlphaRule, AlphaNumRule, AlphaDashRule, NumericRule, IntegerRule,
+            BooleanRule, UrlRule, DateRule, InRule, NotInRule, RegexRule,
+            JsonRule, UuidRule, IpRule, BetweenRule, SizeRule, DigitsRule,
+            DigitsBetweenRule, DecimalRule, ConfirmedRule, DifferentRule,
+            SameRule, RequiredIfRule, RequiredUnlessRule
+        )
+        
+        enhanced_rules = {
+            'alpha': AlphaRule(),
+            'alpha_num': AlphaNumRule(),
+            'alpha_dash': AlphaDashRule(),
+            'numeric': NumericRule(),
+            'integer': IntegerRule(),
+            'boolean': BooleanRule(),
+            'url': UrlRule(),
+            'date': DateRule(),
+            'in': InRule(),
+            'not_in': NotInRule(),
+            'regex': RegexRule(),
+            'json': JsonRule(),
+            'uuid': UuidRule(),
+            'ip': IpRule(),
+            'between': BetweenRule(),
+            'size': SizeRule(),
+            'digits': DigitsRule(),
+            'digits_between': DigitsBetweenRule(),
+            'decimal': DecimalRule(),
+            'confirmed': ConfirmedRule(),
+            'different': DifferentRule(),
+            'same': SameRule(),
+            'required_if': RequiredIfRule(),
+            'required_unless': RequiredUnlessRule(),
+        }
+        
+        self.rule_classes.update(enhanced_rules)
+        
+        # Set data for rules that need it
+        for rule in self.rule_classes.values():
+            if hasattr(rule, 'set_data'):
+                rule.set_data(self.data)
 
 
 def make_validator(data: Dict[str, Any], rules: Dict[str, Union[str, List[str]]], messages: Optional[Dict[str, str]] = None) -> Validator:

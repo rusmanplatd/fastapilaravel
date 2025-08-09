@@ -7,7 +7,7 @@ that have been implemented in this FastAPI application.
 
 from __future__ import annotations
 
-from typing import Any, Dict
+from typing import Any, Dict, List, Callable
 from fastapi import APIRouter, Request, Depends
 from sqlalchemy.orm import Session
 
@@ -39,7 +39,7 @@ router = APIRouter()
 async def create_user(
     request: Request,
     create_request: CreateUserRequest,
-    db: Session = Depends(get_db)
+    db: Session
 ) -> Dict[str, Any]:
     """Create user with Laravel-style form request validation."""
     
@@ -101,7 +101,7 @@ async def upload_file(request: Request) -> Dict[str, Any]:
 
 # Example 5: Collections
 @router.get("/users/analytics")
-async def user_analytics(db: Session = Depends(get_db)) -> Dict[str, Any]:
+async def user_analytics(db: Session) -> Dict[str, Any]:
     """Example using collections for data processing."""
     
     # Get users (simplified)
@@ -179,7 +179,7 @@ async def get_user(
     """Get user with policy authorization."""
     
     # Get users
-    current_user = getattr(request.state, 'user', None)
+    current_user = getattr(request.state, 'user', None) if hasattr(request, 'state') else None
     target_user = db.query(User).filter(User.id == user_id).first()
     
     if not target_user:
@@ -199,14 +199,14 @@ def create_test_users() -> Dict[str, Any]:
     """Example factory usage for testing."""
     
     # Create single user
-    user = UserFactory().make()
+    user: Any = UserFactory().make()
     
     # Create multiple users
-    users = UserFactory().times(5).make()
+    users: Any = UserFactory().times(5).make()
     
     # Create with specific state
-    admin = UserFactory().admin().make()
-    verified_users = UserFactory().verified().times(3).make()
+    admin: Any = UserFactory().admin().make()
+    verified_users: Any = UserFactory().verified().times(3).make()
     
     return {
         "single_user": user.to_dict() if hasattr(user, 'to_dict') else str(user),

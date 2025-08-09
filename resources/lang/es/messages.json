@@ -1,0 +1,53 @@
+{
+  "welcome": "Bienvenido a FastAPI Laravel",
+  "hello": "Hola :name",
+  "goodbye": "Adiós :name", 
+  "thank_you": "Gracias",
+  "please": "Por favor",
+  "yes": "Sí",
+  "no": "No",
+  "save": "Guardar",
+  "cancel": "Cancelar",
+  "delete": "Eliminar",
+  "edit": "Editar",
+  "create": "Crear",
+  "update": "Actualizar",
+  "view": "Ver",
+  "back": "Atrás",
+  "next": "Siguiente",
+  "previous": "Anterior",
+  "home": "Inicio",
+  "dashboard": "Panel de Control",
+  "profile": "Perfil",
+  "settings": "Configuración",
+  "success": "Operación completada exitosamente",
+  "error": "Ocurrió un error",
+  "warning": "Advertencia",
+  "info": "Información",
+  "confirmation": "¿Estás seguro?",
+  "loading": "Cargando...",
+  "search": "Buscar",
+  "filter": "Filtrar",
+  "sort": "Ordenar",
+  "export": "Exportar",
+  "import": "Importar",
+  "upload": "Subir",
+  "download": "Descargar",
+  "file_uploaded": "Archivo subido exitosamente",
+  "file_deleted": "Archivo eliminado exitosamente",
+  "posts": {
+    "0": "No se encontraron publicaciones",
+    "1": "1 publicación encontrada",
+    "other": ":count publicaciones encontradas"
+  },
+  "users": {
+    "0": "No se encontraron usuarios",
+    "1": "1 usuario encontrado", 
+    "other": ":count usuarios encontrados"
+  },
+  "items": {
+    "0": "No hay elementos",
+    "1": "1 elemento",
+    "other": ":count elementos"
+  }
+}

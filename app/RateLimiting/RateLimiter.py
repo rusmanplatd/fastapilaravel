@@ -73,12 +73,12 @@ class CacheRateLimitStore(RateLimitStore):
         attempts += 1
         self.cache.put(attempts_key, attempts, decay_seconds)
         
-        return attempts
+        return int(attempts)
     
     def attempts(self, key: str) -> int:
         """Get the number of attempts for a key."""
         attempts_key = f"rate_limit:{key}:attempts"
-        return self.cache.get(attempts_key, 0)
+        return int(self.cache.get(attempts_key, 0))
     
     def reset(self, key: str) -> bool:
         """Reset the attempts for a key."""
@@ -92,7 +92,7 @@ class CacheRateLimitStore(RateLimitStore):
     def available_at(self, key: str) -> float:
         """Get the time when key will be available again."""
         timer_key = f"rate_limit:{key}:timer"
-        return self.cache.get(timer_key, time.time())
+        return float(self.cache.get(timer_key, time.time()))
     
     def clear(self, key: str) -> bool:
         """Clear the rate limiter for a key."""
@@ -179,8 +179,8 @@ class RateLimiter:
     def _default_key(self, request: Request) -> str:
         """Generate default rate limit key."""
         # Use IP address and user ID if available
-        ip = getattr(request.client, 'host', 'unknown') if request.client else 'unknown'
-        user_id = getattr(request.state, 'user_id', None) if hasattr(request.state, 'user_id') else None
+        ip = getattr(request.client, 'host', 'unknown') if hasattr(request, 'client') and request.client else 'unknown'
+        user_id = getattr(request.state, 'user_id', None) if hasattr(request, 'state') and hasattr(request.state, 'user_id') else None
         
         if user_id:
             identifier = f"user:{user_id}"
@@ -194,7 +194,7 @@ class RateLimiter:
         retry_after = self.retry_after(key)
         
         return HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            status_code=429,
             detail={
                 "message": "Too Many Attempts.",
                 "max_attempts": max_attempts,
