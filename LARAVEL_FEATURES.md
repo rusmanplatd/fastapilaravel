@@ -692,6 +692,83 @@ stats = await Horizon.get_stats()
 - 👥 Worker process monitoring
 - ⚡ WebSocket live updates
 
+### 🔍 **Laravel Scout** (`app/Scout/`)
+Full-text search system with multiple search engines:
+- **Search Engines**: Database, Memory, Elasticsearch, Algolia  
+- **Searchable Trait**: Add search capabilities to any model
+- **Fluent Builder**: Advanced query building with filters and highlighting
+- **Scout Manager**: Multi-engine management with configuration
+- **Searchable Config**: Per-model search configuration
+- **Advanced Features**: Boosting, faceting, aggregations, highlighting
+
+**Usage Example:**
+```python
+from app.Scout import Searchable, Scout, ScoutConfig
+
+# Make model searchable
+class Post(BaseModel, Searchable):
+    __scout_config__ = ScoutConfig(
+        engine='elasticsearch',
+        boost_fields={'title': 2.0, 'content': 1.0},
+        searchable_fields=['title', 'content', 'tags']
+    )
+    
+    def to_searchable_array(self) -> Dict[str, Any]:
+        return {'title': self.title, 'content': self.content, 'tags': self.tags}
+
+# Search with fluent builder
+results = Post.search('python tutorial')
+             .where('status', 'published')
+             .where_in('category', ['tech', 'programming'])
+             .boost('title', 2.0)
+             .highlight('title', 'content')
+             .fuzzy('AUTO')
+             .paginate(page=1, per_page=20)
+             .get()
+
+# Use Scout facade
+await Scout.import_model(Post)  # Index all posts
+await Scout.flush(Post)         # Clear index
+```
+
+### 🔒 **Laravel Sanctum** (`app/Sanctum/`)
+SPA authentication and API token management system:
+- **Personal Access Tokens**: Secure API token generation and management
+- **HasApiTokens Trait**: Add token functionality to any model (typically User)
+- **Token Abilities**: Fine-grained permissions system for API access
+- **SPA Authentication**: Stateful authentication for Single Page Applications
+- **Middleware Integration**: FastAPI dependencies for route protection
+- **Token Rotation**: Optional token rotation for enhanced security
+
+**Usage Example:**
+```python
+from app.Sanctum import HasApiTokens, Sanctum, auth_sanctum, abilities
+
+# Add to User model
+class User(BaseModel, HasApiTokens):
+    pass
+
+# Create tokens
+spa_token = user.create_spa_token("Chrome Browser") 
+api_token = user.create_api_token("Mobile App", ['read', 'write'], expires_in_days=30)
+
+# Protect routes
+@app.get("/api/protected")
+@auth_sanctum
+async def protected_route(user):
+    return {"message": f"Hello {user.name}!"}
+
+@app.post("/api/admin")
+@abilities('admin')
+async def admin_route(user):
+    return {"message": "Admin access granted"}
+
+# Using dependencies
+@app.get("/api/user")
+async def get_user(user=Depends(require_sanctum_auth)):
+    return user.to_dict()
+```
+
 ### 🔭 **Laravel Telescope** (`app/Telescope/`)
 - **Comprehensive Application Monitoring**: Request, query, exception, job, cache, redis, mail, and notification tracking
 - **Debug Dashboard**: Real-time debugging interface with filtering and search
@@ -737,6 +814,22 @@ stats = await Telescope.get_statistics()
 
 ```
 app/
+├── Scout/                        # Laravel Scout - Full-text search
+│   ├── ScoutManager.py           # Multi-engine search manager  
+│   ├── Searchable.py             # Searchable trait and configuration
+│   ├── Builder.py                # Fluent search query builder
+│   ├── Facades.py                # Scout facade for static access
+│   └── Engines/                  # Search engine implementations
+│       ├── DatabaseEngine.py     # Database-based search
+│       ├── MemoryEngine.py       # In-memory search for testing
+│       ├── ElasticsearchEngine.py # Elasticsearch integration
+│       └── AlgoliaEngine.py      # Algolia cloud search
+├── Sanctum/                      # Laravel Sanctum - SPA authentication
+│   ├── SanctumManager.py         # Token authentication manager
+│   ├── PersonalAccessToken.py    # Personal access token model  
+│   ├── HasApiTokens.py           # API token trait for models
+│   ├── Middleware.py             # Authentication middleware & dependencies
+│   └── Facades.py                # Sanctum facade for static access
 ├── Socialite/                    # Laravel Socialite - Social authentication
 │   ├── SocialiteManager.py       # Multi-provider OAuth manager
 │   ├── Contracts.py              # Provider interfaces and user model
@@ -781,9 +874,12 @@ app/
     └── SocialAuthController.py   # Social authentication controller
 
 config/
+├── sanctum.py                    # Sanctum authentication configuration
+├── scout.py                      # Scout search configuration  
 └── socialite.py                  # Socialite configuration
 
 routes/
+├── sanctum.py                    # Sanctum API token management routes
 ├── socialite.py                  # Social authentication routes
 ├── horizon.py                    # Horizon dashboard routes
 └── telescope.py                  # Telescope debugging routes

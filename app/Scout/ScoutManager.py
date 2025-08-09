@@ -85,6 +85,40 @@ class ScoutManager:
             'database': DatabaseEngine(),
             'memory': MemoryEngine(),
         }
+        
+        # Optionally add Elasticsearch and Algolia engines if configured
+        self._setup_optional_engines()
+    
+    def _setup_optional_engines(self) -> None:
+        """Setup optional search engines if their dependencies are available."""
+        import os
+        
+        # Setup Elasticsearch engine if configured
+        elasticsearch_hosts = os.getenv('ELASTICSEARCH_HOSTS', '').split(',') if os.getenv('ELASTICSEARCH_HOSTS') else None
+        if elasticsearch_hosts and elasticsearch_hosts != ['']:
+            try:
+                from .Engines import ElasticsearchEngine
+                self.engines['elasticsearch'] = ElasticsearchEngine(
+                    hosts=elasticsearch_hosts,
+                    api_key=os.getenv('ELASTICSEARCH_API_KEY'),
+                    cloud_id=os.getenv('ELASTICSEARCH_CLOUD_ID')
+                )
+            except ImportError:
+                pass  # elasticsearch package not installed
+        
+        # Setup Algolia engine if configured
+        algolia_app_id = os.getenv('ALGOLIA_APP_ID')
+        algolia_api_key = os.getenv('ALGOLIA_API_KEY')
+        if algolia_app_id and algolia_api_key:
+            try:
+                from .Engines import AlgoliaEngine
+                self.engines['algolia'] = AlgoliaEngine(
+                    app_id=algolia_app_id,
+                    api_key=algolia_api_key,
+                    wait_for_indexing=os.getenv('ALGOLIA_WAIT_FOR_INDEXING', 'false').lower() == 'true'
+                )
+            except ImportError:
+                pass  # algoliasearch package not installed
     
     def engine(self, name: str = None) -> SearchEngine:
         """

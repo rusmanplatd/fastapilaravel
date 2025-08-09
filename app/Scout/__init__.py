@@ -8,8 +8,8 @@ with support for multiple search engines including Elasticsearch,
 Algolia, and simple database-based search.
 """
 
-from .ScoutManager import ScoutManager
-from .Searchable import Searchable, SearchableConfig
+from .ScoutManager import ScoutManager, SearchEngine
+from .Searchable import Searchable, ScoutConfig, SearchResults, SearchResult
 from .Engines import (
     ElasticsearchEngine,
     AlgoliaEngine,
@@ -21,8 +21,11 @@ from .Facades import Scout
 
 __all__ = [
     'ScoutManager',
+    'SearchEngine',
     'Searchable',
-    'SearchableConfig',
+    'ScoutConfig',
+    'SearchResults',
+    'SearchResult',
     'ElasticsearchEngine',
     'AlgoliaEngine', 
     'DatabaseEngine',
